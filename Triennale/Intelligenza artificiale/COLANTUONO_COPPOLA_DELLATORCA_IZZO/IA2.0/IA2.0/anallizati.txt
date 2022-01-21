@@ -1,0 +1,1778 @@
+***********************************************ANALIZING TWEET NUMBER 1...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+President   President   PROPN   NNP   compound
+Obama   Obama   PROPN   NNP   nsubj
+just   just   ADV   RB   advmod
+had   have   VERB   VBD   ROOT
+a   a   DET   DT   det
+news   news   NOUN   NN   compound
+conference   conference   NOUN   NN   dobj
+,   ,   PUNCT   ,   punct
+but   but   CCONJ   CC   cc
+he   -PRON-   PRON   PRP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   conj
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+Our   -PRON-   DET   PRP$   poss
+country   country   NOUN   NN   nsubj
+is   be   VERB   VBZ   ROOT
+a   a   DET   DT   det
+divided   divide   VERB   VBN   amod
+crime   crime   NOUN   NN   compound
+scene   scene   NOUN   NN   attr
+,   ,   PUNCT   ,   punct
+and   and   CCONJ   CC   cc
+it   -PRON-   PRON   PRP   nsubj
+will   will   VERB   MD   aux
+only   only   ADV   RB   advmod
+get   get   VERB   VB   conj
+worse   bad   ADJ   JJR   acomp
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+President Obama   Obama   nsubj   had
+a news conference   conference   dobj   had
+he   he   nsubj   have
+a clue   clue   dobj   have
+Our country   country   nsubj   is
+a divided crime scene   scene   attr   is
+it   it   nsubj   get
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+President   compound   Obama   PROPN   []
+Obama   nsubj   had   VERB   [President]
+just   advmod   had   VERB   []
+had   ROOT   had   VERB   [Obama, just, conference, ,, but, have]
+a   det   conference   NOUN   []
+news   compound   conference   NOUN   []
+conference   dobj   had   VERB   [a, news]
+,   punct   had   VERB   []
+but   cc   had   VERB   []
+he   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   conj   had   VERB   [he, does, n't, clue, .]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   have   VERB   []
+Our   poss   country   NOUN   []
+country   nsubj   is   VERB   [Our]
+is   ROOT   is   VERB   [country, scene, ,, and, get]
+a   det   scene   NOUN   []
+divided   amod   scene   NOUN   []
+crime   compound   scene   NOUN   []
+scene   attr   is   VERB   [a, divided, crime]
+,   punct   is   VERB   []
+and   cc   is   VERB   []
+it   nsubj   get   VERB   []
+will   aux   get   VERB   []
+only   advmod   get   VERB   []
+get   conj   is   VERB   [it, will, only, worse, !]
+worse   acomp   get   VERB   []
+!   punct   get   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+President   compound   0   0   [u'Obama', u'had']
+Obama   nsubj   1   0   [u'had']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Obama   10   15   PERSON
+SENTENCE RECOGNITION
+President Obama just had a news conference, but he doesn't have a clue.
+Our country is a divided crime scene, and it will only get worse!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 2...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+If   if   ADP   IN   mark
+it   -PRON-   PRON   PRP   nsubj
+were   be   VERB   VBD   advcl
+up   up   ADV   RB   prep
+to   to   PART   TO   aux
+goofy   goofy   VERB   VB   advcl
+Elizabeth   Elizabeth   PROPN   NNP   compound
+Warren   Warren   PROPN   NNP   dobj
+,   ,   PUNCT   ,   punct
+we   -PRON-   PRON   PRP   nsubj
+'d   would   AUX   MD   aux
+have   have   VERB   VB   ccomp
+no   no   DET   DT   det
+jobs   job   NOUN   NNS   dobj
+in   in   ADP   IN   prep
+America   America   PROPN   NNP   pobj
+-   -   PUNCT   :   punct
+she   -PRON-   PRON   PRP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+it   it   nsubj   were
+Elizabeth Warren   Warren   dobj   goofy
+we   we   nsubj   have
+no jobs   jobs   dobj   have
+America   America   pobj   in
+she   she   nsubj   have
+a clue   clue   dobj   have
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+If   mark   were   VERB   []
+it   nsubj   were   VERB   []
+were   advcl   have   VERB   [If, it, up, goofy]
+up   prep   were   VERB   []
+to   aux   goofy   VERB   []
+goofy   advcl   were   VERB   [to, Warren]
+Elizabeth   compound   Warren   PROPN   []
+Warren   dobj   goofy   VERB   [Elizabeth]
+,   punct   have   VERB   []
+we   nsubj   have   VERB   []
+'d   aux   have   VERB   []
+have   ccomp   have   VERB   [were, ,, we, 'd, jobs]
+no   det   jobs   NOUN   []
+jobs   dobj   have   VERB   [no, in]
+in   prep   jobs   NOUN   [America]
+America   pobj   in   ADP   []
+-   punct   have   VERB   []
+she   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [have, -, she, does, n't, clue, .]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   have   VERB   [
+]
+
+      .   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+If   mark   0   0   [u'were', u'have', u'have']
+it   nsubj   0   0   [u'were', u'have', u'have']
+were   advcl   2   2   [u'have', u'have']
+up   prep   0   0   [u'were', u'have', u'have']
+to   aux   0   0   [u'goofy', u'were', u'have', u'have']
+goofy   advcl   1   1   [u'were', u'have', u'have']
+Elizabeth   compound   0   0   [u'Warren', u'goofy', u'were', u'have', u'have']
+Warren   dobj   1   0   [u'goofy', u'were', u'have', u'have']
+,   punct   0   0   [u'have', u'have']
+we   nsubj   0   0   [u'have', u'have']
+'d   aux   0   0   [u'have', u'have']
+have   ccomp   4   1   [u'have']
+no   det   0   0   [u'jobs', u'have', u'have']
+jobs   dobj   1   1   [u'have', u'have']
+in   prep   0   1   [u'jobs', u'have', u'have']
+America   pobj   0   0   [u'in', u'jobs', u'have', u'have']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Elizabeth Warren   23   39   PERSONAmerica   62   69   GPE
+SENTENCE RECOGNITION
+If it were up to goofy Elizabeth Warren, we'd have no jobs in America-she doesn't have a clue.
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 3...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+David   David   PROPN   NNP   compound
+Brooks   Brooks   PROPN   NNP   nsubj
+,   ,   PUNCT   ,   punct
+of   of   ADP   IN   prep
+the   the   DET   DT   det
+New   New   PROPN   NNP   compound
+York   York   PROPN   NNP   compound
+Times   Times   PROPN   NNP   pobj
+,   ,   PUNCT   ,   punct
+is   be   VERB   VBZ   aux
+closing   close   VERB   VBG   ROOT
+in   in   PART   RP   prt
+on   on   ADP   IN   prep
+being   be   VERB   VBG   pcomp
+the   the   DET   DT   det
+dumbest   dumb   ADJ   JJS   attr
+of   of   ADP   IN   prep
+them   -PRON-   PRON   PRP   pobj
+all   all   DET   DT   appos
+.   .   PUNCT   .   punct
+He   -PRON-   PRON   PRP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+David Brooks   Brooks   nsubj   closing
+the New York Times   Times   pobj   of
+them   them   pobj   of
+He   He   nsubj   have
+a clue   clue   dobj   have
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+David   compound   Brooks   PROPN   []
+Brooks   nsubj   closing   VERB   [David, ,, of, ,]
+,   punct   Brooks   PROPN   []
+of   prep   Brooks   PROPN   [Times]
+the   det   Times   PROPN   []
+New   compound   York   PROPN   []
+York   compound   Times   PROPN   [New]
+Times   pobj   of   ADP   [the, York]
+,   punct   Brooks   PROPN   []
+is   aux   closing   VERB   []
+closing   ROOT   closing   VERB   [Brooks, is, in, on, .]
+in   prt   closing   VERB   []
+on   prep   closing   VERB   [being]
+being   pcomp   on   ADP   [dumbest]
+the   det   dumbest   ADJ   []
+dumbest   attr   being   VERB   [the, of]
+of   prep   dumbest   ADJ   [them]
+them   pobj   of   ADP   [all]
+all   appos   them   PRON   []
+.   punct   closing   VERB   []
+He   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [He, does, n't, clue, .]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   have   VERB   [
+]
+
+      .   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+David   compound   0   0   [u'Brooks', u'closing']
+Brooks   nsubj   1   3   [u'closing']
+,   punct   0   0   [u'Brooks', u'closing']
+of   prep   0   1   [u'Brooks', u'closing']
+the   det   0   0   [u'Times', u'of', u'Brooks', u'closing']
+New   compound   0   0   [u'York', u'Times', u'of', u'Brooks', u'closing']
+York   compound   1   0   [u'Times', u'of', u'Brooks', u'closing']
+Times   pobj   2   0   [u'of', u'Brooks', u'closing']
+,   punct   0   0   [u'Brooks', u'closing']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+David Brooks   0   12   PERSONthe New York Times   17   35   ORG
+SENTENCE RECOGNITION
+David Brooks, of the New York Times, is closing in on being the dumbest of them all.
+He doesn't have a clue.
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 4...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Mitt   Mitt   PROPN   NNP   compound
+Romney   Romney   PROPN   NNP   nsubj
+is   be   VERB   VBZ   ROOT
+a   a   DET   DT   det
+mixed   mixed   ADJ   JJ   amod
+up   up   PART   RP   prt
+man   man   NOUN   NN   attr
+who   who   PRON   WP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   relcl
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+No   no   DET   DT   det
+wonder   wonder   NOUN   NN   ROOT
+he   -PRON-   PRON   PRP   nsubj
+lost   lose   VERB   VBD   relcl
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Mitt Romney   Romney   nsubj   is
+a mixed up man   man   attr   is
+who   who   nsubj   have
+a clue   clue   dobj   have
+No wonder   wonder   ROOT   wonder
+he   he   nsubj   lost
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Mitt   compound   Romney   PROPN   []
+Romney   nsubj   is   VERB   [Mitt]
+is   ROOT   is   VERB   [Romney, man, .]
+a   det   man   NOUN   []
+mixed   amod   man   NOUN   [up]
+up   prt   mixed   ADJ   []
+man   attr   is   VERB   [a, mixed, have]
+who   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   relcl   man   NOUN   [who, does, n't, clue]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   is   VERB   []
+No   det   wonder   NOUN   []
+wonder   ROOT   wonder   NOUN   [No, lost, !]
+he   nsubj   lost   VERB   []
+lost   relcl   wonder   NOUN   [he]
+!   punct   wonder   NOUN   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Mitt   compound   0   0   [u'Romney', u'is']
+Romney   nsubj   1   0   [u'is']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Mitt Romney   0   11   PERSON
+SENTENCE RECOGNITION
+Mitt Romney is a mixed up man who doesn't have a clue.
+No wonder he lost!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 5...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+I   -PRON-   PRON   PRP   nsubj
+am   be   VERB   VBP   aux
+going   go   VERB   VBG   ccomp
+to   to   PART   TO   aux
+save   save   VERB   VB   xcomp
+Medicare   Medicare   PROPN   NNP   dobj
+and   and   CCONJ   CC   cc
+Medicaid   Medicaid   PROPN   NNP   conj
+,   ,   PUNCT   ,   punct
+Carson   Carson   PROPN   NNP   nsubj
+wants   want   VERB   VBZ   ROOT
+to   to   PART   TO   aux
+abolish   abolish   VERB   VB   xcomp
+,   ,   PUNCT   ,   punct
+and   and   CCONJ   CC   cc
+failing   fail   VERB   VBG   amod
+candidate   candidate   NOUN   NN   compound
+Gov.   Gov.   PROPN   NNP   compound
+John   John   PROPN   NNP   compound
+Kasich   Kasich   PROPN   NNP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   conj
+a   a   DET   DT   det
+clue   clue   NOUN   NN   npadvmod
+-   -   PUNCT   HYPH   punct
+weak   weak   ADJ   JJ   dobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+I   I   nsubj   going
+Medicare   Medicare   dobj   save
+Medicaid   Medicaid   conj   Medicare
+Carson   Carson   nsubj   wants
+failing candidate Gov. John Kasich   Kasich   nsubj   have
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+I   nsubj   going   VERB   []
+am   aux   going   VERB   []
+going   ccomp   wants   VERB   [I, am, save]
+to   aux   save   VERB   []
+save   xcomp   going   VERB   [to, Medicare]
+Medicare   dobj   save   VERB   [and, Medicaid]
+and   cc   Medicare   PROPN   []
+Medicaid   conj   Medicare   PROPN   []
+,   punct   wants   VERB   []
+Carson   nsubj   wants   VERB   []
+wants   ROOT   wants   VERB   [going, ,, Carson, abolish, and, have]
+to   aux   abolish   VERB   []
+abolish   xcomp   wants   VERB   [to, ,]
+,   punct   abolish   VERB   []
+and   cc   wants   VERB   []
+failing   amod   Kasich   PROPN   []
+candidate   compound   Kasich   PROPN   []
+Gov.   compound   Kasich   PROPN   []
+John   compound   Kasich   PROPN   []
+Kasich   nsubj   have   VERB   [failing, candidate, Gov., John]
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   conj   wants   VERB   [Kasich, does, n't, weak, !]
+a   det   weak   ADJ   []
+clue   npadvmod   weak   ADJ   []
+-   punct   weak   ADJ   []
+weak   dobj   have   VERB   [a, clue, -]
+!   punct   have   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+I   nsubj   0   0   [u'going', u'wants']
+am   aux   0   0   [u'going', u'wants']
+going   ccomp   2   1   [u'wants']
+to   aux   0   0   [u'save', u'going', u'wants']
+save   xcomp   1   1   [u'going', u'wants']
+Medicare   dobj   0   2   [u'save', u'going', u'wants']
+and   cc   0   0   [u'Medicare', u'save', u'going', u'wants']
+Medicaid   conj   0   0   [u'Medicare', u'save', u'going', u'wants']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Medicare   19   27   ORGMedicaid   32   40   ORGCarson   42   48   PERSONJohn Kasich   94   105   PERSON
+SENTENCE RECOGNITION
+I am going to save Medicare and Medicaid, Carson wants to abolish, and failing candidate Gov. John Kasich doesn't have a clue - weak!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 6...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Just   just   ADV   RB   advmod
+watched   watch   VERB   VBD   ROOT
+Marco   Marco   PROPN   NNP   compound
+Rubio   Rubio   PROPN   NNP   dobj
+on   on   ADP   IN   prep
+television   television   NOUN   NN   pobj
+.   .   PUNCT   .   punct
+Just   just   ADV   RB   advmod
+another   another   DET   DT   det
+all   all   DET   DT   det
+talk   talk   NOUN   NN   ROOT
+,   ,   PUNCT   ,   punct
+no   no   DET   DT   det
+action   action   NOUN   NN   appos
+,   ,   PUNCT   ,   punct
+politician   politician   NOUN   NN   conj
+.   .   PUNCT   .   punct
+Truly   truly   ADV   RB   advmod
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+!   !   PUNCT   .   punct
+Worst   bad   ADJ   JJS   amod
+voting   voting   NOUN   NN   compound
+record   record   NOUN   NN   ROOT
+in   in   ADP   IN   prep
+Sen.   Sen.   PROPN   NNP   pobj
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Marco Rubio   Rubio   dobj   watched
+television   television   pobj   on
+Just another all talk   talk   ROOT   talk
+no action   action   appos   talk
+politician   politician   conj   action
+a clue   clue   dobj   have
+Worst voting record   record   ROOT   record
+Sen.   Sen.   pobj   in
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Just   advmod   watched   VERB   []
+watched   ROOT   watched   VERB   [Just, Rubio, on, .]
+Marco   compound   Rubio   PROPN   []
+Rubio   dobj   watched   VERB   [Marco]
+on   prep   watched   VERB   [television]
+television   pobj   on   ADP   []
+.   punct   watched   VERB   []
+Just   advmod   another   DET   []
+another   det   talk   NOUN   [Just]
+all   det   talk   NOUN   []
+talk   ROOT   talk   NOUN   [another, all, ,, action, .]
+,   punct   talk   NOUN   []
+no   det   action   NOUN   []
+action   appos   talk   NOUN   [no, ,, politician]
+,   punct   action   NOUN   []
+politician   conj   action   NOUN   []
+.   punct   talk   NOUN   []
+Truly   advmod   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [Truly, does, n't, clue, !]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+!   punct   have   VERB   []
+Worst   amod   record   NOUN   []
+voting   compound   record   NOUN   []
+record   ROOT   record   NOUN   [Worst, voting, in]
+in   prep   record   NOUN   [Sen.]
+Sen.   pobj   in   ADP   [
+]
+
+      Sen.   PROPN   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Just   advmod   0   0   [u'watched']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Marco Rubio   13   24   PERSON
+SENTENCE RECOGNITION
+Just watched Marco Rubio on television.
+Just another all talk, no action, politician.
+Truly doesn't have a clue!
+Worst voting record in Sen.
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 7...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Rich   Rich   PROPN   NNP   compound
+Lowry   Lowry   PROPN   NNP   nsubj
+is   be   VERB   VBZ   ccomp
+truly   truly   ADV   RB   advmod
+one   one   NUM   CD   attr
+of   of   ADP   IN   prep
+the   the   DET   DT   det
+dumbest   dumb   ADJ   JJS   pobj
+of   of   ADP   IN   prep
+the   the   DET   DT   det
+talking   talk   VERB   VBG   amod
+heads   head   NOUN   NNS   pobj
+-   -   PUNCT   :   punct
+he   -PRON-   PRON   PRP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Rich Lowry   Lowry   nsubj   is
+the talking heads   heads   pobj   of
+he   he   nsubj   have
+a clue   clue   dobj   have
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Rich   compound   Lowry   PROPN   []
+Lowry   nsubj   is   VERB   [Rich]
+is   ccomp   have   VERB   [Lowry, truly, one]
+truly   advmod   is   VERB   []
+one   attr   is   VERB   [of]
+of   prep   one   NUM   [dumbest]
+the   det   dumbest   ADJ   []
+dumbest   pobj   of   ADP   [the, of]
+of   prep   dumbest   ADJ   [heads]
+the   det   heads   NOUN   []
+talking   amod   heads   NOUN   []
+heads   pobj   of   ADP   [the, talking]
+-   punct   have   VERB   []
+he   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [is, -, he, does, n't, clue, !]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+!   punct   have   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Rich   compound   0   0   [u'Lowry', u'is', u'have']
+Lowry   nsubj   1   0   [u'is', u'have']
+is   ccomp   1   2   [u'have']
+truly   advmod   0   0   [u'is', u'have']
+one   attr   0   1   [u'is', u'have']
+of   prep   0   1   [u'one', u'is', u'have']
+the   det   0   0   [u'dumbest', u'of', u'one', u'is', u'have']
+dumbest   pobj   1   1   [u'of', u'one', u'is', u'have']
+of   prep   0   1   [u'dumbest', u'of', u'one', u'is', u'have']
+the   det   0   0   [u'heads', u'of', u'dumbest', u'of', u'one', u'is', u'have']
+talking   amod   0   0   [u'heads', u'of', u'dumbest', u'of', u'one', u'is', u'have']
+heads   pobj   2   0   [u'of', u'dumbest', u'of', u'one', u'is', u'have']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Rich Lowry   0   10   PERSONone   20   23   CARDINAL
+SENTENCE RECOGNITION
+Rich Lowry is truly one of the dumbest of the talking heads - he doesn't have a clue!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 8...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Whoopi   Whoopi   PROPN   NNP   compound
+Goldberg   Goldberg   PROPN   NNP   nsubj
+had   have   VERB   VBD   aux
+better   well   ADJ   JJR   advmod
+surround   surround   VERB   VB   ROOT
+herself   -PRON-   PRON   PRP   dobj
+with   with   ADP   IN   prep
+better   well   ADJ   JJR   amod
+hosts   host   NOUN   NNS   pobj
+than   than   ADP   IN   prep
+Nicole   Nicole   PROPN   NNP   compound
+Wallace   Wallace   PROPN   NNP   pobj
+,   ,   PUNCT   ,   punct
+who   who   PRON   WP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   relcl
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+The   the   DET   DT   det
+show   show   NOUN   NN   nsubj
+is   be   VERB   VBZ   ROOT
+close   close   ADJ   JJ   acomp
+to   to   ADP   IN   prep
+death   death   NOUN   NN   pobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Whoopi Goldberg   Goldberg   nsubj   surround
+herself   herself   dobj   surround
+better hosts   hosts   pobj   with
+Nicole Wallace   Wallace   pobj   than
+who   who   nsubj   have
+a clue   clue   dobj   have
+The show   show   nsubj   is
+death   death   pobj   to
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Whoopi   compound   Goldberg   PROPN   []
+Goldberg   nsubj   surround   VERB   [Whoopi]
+had   aux   surround   VERB   []
+better   advmod   surround   VERB   []
+surround   ROOT   surround   VERB   [Goldberg, had, better, herself, with, .]
+herself   dobj   surround   VERB   []
+with   prep   surround   VERB   [hosts]
+better   amod   hosts   NOUN   []
+hosts   pobj   with   ADP   [better, than]
+than   prep   hosts   NOUN   [Wallace]
+Nicole   compound   Wallace   PROPN   []
+Wallace   pobj   than   ADP   [Nicole, ,, have]
+,   punct   Wallace   PROPN   []
+who   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   relcl   Wallace   PROPN   [who, does, n't, clue]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   surround   VERB   []
+The   det   show   NOUN   []
+show   nsubj   is   VERB   [The]
+is   ROOT   is   VERB   [show, close, !]
+close   acomp   is   VERB   [to]
+to   prep   close   ADJ   [death]
+death   pobj   to   ADP   []
+!   punct   is   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Whoopi   compound   0   0   [u'Goldberg', u'surround']
+Goldberg   nsubj   1   0   [u'surround']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Whoopi Goldberg   0   15   PERSONNicole Wallace   67   81   PERSON
+SENTENCE RECOGNITION
+Whoopi Goldberg had better surround herself with better hosts than Nicole Wallace, who doesn't have a clue.
+The show is close to death!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 9...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+You   -PRON-   PRON   PRP   nsubj
+save   save   VERB   VBP   ROOT
+your   -PRON-   DET   PRP$   poss
+$   $   SYM   $   dobj
+.   .   PUNCT   .   punct
+Do   do   VERB   VB   aux
+n't   not   ADV   RB   neg
+invest   invest   VERB   VB   ROOT
+in   in   ADP   IN   prep
+Karl   Karl   PROPN   NNP   compound
+Rove   Rove   PROPN   NNP   pobj
+.   .   PUNCT   .   punct
+He   -PRON-   PRON   PRP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+You   You   nsubj   save
+Karl Rove   Rove   pobj   in
+He   He   nsubj   have
+a clue   clue   dobj   have
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+You   nsubj   save   VERB   []
+save   ROOT   save   VERB   [You, $, .]
+your   poss   $   SYM   []
+$   dobj   save   VERB   [your]
+.   punct   save   VERB   []
+Do   aux   invest   VERB   []
+n't   neg   invest   VERB   []
+invest   ROOT   invest   VERB   [Do, n't, in, .]
+in   prep   invest   VERB   [Rove]
+Karl   compound   Rove   PROPN   []
+Rove   pobj   in   ADP   [Karl]
+.   punct   invest   VERB   []
+He   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [He, does, n't, clue, .]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   have   VERB   [
+]
+
+      .   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+You   nsubj   0   0   [u'save']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Karl Rove   33   42   PERSON
+SENTENCE RECOGNITION
+You save your $.
+Don't invest in Karl Rove.
+He doesn't have a clue.
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 10...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+I   -PRON-   PRON   PRP   nsubj
+am   be   VERB   VBP   ROOT
+the   the   DET   DT   det
+BEST   BEST   PROPN   NNP   compound
+builder   builder   NOUN   NN   attr
+,   ,   PUNCT   ,   punct
+just   just   ADV   RB   advmod
+look   look   VERB   VB   dep
+at   at   ADP   IN   prep
+what   what   PRON   WP   dobj
+I   -PRON-   PRON   PRP   nsubj
+'ve   have   VERB   VB   aux
+built   build   VERB   VBN   pcomp
+.   .   PUNCT   .   punct
+Hillary   Hillary   PROPN   NNP   nsubj
+ca   can   AUX   MD   aux
+n't   not   ADV   RB   neg
+build   build   VERB   VB   ROOT
+.   .   PUNCT   .   punct
+Republican   republican   ADJ   JJ   amod
+candidates   candidate   NOUN   NNS   nsubj
+ca   can   AUX   MD   aux
+n't   not   ADV   RB   neg
+build   build   VERB   VB   ROOT
+.   .   PUNCT   .   punct
+They   -PRON-   PRON   PRP   nsubj
+do   do   VERB   VBP   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+I   I   nsubj   am
+the BEST builder   builder   attr   am
+what   what   dobj   built
+I   I   nsubj   built
+Hillary   Hillary   nsubj   build
+Republican candidates   candidates   nsubj   build
+They   They   nsubj   have
+a clue   clue   dobj   have
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+I   nsubj   am   VERB   []
+am   ROOT   am   VERB   [I, builder, ,, look, .]
+the   det   builder   NOUN   []
+BEST   compound   builder   NOUN   []
+builder   attr   am   VERB   [the, BEST]
+,   punct   am   VERB   []
+just   advmod   look   VERB   []
+look   dep   am   VERB   [just, at]
+at   prep   look   VERB   [built]
+what   dobj   built   VERB   []
+I   nsubj   built   VERB   []
+'ve   aux   built   VERB   []
+built   pcomp   at   ADP   [what, I, 've]
+.   punct   am   VERB   []
+Hillary   nsubj   build   VERB   []
+ca   aux   build   VERB   []
+n't   neg   build   VERB   []
+build   ROOT   build   VERB   [Hillary, ca, n't, .]
+.   punct   build   VERB   []
+Republican   amod   candidates   NOUN   []
+candidates   nsubj   build   VERB   [Republican]
+ca   aux   build   VERB   []
+n't   neg   build   VERB   []
+build   ROOT   build   VERB   [candidates, ca, n't, .]
+.   punct   build   VERB   []
+They   nsubj   have   VERB   []
+do   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [They, do, n't, clue, !]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+!   punct   have   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+I   nsubj   0   0   [u'am']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+BEST   9   13   ORGRepublican   74   84   NORP
+SENTENCE RECOGNITION
+I am the BEST builder, just look at what I've built.
+Hillary can't build.
+Republican candidates can't build.
+They don't have a clue!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 11...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Defense   Defense   PROPN   NNP   compound
+Sec   Sec   PROPN   NNP   ROOT
+.   .   PUNCT   .   punct
+Hagel   Hagel   PROPN   NNP   nsubj
+has   have   VERB   VBZ   aux
+quit   quit   VERB   VBN   ROOT
+.   .   PUNCT   .   punct
+Great   great   ADJ   JJ   amod
+news   news   NOUN   NN   ROOT
+for   for   ADP   IN   prep
+our   -PRON-   DET   PRP$   poss
+country   country   NOUN   NN   pobj
+.   .   PUNCT   .   punct
+The   the   DET   DT   det
+guy   guy   NOUN   NN   nsubj
+did   do   VERB   VBD   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ROOT
+a   a   DET   DT   det
+clue   clue   NOUN   NN   npadvmod
+-   -   PUNCT   HYPH   punct
+grossly   grossly   ADV   RB   advmod
+outmatched   outmatch   VERB   VBN   ccomp
+by   by   ADP   IN   agent
+our   -PRON-   DET   PRP$   poss
+enemies   enemy   NOUN   NNS   pobj
+.   .   PUNCT   .   punct
+Could   could   AUX   MD   aux
+n't   not   ADV   RB   neg
+even   even   ADV   RB   advmod
+speak   speak   VERB   VB   ROOT
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Defense Sec   Sec   ROOT   Sec
+Hagel   Hagel   nsubj   quit
+Great news   news   ROOT   news
+our country   country   pobj   for
+The guy   guy   nsubj   have
+our enemies   enemies   pobj   by
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Defense   compound   Sec   PROPN   []
+Sec   ROOT   Sec   PROPN   [Defense, .]
+.   punct   Sec   PROPN   []
+Hagel   nsubj   quit   VERB   []
+has   aux   quit   VERB   []
+quit   ROOT   quit   VERB   [Hagel, has, .]
+.   punct   quit   VERB   []
+Great   amod   news   NOUN   []
+news   ROOT   news   NOUN   [Great, for, .]
+for   prep   news   NOUN   [country]
+our   poss   country   NOUN   []
+country   pobj   for   ADP   [our]
+.   punct   news   NOUN   []
+The   det   guy   NOUN   []
+guy   nsubj   have   VERB   [The]
+did   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ROOT   have   VERB   [guy, did, n't, outmatched, .]
+a   det   outmatched   VERB   []
+clue   npadvmod   grossly   ADV   []
+-   punct   grossly   ADV   []
+grossly   advmod   outmatched   VERB   [clue, -]
+outmatched   ccomp   have   VERB   [a, grossly, by]
+by   agent   outmatched   VERB   [enemies]
+our   poss   enemies   NOUN   []
+enemies   pobj   by   ADP   [our]
+.   punct   have   VERB   []
+Could   aux   speak   VERB   []
+n't   neg   speak   VERB   []
+even   advmod   speak   VERB   []
+speak   ROOT   speak   VERB   [Could, n't, even, 
+]
+
+      speak   VERB   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Defense   compound   0   0   [u'Sec']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Hagel   12   17   PERSON
+SENTENCE RECOGNITION
+Defense Sec.
+Hagel has quit.
+Great news for our country.
+The guy didn't have a clue-grossly outmatched by our enemies.
+Couldn't even speak
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 12...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+I   -PRON-   PRON   PRP   nsubj
+just   just   ADV   RB   advmod
+had   have   VERB   VBD   ccomp
+to   to   PART   TO   aux
+fire   fire   VERB   VB   xcomp
+someone   someone   NOUN   NN   dobj
+,   ,   PUNCT   ,   punct
+he   -PRON-   PRON   PRP   nsubj
+did   do   VERB   VBD   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   ccomp
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+--   --   PUNCT   :   punct
+he   -PRON-   PRON   PRP   nsubj
+reminded   remind   VERB   VBD   ROOT
+me   -PRON-   PRON   PRP   dobj
+of   of   ADP   IN   prep
+Obama   Obama   PROPN   NNP   pobj
+on   on   ADP   IN   prep
+Wednesday   Wednesday   PROPN   NNP   compound
+night   night   NOUN   NN   pobj
+.   .   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+I   I   nsubj   had
+someone   someone   dobj   fire
+he   he   nsubj   have
+a clue   clue   dobj   have
+he   he   nsubj   reminded
+me   me   dobj   reminded
+Obama   Obama   pobj   of
+Wednesday night   night   pobj   on
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+I   nsubj   had   VERB   []
+just   advmod   had   VERB   []
+had   ccomp   have   VERB   [I, just, fire]
+to   aux   fire   VERB   []
+fire   xcomp   had   VERB   [to, someone]
+someone   dobj   fire   VERB   []
+,   punct   have   VERB   []
+he   nsubj   have   VERB   []
+did   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   ccomp   reminded   VERB   [had, ,, he, did, n't, clue]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+--   punct   reminded   VERB   []
+he   nsubj   reminded   VERB   []
+reminded   ROOT   reminded   VERB   [have, --, he, me, of, on, .]
+me   dobj   reminded   VERB   []
+of   prep   reminded   VERB   [Obama]
+Obama   pobj   of   ADP   []
+on   prep   reminded   VERB   [night]
+Wednesday   compound   night   NOUN   []
+night   pobj   on   ADP   [Wednesday]
+.   punct   reminded   VERB   [
+]
+
+      .   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+I   nsubj   0   0   [u'had', u'have', u'reminded']
+just   advmod   0   0   [u'had', u'have', u'reminded']
+had   ccomp   2   1   [u'have', u'reminded']
+to   aux   0   0   [u'fire', u'had', u'have', u'reminded']
+fire   xcomp   1   1   [u'had', u'have', u'reminded']
+someone   dobj   0   0   [u'fire', u'had', u'have', u'reminded']
+,   punct   0   0   [u'have', u'reminded']
+he   nsubj   0   0   [u'have', u'reminded']
+did   aux   0   0   [u'have', u'reminded']
+n't   neg   0   0   [u'have', u'reminded']
+have   ccomp   5   1   [u'reminded']
+a   det   0   0   [u'clue', u'have', u'reminded']
+clue   dobj   1   0   [u'have', u'reminded']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Obama   69   74   GPEWednesday night   78   93   TIME
+SENTENCE RECOGNITION
+I just had to fire someone, he didn't have a clue--he reminded me of Obama on Wednesday night.
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 13...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+I   -PRON-   PRON   PRP   nsubj
+am   be   VERB   VBP   aux
+going   go   VERB   VBG   ROOT
+to   to   PART   TO   aux
+keep   keep   VERB   VB   xcomp
+our   -PRON-   DET   PRP$   poss
+jobs   job   NOUN   NNS   dobj
+in   in   ADP   IN   prep
+the   the   DET   DT   det
+U.S.   U.S.   PROPN   NNP   pobj
+,   ,   PUNCT   ,   punct
+and   and   CCONJ   CC   cc
+totally   totally   ADV   RB   advmod
+rebuild   rebuild   VERB   VB   conj
+our   -PRON-   DET   PRP$   poss
+crumbling   crumble   VERB   VBG   amod
+infrastructure   infrastructure   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+Crooked   Crooked   PROPN   NNP   compound
+Hillary   Hillary   PROPN   NNP   nsubj
+has   have   VERB   VBZ   ROOT
+no   no   DET   DT   det
+clue   clue   NOUN   NN   dobj
+!   !   PUNCT   .   punct
+@Teamsters   @teamster   NOUN   NNS   ROOT
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+I   I   nsubj   going
+our jobs   jobs   dobj   keep
+the U.S.   U.S.   pobj   in
+our crumbling infrastructure   infrastructure   dobj   rebuild
+Crooked Hillary   Hillary   nsubj   has
+no clue   clue   dobj   has
+@Teamsters   @Teamsters   ROOT   @Teamsters
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+I   nsubj   going   VERB   []
+am   aux   going   VERB   []
+going   ROOT   going   VERB   [I, am, keep, ,, and, rebuild, .]
+to   aux   keep   VERB   []
+keep   xcomp   going   VERB   [to, jobs, in]
+our   poss   jobs   NOUN   []
+jobs   dobj   keep   VERB   [our]
+in   prep   keep   VERB   [U.S.]
+the   det   U.S.   PROPN   []
+U.S.   pobj   in   ADP   [the]
+,   punct   going   VERB   []
+and   cc   going   VERB   []
+totally   advmod   rebuild   VERB   []
+rebuild   conj   going   VERB   [totally, infrastructure]
+our   poss   infrastructure   NOUN   []
+crumbling   amod   infrastructure   NOUN   []
+infrastructure   dobj   rebuild   VERB   [our, crumbling]
+.   punct   going   VERB   []
+Crooked   compound   Hillary   PROPN   []
+Hillary   nsubj   has   VERB   [Crooked]
+has   ROOT   has   VERB   [Hillary, clue, !]
+no   det   clue   NOUN   []
+clue   dobj   has   VERB   [no]
+!   punct   has   VERB   []
+@Teamsters   ROOT   @Teamsters   NOUN   [
+]
+
+      @Teamsters   NOUN   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+I   nsubj   0   0   [u'going']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+U.S.   35   39   GPECrooked Hillary   91   106   PERSON
+SENTENCE RECOGNITION
+I am going to keep our jobs in the U.S., and totally rebuild our crumbling infrastructure.
+Crooked Hillary has no clue!
+@Teamsters
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 14...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+I   -PRON-   PRON   PRP   nsubj
+'d   would   AUX   MD   aux
+like   like   VERB   VB   ROOT
+to   to   PART   TO   aux
+call   call   VERB   VB   xcomp
+JEB   JEB   PROPN   NNP   dobj
+a   a   DET   DT   det
+liar   liar   NOUN   NN   oprd
+,   ,   PUNCT   ,   punct
+but   but   CCONJ   CC   cc
+the   the   DET   DT   det
+truth   truth   NOUN   NN   nsubj
+is   be   VERB   VBZ   conj
+he   -PRON-   PRON   PRP   nsubj
+has   have   VERB   VBZ   ccomp
+no   no   DET   DT   det
+clue   clue   NOUN   NN   dobj
+&   &   CCONJ   CC   cc
+never   never   ADV   RB   neg
+revealed   reveal   VERB   VBD   conj
+that   that   ADP   IN   mark
+he   -PRON-   PRON   PRP   nsubj
+used   use   VERB   VBD   ccomp
+Eminent   Eminent   PROPN   NNP   compound
+Domain-   Domain-   PROPN   NNP   dobj
+when   when   ADV   WRB   advmod
+criticizing   criticize   VERB   VBG   advcl
+me   -PRON-   PRON   PRP   dobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+I   I   nsubj   like
+JEB   JEB   dobj   call
+the truth   truth   nsubj   is
+he   he   nsubj   has
+no clue   clue   dobj   has
+he   he   nsubj   used
+Eminent Domain-   Domain-   dobj   used
+me   me   dobj   criticizing
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+I   nsubj   like   VERB   []
+'d   aux   like   VERB   []
+like   ROOT   like   VERB   [I, 'd, call, ,, but, is]
+to   aux   call   VERB   []
+call   xcomp   like   VERB   [to, JEB, liar]
+JEB   dobj   call   VERB   []
+a   det   liar   NOUN   []
+liar   oprd   call   VERB   [a]
+,   punct   like   VERB   []
+but   cc   like   VERB   []
+the   det   truth   NOUN   []
+truth   nsubj   is   VERB   [the]
+is   conj   like   VERB   [truth, has, !]
+he   nsubj   has   VERB   []
+has   ccomp   is   VERB   [he, clue, &, revealed]
+no   det   clue   NOUN   []
+clue   dobj   has   VERB   [no]
+&   cc   has   VERB   []
+never   neg   revealed   VERB   []
+revealed   conj   has   VERB   [never, used]
+that   mark   used   VERB   []
+he   nsubj   used   VERB   []
+used   ccomp   revealed   VERB   [that, he, Domain-, criticizing]
+Eminent   compound   Domain-   PROPN   []
+Domain-   dobj   used   VERB   [Eminent]
+when   advmod   criticizing   VERB   []
+criticizing   advcl   used   VERB   [when, me]
+me   dobj   criticizing   VERB   []
+!   punct   is   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+I   nsubj   0   0   [u'like']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+JEB   17   20   ORG&   61   62   ORG
+SENTENCE RECOGNITION
+I'd like to call JEB a liar, but the truth is he has no clue & never revealed that he used Eminent Domain- when criticizing me!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 15...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Pamela   Pamela   PROPN   NNP   compound
+Geller   Geller   PROPN   NNP   nsubj
+is   be   VERB   VBZ   ROOT
+a   a   DET   DT   det
+total   total   ADJ   JJ   amod
+whack   whack   NOUN   NN   compound
+job   job   NOUN   NN   attr
+who   who   PRON   WP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   relcl
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+Do   do   VERB   VB   aux
+n't   not   ADV   RB   neg
+provoke   provoke   VERB   VB   ROOT
+the   the   DET   DT   det
+enemy   enemy   NOUN   NN   dobj
+,   ,   PUNCT   ,   punct
+go   go   VERB   VB   conj
+get   get   VERB   VB   advcl
+them   -PRON-   PRON   PRP   dobj
+and   and   CCONJ   CC   cc
+make   make   VERB   VB   conj
+them   -PRON-   PRON   PRP   nsubj
+pay   pay   VERB   VB   ccomp
+.   .   PUNCT   .   punct
+No   no   DET   DT   det
+signals   signal   NOUN   NNS   npadvmod
+,   ,   PUNCT   ,   punct
+just   just   ADV   RB   advmod
+do   do   VERB   VB   ROOT
+it   -PRON-   PRON   PRP   dobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Pamela Geller   Geller   nsubj   is
+a total whack job   job   attr   is
+who   who   nsubj   have
+a clue   clue   dobj   have
+the enemy   enemy   dobj   provoke
+them   them   dobj   get
+them   them   nsubj   pay
+it   it   dobj   do
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Pamela   compound   Geller   PROPN   []
+Geller   nsubj   is   VERB   [Pamela]
+is   ROOT   is   VERB   [Geller, job, .]
+a   det   job   NOUN   []
+total   amod   job   NOUN   []
+whack   compound   job   NOUN   []
+job   attr   is   VERB   [a, total, whack, have]
+who   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   relcl   job   NOUN   [who, does, n't, clue]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   is   VERB   []
+Do   aux   provoke   VERB   []
+n't   neg   provoke   VERB   []
+provoke   ROOT   provoke   VERB   [Do, n't, enemy, go, .]
+the   det   enemy   NOUN   []
+enemy   dobj   provoke   VERB   [the]
+,   punct   go   VERB   []
+go   conj   provoke   VERB   [,, get, and, make]
+get   advcl   go   VERB   [them]
+them   dobj   get   VERB   []
+and   cc   go   VERB   []
+make   conj   go   VERB   [pay]
+them   nsubj   pay   VERB   []
+pay   ccomp   make   VERB   [them]
+.   punct   provoke   VERB   []
+No   det   signals   NOUN   []
+signals   npadvmod   do   VERB   [No]
+,   punct   do   VERB   []
+just   advmod   do   VERB   []
+do   ROOT   do   VERB   [signals, ,, just, it, !]
+it   dobj   do   VERB   []
+!   punct   do   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Pamela   compound   0   0   [u'Geller', u'is']
+Geller   nsubj   1   0   [u'is']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Pamela Geller   0   13   PERSON
+SENTENCE RECOGNITION
+Pamela Geller is a total whack job who doesn't have a clue.
+Don't provoke the enemy, go get them and make them pay.
+No signals, just do it!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 16...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Why   why   ADV   WRB   advmod
+does   do   VERB   VBZ   aux
+CNN   CNN   PROPN   NNP   nsubj
+bore   bore   VERB   VB   ROOT
+their   -PRON-   DET   PRP$   poss
+audience   audience   NOUN   NN   dobj
+with   with   ADP   IN   prep
+people   people   NOUN   NNS   pobj
+like   like   ADP   IN   prep
+@secupp   @secupp   PROPN   NNP   pobj
+,   ,   PUNCT   ,   punct
+a   a   DET   DT   det
+totally   totally   ADV   RB   advmod
+biased   biased   ADJ   JJ   amod
+loser   loser   NOUN   NN   appos
+who   who   PRON   WP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   relcl
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+.   .   PUNCT   .   punct
+I   -PRON-   PRON   PRP   nsubj
+hear   hear   VERB   VBP   ROOT
+she   -PRON-   PRON   PRP   nsubjpass
+will   will   VERB   MD   aux
+soon   soon   ADV   RB   advmod
+be   be   VERB   VB   auxpass
+gone   go   VERB   VBN   ccomp
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+CNN   CNN   nsubj   bore
+their audience   audience   dobj   bore
+people   people   pobj   with
+@secupp   @secupp   pobj   like
+a totally biased loser   loser   appos   @secupp
+who   who   nsubj   have
+a clue   clue   dobj   have
+I   I   nsubj   hear
+she   she   nsubjpass   gone
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Why   advmod   bore   VERB   []
+does   aux   bore   VERB   []
+CNN   nsubj   bore   VERB   []
+bore   ROOT   bore   VERB   [Why, does, CNN, audience, with, .]
+their   poss   audience   NOUN   []
+audience   dobj   bore   VERB   [their]
+with   prep   bore   VERB   [people]
+people   pobj   with   ADP   [like]
+like   prep   people   NOUN   [@secupp]
+@secupp   pobj   like   ADP   [,, loser]
+,   punct   @secupp   PROPN   []
+a   det   loser   NOUN   []
+totally   advmod   biased   ADJ   []
+biased   amod   loser   NOUN   [totally]
+loser   appos   @secupp   PROPN   [a, biased, have]
+who   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   relcl   loser   NOUN   [who, does, n't, clue]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+.   punct   bore   VERB   []
+I   nsubj   hear   VERB   []
+hear   ROOT   hear   VERB   [I, gone, !]
+she   nsubjpass   gone   VERB   []
+will   aux   gone   VERB   []
+soon   advmod   gone   VERB   []
+be   auxpass   gone   VERB   []
+gone   ccomp   hear   VERB   [she, will, soon, be]
+!   punct   hear   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Why   advmod   0   0   [u'bore']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+CNN   9   12   ORG
+SENTENCE RECOGNITION
+Why does CNN bore their audience with people like @secupp, a totally biased loser who doesn't have a clue.
+I hear she will soon be gone!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 17...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+When   when   ADV   WRB   advmod
+will   will   VERB   MD   aux
+@CNN   @CNN   PROPN   NNP   nsubj
+get   get   VERB   VB   ROOT
+some   some   DET   DT   det
+real   real   ADJ   JJ   amod
+political   political   ADJ   JJ   amod
+talent   talent   NOUN   NN   dobj
+rather   rather   ADV   RB   advmod
+than   than   ADP   IN   cc
+political   political   ADJ   JJ   amod
+commentators   commentator   NOUN   NNS   pobj
+like   like   ADP   IN   prep
+Errol   Errol   PROPN   NNP   compound
+Louis   Louis   PROPN   NNP   pobj
+,   ,   PUNCT   ,   punct
+who   who   PRON   WP   nsubj
+does   do   VERB   VBZ   aux
+n't   not   ADV   RB   neg
+have   have   VERB   VB   relcl
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+!   !   PUNCT   .   punct
+Others   other   NOUN   NNS   nsubj
+bad   bad   ADV   RB   ROOT
+also   also   ADV   RB   advmod
+.   .   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+@CNN   @CNN   nsubj   get
+some real political talent   talent   dobj   get
+political commentators   commentators   pobj   than
+Errol Louis   Louis   pobj   like
+who   who   nsubj   have
+a clue   clue   dobj   have
+Others   Others   nsubj   bad
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+When   advmod   get   VERB   []
+will   aux   get   VERB   []
+@CNN   nsubj   get   VERB   []
+get   ROOT   get   VERB   [When, will, @CNN, talent, !]
+some   det   talent   NOUN   []
+real   amod   talent   NOUN   []
+political   amod   talent   NOUN   []
+talent   dobj   get   VERB   [some, real, political, than]
+rather   advmod   than   ADP   []
+than   cc   talent   NOUN   [rather, commentators]
+political   amod   commentators   NOUN   []
+commentators   pobj   than   ADP   [political, like]
+like   prep   commentators   NOUN   [Louis]
+Errol   compound   Louis   PROPN   []
+Louis   pobj   like   ADP   [Errol, ,, have]
+,   punct   Louis   PROPN   []
+who   nsubj   have   VERB   []
+does   aux   have   VERB   []
+n't   neg   have   VERB   []
+have   relcl   Louis   PROPN   [who, does, n't, clue]
+a   det   clue   NOUN   []
+clue   dobj   have   VERB   [a]
+!   punct   get   VERB   []
+Others   nsubj   bad   ADV   []
+bad   ROOT   bad   ADV   [Others, also, .]
+also   advmod   bad   ADV   []
+.   punct   bad   ADV   [
+]
+
+      .   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+When   advmod   0   0   [u'get']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+@CNN   10   14   ORGErrol Louis   86   97   PERSON
+SENTENCE RECOGNITION
+When will @CNN get some real political talent rather than political commentators like Errol Louis, who doesn't have a clue!
+Others bad also.
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 18...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+What   what   DET   WDT   dep
+a   a   DET   DT   det
+waste   waste   NOUN   NN   nsubjpass
+of   of   ADP   IN   prep
+time   time   NOUN   NN   pobj
+being   be   VERB   VBG   auxpass
+interviewed   interview   VERB   VBN   ROOT
+by   by   ADP   IN   agent
+Anderson   Anderson   PROPN   NNP   compound
+Cooper   Cooper   PROPN   NNP   pobj
+when   when   ADV   WRB   advmod
+he   -PRON-   PRON   PRP   nsubj
+puts   put   VERB   VBZ   advcl
+on   on   PART   RP   prt
+really   really   ADV   RB   advmod
+stupid   stupid   ADJ   JJ   amod
+talking   talking   NOUN   NN   compound
+heads   head   NOUN   NNS   dobj
+likeTim   likeTim   PROPN   NNP   nmod
+O'Brien   O'Brien   PROPN   NNP   compound
+-   -   PUNCT   HYPH   punct
+dumb   dumb   ADJ   JJ   amod
+guy   guy   NOUN   NN   appos
+with   with   ADP   IN   prep
+no   no   DET   DT   det
+clue   clue   NOUN   NN   pobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+a waste   waste   nsubjpass   interviewed
+time   time   pobj   of
+Anderson Cooper   Cooper   pobj   by
+he   he   nsubj   puts
+really stupid talking heads   heads   dobj   puts
+likeTim O'Brien-dumb guy   guy   appos   heads
+no clue   clue   pobj   with
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+What   dep   interviewed   VERB   []
+a   det   waste   NOUN   []
+waste   nsubjpass   interviewed   VERB   [a, of]
+of   prep   waste   NOUN   [time]
+time   pobj   of   ADP   []
+being   auxpass   interviewed   VERB   []
+interviewed   ROOT   interviewed   VERB   [What, waste, being, by, puts, !]
+by   agent   interviewed   VERB   [Cooper]
+Anderson   compound   Cooper   PROPN   []
+Cooper   pobj   by   ADP   [Anderson]
+when   advmod   puts   VERB   []
+he   nsubj   puts   VERB   []
+puts   advcl   interviewed   VERB   [when, he, on, heads]
+on   prt   puts   VERB   []
+really   advmod   stupid   ADJ   []
+stupid   amod   heads   NOUN   [really]
+talking   compound   heads   NOUN   []
+heads   dobj   puts   VERB   [stupid, talking, guy]
+likeTim   nmod   guy   NOUN   []
+O'Brien   compound   dumb   ADJ   []
+-   punct   dumb   ADJ   []
+dumb   amod   guy   NOUN   [O'Brien, -]
+guy   appos   heads   NOUN   [likeTim, dumb, with]
+with   prep   guy   NOUN   [clue]
+no   det   clue   NOUN   []
+clue   pobj   with   ADP   [no]
+!   punct   interviewed   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+What   dep   0   0   [u'interviewed']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Anderson Cooper   42   57   PERSONO'Brien   110   117   PERSON
+SENTENCE RECOGNITION
+What a waste of time being interviewed by Anderson Cooper when he puts on really stupid talking heads likeTim O'Brien-dumb guy with no clue!
+
+
+
+
+***********************************************ANALIZING TWEET NUMBER 19...***************************************************************
+LEMMATIZZTION
+TEXT   LEMMA   POS   TAG   DEP
+Our   -PRON-   DET   PRP$   poss
+country   country   NOUN   NN   nsubj
+needs   need   VERB   VBZ   ROOT
+a   a   DET   DT   det
+president   president   NOUN   NN   dobj
+with   with   ADP   IN   prep
+great   great   ADJ   JJ   amod
+leadership   leadership   NOUN   NN   compound
+skills   skill   NOUN   NNS   pobj
+and   and   CCONJ   CC   cc
+vision   vision   NOUN   NN   conj
+,   ,   PUNCT   ,   punct
+not   not   ADV   RB   neg
+someone   someone   NOUN   NN   dep
+like   like   ADP   IN   prep
+Hillary   Hillary   PROPN   NNP   pobj
+or   or   CCONJ   CC   cc
+Barack   Barack   PROPN   NNP   conj
+,   ,   PUNCT   ,   punct
+neither   neither   DET   DT   nsubj
+of   of   ADP   IN   prep
+which   which   DET   WDT   pobj
+has   have   VERB   VBZ   relcl
+a   a   DET   DT   det
+clue   clue   NOUN   NN   dobj
+!   !   PUNCT   .   punct
+
+   
+   SPACE   _SP   
+
+NOUN CHUNKS
+TEXT   ROOT_TEXT   ROOT_DEP   ROOT_HEAD_TEXT
+Our country   country   nsubj   needs
+a president   president   dobj   needs
+great leadership skills   skills   pobj   with
+vision   vision   conj   skills
+Hillary   Hillary   pobj   like
+Barack   Barack   conj   Hillary
+a clue   clue   dobj   has
+
+NAVIGATING THE PARSE TREE
+TEXT   DEP   HEAD_TEXT   HEAD_POS   CHILDREN
+Our   poss   country   NOUN   []
+country   nsubj   needs   VERB   [Our]
+needs   ROOT   needs   VERB   [country, president, with, ,, someone, !]
+a   det   president   NOUN   []
+president   dobj   needs   VERB   [a]
+with   prep   needs   VERB   [skills]
+great   amod   skills   NOUN   []
+leadership   compound   skills   NOUN   []
+skills   pobj   with   ADP   [great, leadership, and, vision]
+and   cc   skills   NOUN   []
+vision   conj   skills   NOUN   []
+,   punct   needs   VERB   []
+not   neg   someone   NOUN   []
+someone   dep   needs   VERB   [not, like, ,, has]
+like   prep   someone   NOUN   [Hillary]
+Hillary   pobj   like   ADP   [or, Barack]
+or   cc   Hillary   PROPN   []
+Barack   conj   Hillary   PROPN   []
+,   punct   someone   NOUN   []
+neither   nsubj   has   VERB   [of]
+of   prep   neither   DET   [which]
+which   pobj   of   ADP   []
+has   relcl   someone   NOUN   [neither, clue]
+a   det   clue   NOUN   []
+clue   dobj   has   VERB   [a]
+!   punct   needs   VERB   [
+]
+
+      !   PUNCT   []
+
+ITERATING AROUND THE LOCAL TREE
+TEXT   DEP   N_LEFTS   N_RIGTHS   ANCESTORS
+Our   poss   0   0   [u'country', u'needs']
+country   nsubj   1   0   [u'needs']
+
+NAMED ENTITY RECOGNITION
+TEXT   START   END  LABEL   DESCRIPTION
+Hillary   88   95   PERSONBarack   99   105   PERSON
+SENTENCE RECOGNITION
+Our country needs a president with great leadership skills and vision, not someone like Hillary or Barack, neither of which has a clue!
+
+
+
+
