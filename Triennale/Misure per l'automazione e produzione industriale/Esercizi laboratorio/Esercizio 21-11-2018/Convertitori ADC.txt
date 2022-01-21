@@ -1,0 +1,88 @@
+La periferica del convertitore ADC è descritta nel cap 12 del refman.
+Abbiamo 4 adc: ADC1...ADC4, gestiti come 2 coppie. Posso infatti far lavorare un'intera coppia insieme. Essi sono legati al bus AHB per gestire tutto più velocemente, e ogno ADC è legato tramite un multiplexzer a 19 canali
+C,è un canale a cui è legato u trasduttore di temperstura, che è legato al canale 16n di ADC1
+C'è poi un canale legato alla batteria
+Un altro lrgato alla tensione di riferimento
+Ci sono poi altri 4 canali legati a degli amplificatori operazionali, interni allo strumento, le cui uscite sono legati ai ADC. I convertitori sono ad approssimazioni successive a 16 bit
+Il microcontroillore comunica con ADC tramite una linea SOC(start of conertion), per dirgli quando deve convertire. Si può decidere:
+	-o alzando un bit, quindi via software, cioè il trigger è software
+	-o via hardware, impostando un trigger(un evento) che scatena la conversione, come un timer
+L'ADC può comunicare poi con il microcontrollore con la linea EOC(end og convertion) per dire che ha fi nito di convrtire
+Il fondoscala dell'ADC è 3 Volt, che rappresenta l'alimentazione tipica: I canali di ingresso che posso legare al converrtitore sono ADCx_INy, con x il numero di convertitore, e y il numero della linea, da 1 a 16
+Il cuore dello strumento è un sar, dove prima troviamo un sapmle and hol chematizzato con un interruttore e un condensatore. L'interruttore viene chiuso in un tempo di sampling scritto in 3 bit da SMPx, con x il numero della linea
+Il convertitore all'accensione è in grtado di eseguire un autocalibrazione
+la tensione di riferimento viene legata all'ADC alzando il bit ADEN, e disabilitata con ADDIS
+Ognoi canale ADC_IN passa attraverso un canale Vinn(positiva) e Vinp(positiva) che può essere positiva o negativa, e il blocco selection and scan control che prende in una tensione differenziale data da Vinn e Vinp
+
+Il risultato della conversione è salvato in registro RDATA di 16 bit, dove i primi 4 non sono significativi, e gli ultimi 12 sono proprio il risultato, che poi viene mandato attraverso AHB alla CPU o gestito da un controllore DMA
+Lo start of convertion può venire da un trigger hardware, che può essere il fronte di salita, di discesa, o entrambi di una line: i fronti sono selezioneati con 2 bit EXTEN, e il segnale che rappresenta il trigger lo seleziono con
+4 bit chamati EXTSEL, che sono l'uscita di un multiplexer in cui entrano le varie linee pr i trigger EXT1 e così via.
+
+Con OVRMOD si dice cosa deve fare l'ADC se  in ingresso c'è una nuova tensione ma ilm valore nel registro non è stato ancora letto
+Con ALIGN stabilisco in quali bit del registro deve stare il risultato(primi 12 o ultimi 12) in ADC_DR
+Con RES posso decidere se esprimere il rsultato su 8, 10, 12 bit o 16 bit, cioè scelgo la risoluzione
+Posso inoltre fare conversioni injectid, cioè se salatre da una linea ad un altra mentre converto.
+
+In un solo ADC entrano le linee Vinne Vinp, e se ho scelto una conversione single-ended, la Vinn viene direttamente legata a massa, e la Vinp viene legata al canale, se invece voglio una tensione differenziale, eseguirò la differenza
+tra il canale ADCx_IN1 e ADCx_IN2, cioè la differenza tra 2 linee diverse dello stesso convertitore ADCx, e le linee di tali canali entrano proprio in Vinp e Vinnp
+
+Prima di converire, cioè con il convertitore disabilitato(ADEN=0) si deve fare:
+1)Al convertitore, per funziinare, deve arrivare una tensione molto srtabile da un regolatore di tensione che , visto che consuma potenza, all'inizio parte disabilitato e poi lo devo abilitare
+  Si ablitita cin i 2 bit ADVREGEN, ed è proprio la prima operazione da fare. appena lo abilito il regolatore, devo sapettare un transitorio di circa 10 microsecondi per essere sicuro che il regolatore abbia erogato tensione
+  I bit ADVREGEN sono messi inizialmente a 10, devo mettere 00, e poi 01, e così abilito il regolatore
+  Per fare la conversioni di caali in single handed, il registro ADC_DIFSEL non mi interessa
+
+2)Devo poi fare l'autocalibrazione, che deipende se voglio fare una misura single handed o differenziale: cio si decide con il bit ADCALDIF:
+	-se è 1, sto facendo la differenziale
+	-se è 0, sto miksurando single handed 
+Alzo poi il bit ADCAL per iniziare l'autocalibrazione, e tale pit resta a 1 per tutta la calibrazione e poi viene abbassato in automatico
+
+Posso poi abilitare l'ADC mettendo il bit ADEN=1, messo tale bit a 1 però c'è un certo ritardo, e l'ADC mi avverte che è pronto alzando il bit ADRDY, devo quindi aspettare che tale bit sia 1 prima di convertte
+Il registro SAR dipende da un clock, che può essere:
+	-un qualsiasi clock esterno indipendente dal clock sul bus AHB
+	-oppure prendo il clock su AHB, che lo posso prendere a 72Mhz, 36Mhz o 18 Mhz
+Ciò viene deciso con i bit CKMODE del registro ADCCCR
+Il clock in realtà viene indicato all'inizio prorpio' prima di iniziare la calibraione
+
+Ogni ADC è abilitato fino a 19 canali tramite un multiplexer, e quindi posso fare la conversione da un solo canale o da una lista di canali, convertendo ciscun canale ad ogni evento di trigger
+La selezione dei calani viene fatta tramite il registro SQRx
+Il numero di conversione totali che devo fare si scrive con il bit L dell'SQRx, e:
+	-il canale 16 è del sensore di temperatura
+	-il 17 è della batteria
+	-il 18 è della tensione di riferimento
+Gi altri canali sono per le periferiche esterne, come quelle di GPIO
+
+
+I tempi di sampling vanno messi nei registri SMPR, che possono essere scelti diversamente per ciascuno canale. I tempi di sepmling sono fissati, e sono espressi in multipli del periodo di clock: ciò si fa per vedere il tempo totale, 
+che è la somma del tempo di sampling + quello di conversione, che è fissato una volta scelta la risoluzione
+
+
+Devo poi far partire la conversione. Il ADC opera a seconda di come ho messo il bit CONT: se CONT=0, non voglio la conversione continua, e la faccio partire in 2 modi:ù
+	-o alzo il bit ADSTART per un trigger software
+	-o parte da un trigger harware esterno
+Finita la conversione, si alza il bit EOC, viene memorizzato il risulatao, e ho abilitato l'interrupt su EOC con il bit EOCIE, allora si genera l'interrupt
+Se sto convertendo invece un sequenza, peer ciascuna conversione dsi deve alzare il bit EOC, e alla fine si alza un bit EOS
+
+Se invece il bit CONT=1, cioè la conversione è continua, il trigger da via solo la proima conversione, e ogni volta che sei legge il data registrer si inizia una nuova conversione indipendentemente dal trigger
+se ho messo un trigger software, la conversione inizia appena il bit ADSTART si alza
+se ho messo un  trigger hardware, la conversione parte dal prossimo evento di trigger dopo che ho alato ADSTART, e se ADSTART è 0, i trigger hardware vengono ignorati
+
+Con i bit EXTEN, se valgono 00 il trigger è software, impostando altro memtto il trigger hardware su un fronte
+Per decidere di cosa sto guardando il fronte, setto i bit EXTSEL, che ne sono 4
+
+
+
+
+I registri sono separati in 2 sezioni
+	-i for each ADC, che servono per configurare il singolo ADC
+		Il rpimo registro è lo status registrer, che contiene i flag. Si chiama ADCx_ISR, e i flag sono ADRDY(il bit 0 per dire se è pronto), EOSMP(fine del sampling) , EOC(fine della conversione) , EOS(fine della sequenza), OVR
+		I registri per abilitare gli interruprt, ovvero gli ADCx_IER, tramite il cui possso dire su cosa abilitare l'interrupt
+		Il controllor registrer, dove i bit 28 e 29 servono per il regolatore di tensione; i bit 31 lo alzo per dare il via alla calibrazione, il bit 30 lo alzo se voglio fare single handed
+		il ADCx_CFGR serve a fare la configurazione, e contiene tutti i bit di abilitazuione, come il CONT, cosa fare in override ecc...
+		Il registro per il sampling ADCx_SMPR, dove il canale da cui voglio convertire è identificato dal blocco SMP(per esempio, canale 3 sta in SMP3), e ho 2 registri: SQR1 per i primi 9 canali, SQR" per gli altri
+		I registri di sequenza ADCx_SQR, dove i 4 bit meno significativ indicano la lunghezza della sequenza -1(0000 dice che sto facendo una conversione), nei camopi poi SQ1 indico il primo canaòe da cui voglio convertire,
+		in SQ2 il secondo canale da cui voglio convertire e così via. di registri SQR ne ho 4
+		Il data registrer ADXx_DR, fatto di 32 bit dove però dcrivo solo negli ultimi 16(in realtà solo in 12 bit, i primi o gli ultimi)
+	-i common, che servono a configurare le coppie, a noi serve solo ADCx_CCR, dove x può essere 1 o 2 per la coppia
+		In CRR ci sono i bit il clock mode, e per il sensore, batteria o massa
+

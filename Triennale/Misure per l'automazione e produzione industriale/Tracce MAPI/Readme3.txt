@@ -1,0 +1,3 @@
+Configurare il pin PA5 affinchè generi un'onda quadra di ampiezza 0-3V e periodo in us pari alla propria matricola sul canale OUT2. Collegare con Jumper il pin PF4.
+Configurare PF4 come sorgente di interruzione esterna (EXTI4) sul fronte di salita. Nella ISR abilitare il TIM6 per misurare la durata del periodo del segnale di RA5 (ovvero misurare il tempo tra due interrupt successive) per 1000 volte.
+Visualizzare valore medio e incertezza tipo di categoria A del periodo del segnale generato.

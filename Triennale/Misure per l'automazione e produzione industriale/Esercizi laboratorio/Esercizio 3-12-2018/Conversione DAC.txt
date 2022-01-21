@@ -1,0 +1,36 @@
+Voglio generare una tensione analogica tramite il convertitore digitale analogico(DAC). Vado a vedere nel capitolo 13 del refman, con un DAC a 12 bit che pu generare una tensione da 0 a 3V. Genera su 2 canali:
+DAC1_OUT1 e DAC1_OUT2. La tensione generata si trova prorpio su uno di questi 2 pin. Vediamo com'è fatta la periferica:
+I bit inviati al DAC si trovano in un registro chiamato DORx, in cui però non posso scrivere; io lavoro nel registro DHRx, e la Control logicx prende il contenuto del DHR e lo copia nel DOR, e ciò accade quando si verifica un evento di 
+trigger. La scelta del trigger si prende da un multiplexer tramite i bit TSEL, e può essere o un trigger software, o un trigger esterno che viene dai timer(2,4,15,6,7,8,3)
+La logica di controller del controller è già impostato che genera una forma d'onda triangolare di cui noi possiamo regolare l'ampiezza, o può generare un rumore casuale.
+I pin che corrispondono all'output del DAc devo ricordare che nella periferica GPIO la devo mettere come analogica
+Con il bit EN che si trova nel registro DAC_CR posso abilitare il DAC dopo un tempo di sturtup; posso anche collegare un buffer di tensione per far si che il DAC non risente della periferica a valle, e si abilita con il bit
+BOFF sempre nel DAC_CR; dopo nel DHR devo scrivere i bit che corrispondono alla tensione:
+	-o sfrutto tutti i 12 bit su 16, e devo scegliere di allinearli a destra(DAC_DHR12R) o sinistra(DAC_DHR12R)
+	-oppure uso i primi 8 bit allineati a destera(meno significativi), e scrivo nel registro DAC_DHR8R
+Quando trasferisco i bit nel DOR, il DAC ha bisogno di un tempo detto settling per generare una tensione stabile.
+La tensione digitale si calcola con DACoutput=VDDa x (DOR/4095); opera in quantizzazione silenziata, e VDDa/4095 sarebbe praticamente l'ampiezza del quanto, mentre DOR è il codice dell'omonimo regisro: quidni praticamente sto calcolando
+la tensione attesa come codice per quanto
+Per l'evento di trigger:
+	-metto 111 in TSEL per lavorare con un trigger software, alzando prima il bit TEN per abilitare il trigger La conversione (trasferiento da DHR a DOR) in questo caso avviene quando ho settato il bit SWTRIG
+
+Nel registro DAC_Cr ci sono 32 bit, dove i bit MAMp servono a generare l'onda triangolare, WHAVE per il rumore, poi sta il TSEL(devo mettere 111), TEN, BOFF(per il buffer), EN
+Il registro DAC_SWITRIGR serve a dare il trigger software e ci sono solo 2 bit, uno per la linea 1, uno per la linea 2; c'è poi DAC_DHR12R per l'allineamento a destra, ed è meglio usare questo, e tutti questi registri sono replicati
+per la seconda linea
+
+Con il DAC posso anche generare una forma d'onda temporizzando il trigger e mettendo i giusti valori in DHR
+
+
+
+**************************************************************************************************************************************************************************************************************************************
+Assegno:
+Generare una sinusoide, generando i campioni di un solo periodo che poi si ripetono sempre; il periodo di sinusoide lo definisco con 100 punti: ciò si fa riempiendo una tabella LOOT che contiene i 100 valori.
+Tali campioni vanno scritti di volta in volta in DHR, con la formula (offset + ampiezza * sen(x)), ricordando che il DAc vede da 0 a 3 volt; quindi, per esempio se scegliessi l'ampiezza di 1,5 volt con un offset di 1,5 , così
+entro nel fondoscala. Devo definire quindi solo l'angolo x, che è l'angolo di campionamento che mi serve per copire 2pi(2 pi greco); l'angolo x=(2pi/punti che voglio); la tabella la popolo con un for dove ogni volta
+l'angolo x del sen lo genero sommando ogni volta 2pi/100. Per il tempo di generazione devo essere molto preciso: adopero un trigger esterno del DAC che lo fornisce un timer(TIM2 per esempio): lo devo usare in base dei tempi, e
+in ARR devo scrivere il numero giusto per avere il tempo di generazioneche desidero(Per esempio devo generare i campioni in un secondo, il tempo tra un campione e un'altro sarà 1/100, cioè la base dei tempi con cui scrvo in ARR
+per essere sicuro di avere un tempo di updtate ogni 1/100 s). Quindi al DAC dico che devo prendere il trigger dal timer: TEN sarà uguale, ma dovrò cambiare i bit TSEL del DAC_CR(Per esempio 100 se uso il timer2).
+Devo poi configurare anche il timer, cioè gli devo dire che ogni volta che va in update deve generare un segnale triggerout: si fa nel registro di controllo TIMx_CR2, con i bit MMS (dobbiamo mettere 010)
+Devo scrivere poi in DHR, ci devo mettere i campioni: devo aspettare che ci sia l'evebto di update con un wghile su UIF; quando accade ciò, prendo un elemento dalla tabella LOOT e lo scrivo in DHR, lo faccio 100 volte e
+poi ripeto.
+**************************************************************************************************************************************************************************************************************************************

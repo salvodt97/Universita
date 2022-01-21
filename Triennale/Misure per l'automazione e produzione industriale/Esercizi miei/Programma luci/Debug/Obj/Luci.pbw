@@ -1,0 +1,296 @@
+[
+  {
+    "ID": "c:@ptr",
+    "What": "Variable",
+    "defdec": "Dec",
+    "display": "ptr",
+    "location": {
+      "column": "16",
+      "line": "3",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "ptr",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:@F@main",
+    "What": "Function",
+    "defdec": "Def",
+    "display": "int main(void)",
+    "location": {
+      "column": "1",
+      "line": "4",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "main",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2427@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "52",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2476@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "54",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2526@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "56",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2576@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "58",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2626@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "60",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2676@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "62",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2726@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "64",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2799@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "68",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2850@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "70",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2901@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "72",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@2952@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "74",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3003@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "76",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3054@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "78",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3105@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "80",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3155@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "82",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3213@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "86",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3243@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "11",
+      "line": "87",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3291@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "12",
+      "line": "90",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  },
+  {
+    "ID": "c:mainluci.c@3322@F@main@i",
+    "What": "Variable",
+    "defdec": "Def",
+    "display": "i",
+    "location": {
+      "column": "12",
+      "line": "91",
+      "path": "C:\\Users\\Windows_10\\Desktop\\Mapi\\Esercizi laboratorio\\Programma luci\\mainluci.c"
+    },
+    "name": "i",
+    "origin": "project_file",
+    "scope": null
+  }
+]

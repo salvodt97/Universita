@@ -1,0 +1,20 @@
+Le interruzioni servono ad una periferica per avvisare la CPU che si è verificato un evento. Quando si verifica l'interrupt, la CPU interrompe cioò che stava facendo, salva lo stato, esegue la ISR per gestire le interrupt, e poi rispristina lo stato
+La gestione viene affidata all,NVIC, che si accorge che si è verificato un evento di interrupt creato da noi, salta l'esecuzione del codice all'esecuzione dell'ISR, lo esegue e poi ripristina lo stato
+Gli interrupt si vedono nel refman, capitolo 11, in una tabella fatta di diverse colonne:
+-nella seconda colonna c'è la priorità di default
+-nella terza c'è la causa dell'interrupt con una descrizione: noi trattiamo gli interrupt esterni EXT, dovuti al cambio di stato adiuna linea del controlore; ADC 1 e 2 legati al convertitore A->D; quelli legate alla comunicazione
+USB; i global interrupt legati al timer(tutti gli eventi del timer, overflaw e altri, somno gestiti da un unica global interrupt)
+In generale NVIC può gestire 82 interruzione configurate dall'utente + 11 interne.
+
+Per abilitare l'interrupt devo dire all NVIC che deve gestire un tipo di interrupt, e vedo la position della prima colonna; devo poi configuarare la periferica così quando si verifica l'evento la periferica
+deve generare un interrupt request che viene servita dall NVIC. Per capire come configurare lam periferica lo vedo nel refman nella sezione della periferica
+Per i timer, per abilitare gli interrupt devo andare a vedere nel registro DIER, e devo mettere il bit meno significativo(UIE) ad 1.
+Devo poi dire a NVIC come servire la request, e lo vedo nel pdf cortexM4Techrefman, e vado nel capitolo 6. Qui trovo i registri ISER, che ne ho di più, alzare un un bit di un registroindica all NVIC
+di getire un particolare interrupt. A noi bastano 3 registri da 32 bit per gestire tutte le interrupt(ciacun bit di un ISER si riferisce a un particolare interrupt).
+NVIC ha però 8 registri, è può gestire 256 interrupt in generale, ma a noi servono solo 3 registri.
+Per capire ciò uso ilm fale core_cm4.h, dove trovo la struct di NVIC dove il rpimo campo è un vettore di registri ISER.
+Per capire come abilitare un interrupt, vedo nel refman la colonna position, che mi dice qual'è il bit dell' evento che mi interessa. Inizia con ISER0, da 0 a31 sto in ISER0, poi continua con 32,33...; queste ultime posizioni
+si riferiscono agli altro ISER(la position 32 sarebbe il bit 0 di ISER1 e così via)
+Poi nel file sturtup_stm32f30x.c, che è un' assebler, trovo le varie ISR che sono messe in ordinr in base alla position del tipo di interrupt che gestiscono scritto nel refman; in questo interrupt, nel caso che ho commesso errori
+oppure ho sbagliato a scrivere l'ISR, l'assembler mi mette a disposizone lui un'istruzione di alto a quella etichetta che mi blocca il codice; questa istruzione è salvata in un'area di memorea weak,
+così appena scrivo la ISR con quella etichetta, viene sostituita ed esegue la mia istruzione

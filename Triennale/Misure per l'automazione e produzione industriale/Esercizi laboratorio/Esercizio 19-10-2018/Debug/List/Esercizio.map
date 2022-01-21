@@ -1,0 +1,199 @@
+###############################################################################
+#
+# IAR ELF Linker V8.30.2.160/W32 for ARM                  19/Oct/2018  16:52:03
+# Copyright 2007-2018 IAR Systems AB.
+#
+#    Output file  =  
+#        C:\Users\Windows_10\Desktop\Mapi\Esercizi
+#        laboratorio\19-10-2018\Debug\Exe\Esercizio.out
+#    Map file     =  
+#        C:\Users\Windows_10\Desktop\Mapi\Esercizi
+#        laboratorio\19-10-2018\Debug\List\Esercizio.map
+#    Command line =  
+#        -f C:\Users\WINDOW~1\AppData\Local\Temp\EW9C3F.tmp
+#        ("C:\Users\Windows_10\Desktop\Mapi\Esercizi
+#        laboratorio\19-10-2018\Debug\Obj\Untitled3.o" --no_out_extension -o
+#        "C:\Users\Windows_10\Desktop\Mapi\Esercizi
+#        laboratorio\19-10-2018\Debug\Exe\Esercizio.out" --map
+#        "C:\Users\Windows_10\Desktop\Mapi\Esercizi
+#        laboratorio\19-10-2018\Debug\List\Esercizio.map" --config "C:\Program
+#        Files (x86)\IAR Systems\Embedded Workbench
+#        8.1\arm\config\linker\ST\stm32f303xC.icf" --semihosting --entry
+#        __iar_program_start --vfe --text_out locale)
+#
+###############################################################################
+
+*******************************************************************************
+*** RUNTIME MODEL ATTRIBUTES
+***
+
+CppFlavor       = *
+__SystemLibrary = DLib
+__dlib_version  = 6
+
+
+*******************************************************************************
+*** HEAP SELECTION
+***
+
+The basic heap was selected because some modules are built with
+size limitations (and not runtime checking), and --advanced_heap
+was not specified.
+
+
+*******************************************************************************
+*** PLACEMENT SUMMARY
+***
+
+"A0":  place at 0x800'0000 { ro section .intvec };
+"P1":  place in [from 0x800'0000 to 0x803'ffff] { ro };
+define block CSTACK with size = 8K, alignment = 8 { };
+define block HEAP with size = 8K, alignment = 8 { };
+"P2":  place in [from 0x2000'0000 to 0x2000'9fff] {
+          rw, block CSTACK, block HEAP };
+
+No sections matched the following patterns:
+
+  section .ccmram  in "P3"
+
+
+  Section          Kind         Address    Size  Object
+  -------          ----         -------    ----  ------
+"A0":                                      0x40
+  .intvec          ro code   0x800'0000    0x40  vector_table_M.o [4]
+                           - 0x800'0040    0x40
+
+"P1":                                     0x17c
+  .text            ro code   0x800'0040    0x90  Untitled3.o [1]
+  .text            ro code   0x800'00d0    0x3a  zero_init3.o [4]
+  .text            ro code   0x800'010a     0x2  vector_table_M.o [4]
+  .text            ro code   0x800'010c    0x28  data_init.o [4]
+  .text            ro code   0x800'0134    0x22  fpinit_M.o [3]
+  .iar.init_table  const     0x800'0158    0x10  - Linker created -
+  .text            ro code   0x800'0168    0x1e  cmain.o [4]
+  .text            ro code   0x800'0186     0x4  low_level_init.o [2]
+  .text            ro code   0x800'018a     0x4  exit.o [2]
+  .text            ro code   0x800'0190     0xa  cexit.o [4]
+  .text            ro code   0x800'019c    0x14  exit.o [5]
+  .text            ro code   0x800'01b0     0xc  cstartup_M.o [4]
+  .rodata          const     0x800'01bc     0x0  zero_init3.o [4]
+                           - 0x800'01bc   0x17c
+
+"P2", part 1 of 2:                          0x4
+  .bss             zero     0x2000'0000     0x4  Untitled3.o [1]
+                          - 0x2000'0004     0x4
+
+"P2", part 2 of 2:                       0x2000
+  CSTACK                    0x2000'0008  0x2000  <Block>
+    CSTACK         uninit   0x2000'0008  0x2000  <Block tail>
+                          - 0x2000'2008  0x2000
+
+Unused ranges:
+
+         From           To      Size
+         ----           --      ----
+   0x800'01bc   0x803'ffff  0x3'fe44
+  0x2000'0004  0x2000'0007       0x4
+  0x2000'2008  0x2000'9fff    0x7ff8
+
+
+*******************************************************************************
+*** INIT TABLE
+***
+
+          Address      Size
+          -------      ----
+Zero (__iar_zero_init3)
+    1 destination range, total size 0x4:
+          0x2000'0000   0x4
+
+
+
+*******************************************************************************
+*** MODULE SUMMARY
+***
+
+    Module            ro code  ro data  rw data
+    ------            -------  -------  -------
+command line/config:
+    -------------------------------------------
+    Total:
+
+C:\Users\Windows_10\Desktop\Mapi\Esercizi laboratorio\19-10-2018\Debug\Obj: [1]
+    Untitled3.o           144                 4
+    -------------------------------------------
+    Total:                144                 4
+
+dl7M_tln.a: [2]
+    exit.o                  4
+    low_level_init.o        4
+    -------------------------------------------
+    Total:                  8
+
+m7M_tls.a: [3]
+    fpinit_M.o             34
+    -------------------------------------------
+    Total:                 34
+
+rt7M_tl.a: [4]
+    cexit.o                10
+    cmain.o                30
+    cstartup_M.o           12
+    data_init.o            40
+    vector_table_M.o       66
+    zero_init3.o           58
+    -------------------------------------------
+    Total:                216
+
+shb_l.a: [5]
+    exit.o                 20
+    -------------------------------------------
+    Total:                 20
+
+    Gaps                    4        2
+    Linker created                  16    8 192
+-----------------------------------------------
+    Grand Total:          426       18    8 196
+
+
+*******************************************************************************
+*** ENTRY LIST
+***
+
+Entry                       Address  Size  Type      Object
+-----                       -------  ----  ----      ------
+.iar.init_table$$Base    0x800'0158         --   Gb  - Linker created -
+.iar.init_table$$Limit   0x800'0168         --   Gb  - Linker created -
+?main                    0x800'0169        Code  Gb  cmain.o [4]
+CSTACK$$Base            0x2000'0008         --   Gb  - Linker created -
+CSTACK$$Limit           0x2000'2008         --   Gb  - Linker created -
+Region$$Table$$Base      0x800'0158         --   Gb  - Linker created -
+Region$$Table$$Limit     0x800'0168         --   Gb  - Linker created -
+__cmain                  0x800'0169        Code  Gb  cmain.o [4]
+__exit                   0x800'019d  0x14  Code  Gb  exit.o [5]
+__iar_data_init3         0x800'010d  0x28  Code  Gb  data_init.o [4]
+__iar_init_vfp           0x800'0135        Code  Gb  fpinit_M.o [3]
+__iar_program_start      0x800'01b1        Code  Gb  cstartup_M.o [4]
+__iar_zero_init3         0x800'00d1  0x3a  Code  Gb  zero_init3.o [4]
+__low_level_init         0x800'0187   0x4  Code  Gb  low_level_init.o [2]
+__vector_table           0x800'0000        Data  Gb  vector_table_M.o [4]
+_call_main               0x800'0175        Code  Gb  cmain.o [4]
+_exit                    0x800'0191        Code  Gb  cexit.o [4]
+_main                    0x800'0183        Code  Gb  cmain.o [4]
+exit                     0x800'018b   0x4  Code  Gb  exit.o [2]
+main                     0x800'0041  0x90  Code  Gb  Untitled3.o [1]
+puntatore               0x2000'0000   0x4  Data  Gb  Untitled3.o [1]
+
+
+[1] = C:\Users\Windows_10\Desktop\Mapi\Esercizi laboratorio\19-10-2018\Debug\Obj
+[2] = dl7M_tln.a
+[3] = m7M_tls.a
+[4] = rt7M_tl.a
+[5] = shb_l.a
+
+    426 bytes of readonly  code memory
+     18 bytes of readonly  data memory
+  8 196 bytes of readwrite data memory
+
+Errors: none
+Warnings: none

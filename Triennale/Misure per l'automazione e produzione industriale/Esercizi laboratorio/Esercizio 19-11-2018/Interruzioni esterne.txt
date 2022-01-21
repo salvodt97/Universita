@@ -1,0 +1,30 @@
+Gli interrupt esterni vengono etichettate con EXTI, nel capitolo 11 del refman. La linea va in un circuito che deve fare la detenction
+del fronte per accorgersi del cambiamento di stato. Il circuito riceve in ingresso quindi la configurazione fattai un opportuno registro.
+Visto che voglio scatenare un'interrupt quando si preme il pulsante, devo guardare quindi il fronte di salita.
+l'interrupt si scatena quindi quando il circuito detenction ha riconosciuto il fronte di salita o se u un registro si scatena un'interruzione
+software.
+Il risultato della OR del circuito poi va in una AND con un interrupt mask registrer per smascherare l'interruzione.
+'udcita di questa AND alza il bit pending request(BPR) che viene inviato a NVIC; quindi il BPR all'inizio deve essere basso.
+I collegaenti sono bus a 28 linee visto che NVIC può gestire fino a 28 linee.
+Delle 28 linee eterne legate agli interrupt, 16 sono gestite dalla periferica GPIO.
+con EXTI0 viene legato l'interrupt legato alla linea di stato di una qualsiasi periferica GPIO0, EXTI1 si refir
+
+
+
+
+Il registro usato per smascherare un interrupt è EXTI_IMR; se lascio tutti i bit a 0, significa che tutte le interrupt sono mascherate;
+se
+
+
+
+
+Il registro EXTI_RTSR è per il fronte di salita, cioè se voglipo generare un'interrupt sul fronte di salita della linea di EXTI0 per
+esempio, metterò 1 nel bit =, ecc..
+Il registro EXTI_FTSR invece serve a lavorare con il fronte di discesa.
+ETI_SWIER serve invece a generare un interruzione software, che posso usare per una linea di EXTI alzndo il relativo 0
+EXTI_PR invece è il pending registrer, cioè se ho smascherato l'interrupt di EXTI0 e ho detto il fronte, quando si verifica il 
+fronte devo alzare il relativo bit del registro; se il bit vale 1, viene inviato la request all'NVIC. La prima cosa da fare è cancellare questo flag, scrivendo 1 dentro.
+
+
+Visto che gli interrupt sono 35 non vengono gestiti in un regitro a 32 bit: quindi per ogni interrupt ho 2 registri a 32 bit, e nel secondo
+registro metto i bit restanti

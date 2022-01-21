@@ -1,0 +1,40 @@
+Il convertitore DAC converte segnali digitali in segnali analogici
+Capitolo 13 del ref man
+Si lavora con DAC a 12 bit che genera una tensione su 2 canali DAC1_OUT1 e DAC1_OUT2
+I bit inviati al DAC si trovano in un registro DOR, in cui però non posso scrivere
+La tensione analogica generata sul DAC è sul canale DAC1_OUT1
+
+DHR: data holding register; Il control logic, quando si verifica un evento di trigger copia il contenuto di questo registro nel registro DOR
+La scelta del trigger si fa con un TSEL che consente di selezionare un trigger software oppure un segnale di timer che si genera quando si verifica un update
+Possiamo far eseguire la scrittura nel DHR con un DMA.
+C'è un bit TEN(trigger enable)
+I bit MAMP e WAVEN che interagiscono con la control logic, che è gia impostata in modo tale da restituire un'onda triangolare di cui bisogna definire l'ampiezza.
+I pin che corrispondono agli output del dac, essendo analogici, fanno si che le periferiche di GPIO devono essere settate su uscita digitale.
+Il DAC channel viene fatto funzionare con un but EN1 che si trova nel registro DAC_CR. Quando abilito questo bit devo attendere un tempo di wake up.
+C'è la possibilità di collegare un buffer in uscita al DAC per disaccoppiarlo con eventuali circuiti a valle; bisogna abilitare un buffer di tensione a valle del 
+DAC con il bit BOFF.
+A questo punto devo scrivere nel DHR la sequenza di bit che corrisponde alla tensione analogica che voglio misurare.:
+	-o sfrutto tutti i 12 bit su 16, e devo scegliere se allinearli a dx o a sx [DHR12L o DHR12R]
+	-o scelgo solo 8 bit che saranno allineati a destra; serve per avere migliore gestione del byte [DHR8]
+
+Quando viene generata la tensione analogica il DAC ha bisogno di un SETTLING TIME di assestamento per generare la tensione in maniera stabile.
+Per passare da codici a tensioni si usa una formula
+
+		DACoutput = VDDa * (DOR/4095)
+Quindi il DAC opera in quantizzazione silenziata perchè 4095=2^16-1
+La quantità VDD/4095 è il QUANTO.
+
+La trigger selection può essere fatta se TEN è alto usando il bit TSEL che deve avere un valore specifico.
+
+Se è stato selezionato il trigger software il trasferimento inizia quando viene settato il bit SWTRIG, che viene poi riportato a 0 dall'hardware quando il 
+trasferimento è terminato.
+
+Nel registro di controllo, ho 16 bit più significativi che fanno riferimento al canale 2, i meno significativi al canale 1 e sono identici tra loro.
+
+MAMP sono per la generazione del segnale triangolare
+WAVE per selezionare l'onda triangolare o rumorosa
+TSEL TEN BOFF e EN sono invece i bit del registro.
+Il DAC_SWTRIGR è fatto da soli 2 bit uno per un  canale e uno per un altro.
+
+Il DAC_DOR è in sola lettura
+Nello status register posso usare un solo flag che riguarda l'utilizzo del -DMA

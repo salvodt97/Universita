@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workspace>
+    <project>
+        <path>$WS_DIR$\Esercizio.ewp</path>
+    </project>
+    <project>
+        <path>$WS_DIR$\..\..\Esercizi\Luci interruttore\Luci interruttore.ewp</path>
+    </project>
+    <batchBuild />
+</workspace>

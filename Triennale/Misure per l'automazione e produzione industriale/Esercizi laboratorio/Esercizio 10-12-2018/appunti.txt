@@ -1,0 +1,154 @@
+DMA:
+
+Direct Memory Access, serve per effettuare 
+
+12 canale indipendente, ogni canale per il trasf memoria, avviene da una locazione di memoria (o perfierica) 
+ad un altra locaz o perif, trasferendo dati a cui dovremo dire quanto so grandi (half word, word ecc) fino a 2^16 
+dati programmabili
+
+DMA 1 gestisce 7 canali e DMA 2 ne gestisce 5
+DMA Preleva un dato dalla memoria
+
+un bit memory to memory va alzaato epr fare tale operazione
+vediamo da memoria a periferica
+           
+devo specificare la dim dei dati con dei bit PSIZE, MSIZE (uno periferica l'altro memoria)
+inoltre gli indirizzi che fornisco sono quelli di partenza, devo specificare se l'indirizzo di mmoria e di periferica              LUT=ROOT
+l'indirizzo di root va specificato
+
+l'indirizzo di partenza della destinazione è il DHR del DAC
+Se immaginiamo cosa fa il DMA, parte dal primo indirizzo della root e scrivere nel DHR, incrementa il DMA e lo 
+scrive nel DHR e così via
+la destinazione è sempre la stessa (DHR) il comportamento viene stabilito da PINC e MINC
+
+setta l'indirizzo del registro della periferica nel DMA_CPAR 
+setta l'indirizzo di memoria DMA_CMAR
+setta la dimensione dei dati nel registro DMA_CNDTR
+Si può configurare la priorità del canale, nel registro di controllo DMA_CCR,
+configura la direzione del trasferimento
+s la modalità deve essere circolare, cioè una volta finiti i tot campioni, in altre parole si deve fermare dopo il tot
+oppure continua?
+se devono essre incrementati gli indirizzi di periferica/memoria
+data size espressa in bit sia perif che memory
+disponiamo di 3 flag: half transfer, full transfer, error transfer
+si possono abilitare degli interrupt su uno, due o tutti gli eventi
+infine attivate il canale settando il bit di enable nel registro DMA_CCR
+la CPU si disinteressa del trasferimento a questo punto, perchè avviene tra controllore, DMA e periferica.
+in particolare ogni volta che il DAC prende dal dhr lo svuota e lo mette nel dor 
+il DMA va scelto, così come i canali, secondo un criterio. sono mappati 
+in altre parole ci sono canali adibiti a ricevere le requests e vale per DMA1 e DMA2
+DMA_ISR registro di status per tutti i canali di ogni DMA, quindi abbiamo 4 bit pero gni canale dal meno al più
+significativo, il general interrupt flag si alza per qualunque dei 3 eventi, seguiti dagli altri 3
+i primi 4 con l'1 vicino sono relativi al canale 1, i successivi al 2, 3 ecc
+fino al canale 7. per quanto riguarda DMA 2 soltanto 5
+noi useremo i canali 3 di DMA 2
+
+i flag sono read only? why
+ogni flag  si abbassa andando a scrivere nel corrispondente clear register, cancellandolo scrivendo 1 nell IFCR
+
+quyesto registro si trova subito dopo lo status, scrivere un 1 in corrispondenza del bit implica cancellare il 
+relativo flag nello status registerllol
+channel config.
+questo registro ne troviamo 1 per ogni channel, useremop il channel 3 cioè DMA_CCR3 (in genere DMA_CCRx)
+il DMA funziona se vediamo il valore di questo registro nella finestra che vede i registri, se si si incrementa
+CMAR, &DAC->DHR12R1 per fare cosa?
+
+hashire seri wo kaze no yooni tsukimi ara wo PADORU PADORU
+anche il DAC dweve eaccorgersi che sta interagendo con qualcosa
+DAC_CR lasciatelo al valore di default = DHR deve essere svuotato prima di scrivere 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

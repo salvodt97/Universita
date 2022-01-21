@@ -1,0 +1,42 @@
+TIMER(capitolo 20 ref man)
+I timer di base sono 6 0 7, ed è una perirefica in 3 blocchi: Autoreload registrer, counter e prescaler(ARR, CNT e PSC).
+Il counter in particolare è un contatore che incrementa il proprio valore di1 ogni volta che gli arriva un segnale di clock; al timer arriva un clock di didtema che,
+a differenza di quello esterno, non ha frequenza di 8Mhz.
+Il counter ha 16 bit, e quindi può contare fino a 2^16-1 e, superato questo valore, va n overflaw e si azzera e ricomincia.
+Il conuter può servire a contare il tempo: se considero una frequenza di 8Mhz che è quella del clock esterno, e quindi il counter impiega 8 ms per raggiungere
+il valore massimo e dopo va in overflaw. Questo tempo in realtà si può aumentare e così posso avere ua frequenza minore: ciò e quello che fa il prescaler,
+che divide la frequenza del clock di un  valore intero; così al cmtatore arriva un segnale a frequenza minore e quindi si incrementa in un tempo maghgiore, visto che
+T=1/f.
+ARR invece è un registro di 16 bit anche esso e rappresenta il numero massimo di contegi che può fare il contatore, e lo posso anche settare come voglio 
+così da "spostare" lìoverflaw.
+
+Il conteggio del counter è abilitato solo quando il bit COUNTER ENABLE (CEN)  nel registro TIMx_CR1; il prescaler divide di un valore che è quello che do io +1.
+Nel refman ci sono 2 modi di utilizzo:
+	base dei tempi: adopero il contatore per avere un avvertimento(segnale) ogni volta che è trascorso un intervalloo di tempo deltaT che viene fissato a priori.
+		Io scrivo un valore in ARR così, quando il counter arriva a ARR, il contatore si riazzera e il valore scritto in ARR dipende da ciò che voglio contare
+		e qundi ARR=(dektaT che voglio)/(tempo che impiega CNT per incrementarsi). Per esempio nel caso voglio usare il clock esterno, ARR=deltaT*8MHz
+		Il problema è che io ho solo 16 bit per il timer, e quindi sull'intervallo che voglio misurare devo porre un limite affinchè ARR non arrivi a overflow
+		Per evitare ciò uso il prescaler, che imposto a un certo valore n e il divisore di frequenza divide per n+1: la frequenza così è dimezzata
+		e quindi il periodo è maggiore. Così il timer scatta ogni volta che arriva a ARR, che non è più un overflaw ma un evento.
+		In realtà ogni al prescaler, posso uare anche il timer 2 che ha 32 bit.
+	 
+	contatore: uso il timer per fargli fare la misura di intervallo di tempo. Srtavolta ARR non serve: azzero il contatore, abilito CEN e poi ogni volta che
+		accade un evento vado a vedere il contatore, per vedere quanto tempo è passato
+
+Quindi con la periiferica timer posso misurare intervalli di tempo: anche qui ovviamente ho un limite perchè il contatore ha un overflaw, pari a
+(2^16)*(tempo in cui il prescaler si incrementa, che di base è 125 nanosecondi(ns)).
+
+Il primo registro della periferica timr è il control registrer(TIMx_CR1), e posso usare solo 6 bit perchè gli altri sono riservati:
+Il bit Update Interruopt Flag(UIF), che si alza ogi volta che il contatore raggiunge ARR; il bit 11 fa UIF remap, e si alza ogni volta che raggiungo overflaw,
+quindi il contatore si azzera e ricomincuia
+Il bit 7 è ARPE, che è 0 se il registro TIMx_ARR non è bufferizzato, altrimenti è 1:
+Se ARR non è bafferizzato, significa che come overflaw uso sempre lo stesso, se è 1 significa che posso impostare un nuovo overflaw che sarà quello effettivo da dopo.
+Il bit OPM è alto se il contatore conta solo una vola e si ferma.
+Il bit 2 URS specifica il tipo di evento che aativa il timer: se è 1, il timer generta un evento solo se c'è overflow, se è 0 indca un evento generico.
+Il bit UDS serve a disabilitare gli eventi di update.
+
+Il registro CR2 serve a far si che il timer si comporti da master per altre periferiche, e ha solo 3 bit
+
+Il registro Interruprt serve a generare interrupt: se il bit 0 è alto, significa che quando ho overflaw ci deve essere un interruzione
+
+Il registro Sr ha un bit UIF che si alza ogni volta che c'è overflow, ed è un bit in sola lettura, e ci posso scrivere solo 0 per abbassare il flag
