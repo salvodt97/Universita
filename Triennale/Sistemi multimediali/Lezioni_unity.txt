@@ -1,0 +1,62 @@
+E un motore real time cross platform: permette di crerae progetti 2D e 3D, e cotruire un'applicazione anche senza creare codice.E basato sulle API di C# e le piattaforme
+che supporta sono iOS, ANdroid, Linux, Windows..., posso fare anche applicazioni ibride,cioè creare un progetto multipiattaforma; è molto facile da usare nonostante
+sia uno strumento molto potente.
+Una volta creato il progetto, ci sono diverse finestre per individuare diverse parti e fasi del progetto, tenendo sempre aperte le finestre scene e game; una scena la posso
+vedere come il livello di un gioco, e gli oggetti contenuti nella scena soo tenuti in una gerarchia. All'interno della scena posso girare la visuale tenendo premuto 
+il tasto destro. In Project ci sono tutti glioggetti del progetto mentre inspector mostra le proprietà di un'oggetto, e ina scena vanno sempre messe luci e camera.
+Layers permette di dare un ordine gerarchico agli oggetti della scena così da interagire solo con una classe di elementi.
+Gli oggetti si selezionano da GameObject, e nell'inspector tra le proprietà compaiono le mesh, in box collider determina quando 2 oggetti entrano in contatto.
+Uity ha anche un motore per la fisica: in inspector, in add component, posso aggiungere diverse funzionalità.
+In project poi posso fare tasto deatro, create e posso creare un materiale, che è solo un file che si trova nel progetto ma non posso associarlo a niente: esso è una
+prprpietà, e per associarlo ad un'oggetto lo prendo e lo trascino.
+
+
+Inoltre con uno script posso cambiare il comportamento diun oggetto, che si apre in visual studio. tale script importa alcune librerie e ha 2 metodi. Un metodo start che viene chiamato quando
+l'oggetto viene istanziato, e il metodo update che viene richiamato per ogni frame, di continuo, e dipende dalla potenz della macchina o da come è stato sviluppato il proggetto.
+All'interno della classe posso poi dichiarare variabili, che poi in unity vedo in inspector.Ci sono inoltre delle funzioni particolari, come transform.position, che
+contiene le info sula posizione dell'oogetto.
+Se invece creo una variabile di tipo Vector3, posso creare un vettore di 3 elementi che sarebbero gli assi cartesiani: poi in unity posso modificare i valori di tale
+vettore, che se lo soomo a tranform.position mi fa traslare l'oggetto.
+Se ciò lo metto nel metodo start, l'operazione viene fatta una sola volta, cioè quando premo play.Invece, con debug.log posso mandare nella console di unity alcune
+info relative a variabili o altro. Posso inoltre far interagire lo script con le proprietò di rigidbody dell'oggetto stesso, così da manipolarla, e in unity lo associo
+poi all'oggetto. Nello script posso poi chiamare il metodo AddForce(), che aggiunge una forza all'ooggetto: prende come parametri un vector3 e il tipo di forza: con 
+deltatime applico una forrz continua nel tempo, ma posso applicare anche una forza impulsiva, o una frza da applicare in game, come se controllassi un personaggio
+con i tasti della tastiera. Per ricevere degli input si usa la classe Input.
+A volte è utile usare il metodo Fixed per rendere indipendente una proprietà dalla potenza del computer
+Si possono collegare tra loro 2 oggetti in modo che il loro transform sia lo stesso: per esempio posso collegare camera e player per seguire il player nei suoi movimenti
+ma è limitante. Si può segure il player però anche tramite script.
+
+Possiamo creare dei tag per gli ogetti. Posso aggiungere anche delle UI, interfacce utente, con tastodestro->UI, per aggiungere tipo del testo alla scena.
+Poso aggiungere anche oggetti di tipo testo, che stanno nella canvas che indica l'area che vedo nella scena; posso anche inserire un button
+
+
+Si può crerae una nuova scena, caricarla ecc...Creo quindi un oggetto GAbeobject e lo chiamo SManager, che serve a gestire le varie scene: definisco il suo
+comportamento con uno script
+
+
+
+
+
+POsso poi caricare divesri aset, scaricandoli o creandoli da Blender e poi li esporto, con export, in unity nel formato fbx, obj ecc...
+Vado poi in unity, asset, import new asset e scelgo tra i file disponibili, e scelgo l'oggetto a cui posso aggiungere tutte le caratteristiche di un oggetto. Devo aggiungere
+però un collider, perchè non ce l'ha.
+Inoltre abbiamo a disposizione anche un tool per il modelling 3d, cioè probuilder, che lo devo prima attivare in package menager
+
+Con la funzione FindObjectoftype posso caricare un'oggetto, come lo scene_manager, senza dovere usare delle variabili public; c'è poi il meodo invoke, che prende in ingresso
+il nome di una funzione e un float, che indica quanto tempo deve passare per richiamare quella funzione
+
+ANDROID
+File Buildsetting, ho la possibilità di scegliere la piattaforma su cui fare il build, e posso preparae il pogetto a funzionare tipo su android ricompilando il progetto
+ma a livello di scene non viene cambiato nulla		 ********SCARICARE A CASA***************
+Poi su run device posso collegare un cellulare a unity un pò come chromecast e creo l'applicazione come un pak per android; in build setting invece, su player setting,
+posso impostare delle cose riguardo l'applicazione che sto creando.
+
+
+
+
+
+
+
+
+***********************************************************************************************************************************************************************
+In una cartella prefabs posso inserire tutti gli oggetti che poi ho intenzione di usare nela scena, sena tenerli in hierarchy.

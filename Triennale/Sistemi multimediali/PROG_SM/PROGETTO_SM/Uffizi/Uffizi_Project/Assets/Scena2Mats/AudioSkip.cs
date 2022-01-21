@@ -1,0 +1,24 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public class AudioSkip : MonoBehaviour
+{
+    private float time= 0.0f;
+    // Start is called before the first frame update
+    void Start()
+    {
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        time = time + Time.deltaTime;
+        if (time > 6.0f)
+        {
+            SceneManager.LoadScene("3. Intro");
+        }
+    }
+}
