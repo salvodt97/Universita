@@ -1,0 +1,101 @@
+Ci sono 3 finestre: la command window, dove creiamo variabili, matrici..., il workspace dove vengono slavate le variabili e una finestra dove vediamo cartelle ecc...
+In matlab a una variabile devo solo dare il valore, senza dichiararla, per esempio a=3. 
+-Un vettore riga lo definisco con le [], per esempio a=[1 2 3] è un vettore riga.
+-Per un vettore colonna invece, faccio il trasposto di un vettore riga: si fa con " ' ", cioè b=[1 2 3]'. oopure uso il " ; " tra gi elementi, che serve per 
+andare a capo, cioè b=[1; 2; 3].
+-Una matrice la definisco dando il nome con lettera maiuscola, e scrivo dei vettori riga separati da ; , cioè A=[1 2; 3 4].
+-Se non specifico il nome della variabile, matlab crea una variabile ans dove mette il risultato di un comando
+
+
+COMANDI(si scrivono tuuti in minuscolo)
+*HELP (help comando) serve a vedere come funziona il comando che scriverò di seguito: per esempio con help zeros vedo come funziona il comando zeros.
+*ZEROS (zeros()) serve a definire vettori e matrici di 0(scrivendo zeros(n) per la dimensione di uja matrice quadrata), se invece voglio definire un vettore, devo
+specificare il numer di righe e colonne, cioè zeros(3, 1): crea un vettore colonne di 3 righe(il primo argomento sono le righe, il secondo le colonne).
+*ONES (ones()) funziona esattamente come zeros, restituisce però vettori o matrici di tutti 1.
+*EYE (eye()) serve a creare invece una matrice identità passando come parametro sempre la dimensione.
+*DIAG (diag()) serve a creare una matrice diagonale dato un vettore, oppure serve ad estrarre la diagonale principale di una matrice data in ingresso: con
+diag([1 2 3]), crea una matrice diagonale che ha tutti 0 tranne sulla diagonale, dove stanno gli elementi del vettore.
+*RAND (rand()) distribuisce una matrice quadrata con numeri casuali tra 0 e 1 con probabilità uniforme, per esempio rand(2) crea una matrice 2x2, ma posso passare
+anche 2 argomenti, rand(2,3) peresempio crea una matrice 2x3. Tra parentesi quindi indico il numero di righe e colonne
+*RANDN (randn()) invece distibuisce matrice e vettori con elementi casuali con probabilità gaussiana.
+*LENGTH (length()) opera sui vettori, e mi dice quanti elementi contiene.
+*SIZE (size()) mi dice il numero di righe e colonne di una matrice, o di un vettore
+*WHO (who) mi dice il nome di tutte le variabili del workspace
+*WHOS (whos) mi dice il nome, dimensione, spazio occupato di tutte le variabili
+*CLEAR serve ad eliminare le variabili dal workspace: con "clear all" elimino tutte le variabili dal workspace, oppure con "clear a" elimino a.
+*CLC ripulisce la command window
+*SS (ss(A, B, C, D)) serve per definire un sistema dinamico con quelle 4 matrici
+*INITIAL (initial()) serve a calcolare l'evoluzione libera, prende come parametro un sistema dinamico(sys) e un vettore di condizione iniziali(x0),
+obbligatori, e poi può prendere altri parametri, comeil vettore temporale che indica l'istante in cui sto calcolando initial.
+*PLOT (plot()) mi mostra il grafico di un sistema, mettendo prima la variabile indipendente(ascissa) e poi la dipendente(ordinata), dopo tra apici posso mettere
+le opzioni, per esempio 'o-r' mi fa disegnare una funzione fatta di trattini e pallini, ed è utile per il campionamento, per vedere i valori scelti separati
+perchè di default plot unisce tutti i punti. r invece indica il colore: r è rosso, y è giallo, b è blu(default), k è nero. dopo posso mettere 'LineWidth', per indicare
+lo spessore della linea, e dopo metto lo spessore numerico. (Per esempio plot(t,y1,'o-r','LineWidth',2))
+*STEP (step()) prende come parametro un sistema sys e ne calcola la risposta al gradino unitario, quindi evoluzione forzata(serve l'ingresso e non lo stato iniziale).
+*TF (tf()) prende in ingresso un sistema scritto nello spazio di stato(dominio del tempo) e ne calcola la funzione di trasferimento(dominio di Laplace).
+*EIG (eig()) prende una matrice in ingresso e clacola gli autovalori.
+*SPARSE (sparse()) prende in ingresso una matrice che ha tanti 0 e pochi elementi non nulli e crea una matrice sparsa, così matlab in memoria salva solo gli elementi
+non nulli in memoria
+*SAVE (save) salva tutte le variabili contenute nel workspace, e se dopo metto un nome, mi crea un file .mat con quel nome e ci salva le cose dentro. Dopo però il nome
+del file, posso mettere anche il nome di una variabile per indicare che voglio slavare solo quella
+*LOAD (load) serve a caricare le info che ho salvato in un file .mat
+*LINSPACE (linspace()) serve a creare una variabile che va in intervalli, e come parametri metti il punto di partenza, il punto di arrivo e quanti punti voglio tra
+quelli. Per esempio linspace(-pi,pi,10) crea 10 punti di t che vanno da -pi a pi
+*FIGURE serve ad aprire una finestra grafica vuota
+*GRID (grid) serve ad inserire una griglia nel grafico: se scrivo grid on la accende, con grid off la spegne
+*XLABEL o YLABEL servono a inserire le etichette degli assi x o y, per esempio(xlabel('tempo t (sec)', 'Fontsize', 12, 'FontWeight', 'bold'), con Fontsize indico la
+dimensione dell'etichetta, che è il primo parametro, e con FontWeight indico la "pesantezza" del font, con bold il grassetto).
+*HOLD ON (hold on) serve a prendere e a "bloccare" un grafico già fatto
+*LEGEND (legend()) crea una legenda, una casella nel plot dove indico in ordine i grafici che sto disegnando, e posso dire dove mettere la legenda mettendo tra 
+apici la posizione: di default è nordeast
+*SUBPLOT (subplot()) prende dei numeri come parametri, con il primo dico quante righe sto creando con il subplot, con il secondo le colonne, con il terzzo numero
+indico quale plot sto trattando ora
+*SEMILOGX o SEMILOGY o LOGLOG sono esattamente come i plot, cioè espande il disegno perchè me lo disegna in scala logaritmica(lo espande o l'asse x o y), con loglog
+espande entrambi gli assi.
+*INPUT (input()) consente di definire a video, nella command window, il valore di una variabile, cioè la inserisco da tastiera
+*FPRINTF (fprintf()) fa stampare a video una stringa, primo parametro, è il valore di una variabile, secondo.
+*DISP (disp()) funziona come fprintf, fa vedere a video qualunque stringa separate tra , e in []
+*NUM2STR (num2str()) serve a convertire il valore del paraetro da un qualsiasi tipo a una stringa. Ciò è utile per il comado disp(), così posso stampare più cose
+*FOPEN (fopen()) serve a creare un file di testo: il primo parametro è il nome del file, il secondo è ciò che faccio(con wt dico che scrivo), e dentro ci scrivo con
+fprintf, indicando come primo parametro, prima della stringa, il nome del file. Una volta fatto, il file lo chiudo con FCLOSE fclose().
+*XLSWRITE ha 2 parametri, il primo è un file excel, il secondo è il vettore o matrice che ci voglio scrivere
+
+
+
+-Se voglio accedere ad un elemento di uan matrice A creata precedentemente, basta che scrivo A(n,m), cioè indico la posizione dell'elemento. Se scrivo A(n,m)=b,
+assegno all'elemento di posizione n,m il valore b.
+-Se invece voglio vedere tutta una riga , uso i " : " al posto delle colonne, per esempio A(2, :) mi restituisce tutta la seconda riga, stessa cosa per una colonna
+Posso anche estrarre un sottoblocco, indicando prima e dopo i : riga/colonna iniziale e finale. Per esempio A(1:2, 2:3) mi estrae gli elementi comuni alla prima e 
+secona riga e alla secona e terza colonna. Ciò si può fare anche con i vettori.
+--------------------------------------------------------------
+Es:                                                          -
+A = 1 2 3	se faccio A(1:2, 2:3) estrae   2 3           -          **********Con % commento**************
+    4 5 6				       5 6	     -
+    7 8 9                                                    -
+--------------------------------------------------------------
+
+
+-Se faccio H = [B C] mi crea una matrice H concatenando le matrici B e C: così le mette in riga, oppure con H = [B; C] le mette in colonna
+
+-In matlab posso definire anche un sistema: inanzitutto dovrei fare le 4 matrici A,B,C,D, e definisco il sistema dinamico con il comando ss. Vorrei poi calcolare
+l'uscita, divisa in evoluzione libera(che calcolo con initial) e forzata(calcolo per esempio con step se ho un gradino).
+-Inoltre, posso convertire un sistema dinamico dal dominio del tempo al dominio di Laplace con il comando tf
+
+
+
+
+
+-In matlab ci sono 2 tipi di file: il .mat di contiene dei dati, invece il .m è un file che contiene un codice e può essere anche uno script.
+Quando lancio un programma, un .m, mi devo mettere nella cartella in cui lo script viene salvato.
+-Quando creo un elemento in matlab, tipo matrice o altro, se dopo il comando non metto il ";" il risultato del comando non viene mostrato nella command window
+-IN un file .m di matlba posso anche richiamare altri script o funzioni esterne. In uno script è sepmre bene mettere un clear e un close all all'inizio. Se poi
+evidenzio una stringa, la lancio con F9. Se scrivo %%, posso separare diversi pezzi di codice in uno stesso script.
+Con cltr r posso mettere a commento delle righe evidenziate, con ctrl t tolgo
+
+Ci sono molte funzioni, grafici, che si concenrano tutte in un piccolo intorno con molte variazioni, e vorrei espandere quell'intorno
+
+
+
+
+
+
