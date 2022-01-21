@@ -1,0 +1,2 @@
+MSA01 Massaggio 0 25
+SAU01 Sauna 100 10

@@ -1,0 +1,37 @@
+# Project: Esame12-12-12
+# Makefile created by Dev-C++ 5.11
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+OBJ      = mainEsame.o Pacco.o Pacchetto.o Vettore.o
+LINKOBJ  = mainEsame.o Pacco.o Pacchetto.o Vettore.o
+LIBS     = -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib" -L"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/lib" -static-libgcc
+INCS     = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include"
+CXXINCS  = -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/x86_64-w64-mingw32/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include" -I"C:/Program Files (x86)/Dev-Cpp/MinGW64/lib/gcc/x86_64-w64-mingw32/4.9.2/include/c++"
+BIN      = Esame12-12-12.exe
+CXXFLAGS = $(CXXINCS) 
+CFLAGS   = $(INCS) 
+RM       = rm.exe -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o $(BIN) $(LIBS)
+
+mainEsame.o: mainEsame.cpp
+	$(CPP) -c mainEsame.cpp -o mainEsame.o $(CXXFLAGS)
+
+Pacco.o: Pacco.cpp
+	$(CPP) -c Pacco.cpp -o Pacco.o $(CXXFLAGS)
+
+Pacchetto.o: Pacchetto.cpp
+	$(CPP) -c Pacchetto.cpp -o Pacchetto.o $(CXXFLAGS)
+
+Vettore.o: Vettore.cpp
+	$(CPP) -c Vettore.cpp -o Vettore.o $(CXXFLAGS)

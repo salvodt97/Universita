@@ -1,0 +1,3 @@
+Il cliente e': Giuseppe Amministratore
+Il cliente e': Salvatore Utente salvo@libero.it *********** 21:43:52
+Deve esserci almeno una lettera maisucola nella password: vincenzo97 del cliente numero 3
