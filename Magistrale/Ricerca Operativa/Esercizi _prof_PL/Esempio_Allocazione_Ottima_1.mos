@@ -1,0 +1,48 @@
+(!******************************************************
+   Esempio 1: allocazione ottima di risorse
+*******************************************************!)
+
+model Allocazione_ottima
+ uses "mmxprs"                      
+
+ parameters
+  NPROD = 4   (! Numero di prodotti !) 	
+  Q1_disp = 5000	(! Disponibilità risorsa 1!)
+  Q2_disp = 7000	(! Disponibilità risorsa 2!)	
+  Q3_disp = 3500 	(! Disponibilità risorsa 3!)
+ end-parameters
+
+ declarations
+  PROFITTO: array(1..NPROD) of integer  
+  Q1: array(1..NPROD) of integer	  	! Q1(i) consumo della risorsa 1 per ogni prodotto i-esimo
+  Q2: array(1..NPROD) of integer	  	! Q2(i) consumo della risorsa 2 per ogni prodotto i-esimo
+  Q3: array(1..NPROD) of integer	  	! Q2(i) consumo della risorsa 2 per ogni prodotto i-esimo
+  
+  x: array(1..NPROD) of  mpvar          ! dichiarazione variabili
+ end-declarations
+ 
+ initializations from "prod.dat"
+  PROFITTO Q1 Q2 Q3
+ end-initializations
+ 
+ forall(i in 1..NPROD)do
+ 	x(i) is_integer
+ end-do
+
+ ! Funzione obiettivo: massimizzare il profitto
+ MaxProf:= sum(i in 1..NPROD) PROFITTO(i)*x(i)                
+ ! Vincolo 1            
+ Risorsa_1:= sum(i in 1..NPROD) Q1(i)*x(i) <= Q1_disp 
+ ! Vincolo 2            
+ Risorsa_2:= sum(i in 1..NPROD) Q2(i)*x(i) <= Q2_disp  
+ ! Vincolo 3            
+ Risorsa_3:= sum(i in 1..NPROD) Q3(i)*x(i) <= Q3_disp   
+ ! Risolve il modello  
+ 
+ maximize(MaxProf)                  
+ ! Stampa la soluzione
+ writeln("Solution:\n Objective: ", getobjval)
+ forall(i in 1..NPROD)
+   writeln("x(",i,") = ", getsol(x(i)))
+ 
+end-model

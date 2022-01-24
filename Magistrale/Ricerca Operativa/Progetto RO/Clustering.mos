@@ -1,0 +1,131 @@
+model Clustering
+uses "mmxprs", "mmsvg" 
+
+parameters
+DATAFILE = 'Clustering.dat'						!File da cui leggere i dati di input
+end-parameters
+forward procedure Calcola_distanze				!Procedura che calcola le distanze tra tutti i nodi
+forward procedure Disegna_soluzione				!Procedura usata per rappresentare la soluzione
+	
+declarations
+	p: 		integer								!Numero di centroidi
+	NODI: 	set of integer						!Nodi della rete
+	XCORD:	array(NODI) of real					!Coordinate x dei nodi
+	YCORD: 	array(NODI) of real					!Coordinate y dei nodi
+	DIST:	dynamic array(NODI,NODI) of real	!Distanze tra i nodi
+	x:		dynamic array(NODI,NODI) of mpvar	!Variabili per gli archi
+	y: 		dynamic array(NODI) of mpvar		!Variabili per i centroidi
+end-declarations
+
+initializations from DATAFILE
+	[XCORD, YCORD] as "NODIINPUT"
+end-initializations
+
+Calcola_distanze								!Calcolo delle distanze
+
+!Creazione delle variabili
+forall(i,j in NODI) do
+	create(x(i,j))
+end-do
+
+forall(j in NODI) do
+	create(y(j))
+	y(j) is_binary								!Vincolo y={0,1}
+end-do
+
+!Scelta del numero di centroidi
+repeat
+	writeln
+	writeln("Il numero di centroidi deve essere inferiore al numero di nodi (", getsize(NODI), ")")
+	writeln("Inserire il numero di centroidi:")
+	read(p)
+	if(p > getsize(NODI))then
+		writeln("Error: numero di centroidi maggiore del numero di nodi")
+	end-if
+until(p <= getsize(NODI))
+
+!Vincoli
+sum(j in NODI) y(j) = p
+
+forall(i in NODI)
+	sum(j in NODI) x(i,j) = 1
+	
+forall(i,j in NODI) do
+	x(i,j) <= y(j)							!Vincolo di variable upper bound
+	x(i,j) >= 0
+end-do
+		
+Obiettivo := sum(i,j in NODI | i<>j and exists(DIST(i,j))) DIST(i,j)*x(i,j)	!Funzione obbiettivo
+
+minimize(Obiettivo)															!Minimizzazione
+
+
+!Visualizzazione del valore di funzione obbiettivo													
+writeln
+writeln("Scegliendo ", p, " centroidi, il valore di funzione obiettivo e': ", getobjval)
+
+!Visualizzazione dei centoridi
+writeln
+writeln("I centroidi scelti sono: ")
+forall(j in NODI | getsol(y(j)) = 1)
+	write(j, "  ")
+
+!Visualizzazione delle afferenze	
+writeln
+writeln
+forall(i,j in NODI | i<>j and getsol(x(i,j)) = 1)
+	writeln("Il nodo ", i, " afferisce al cluster del centroide ", j)
+
+
+!Rappresentazione grafica
+Disegna_soluzione
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1Procedure!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+procedure Calcola_distanze
+	
+	writeln
+	writeln("Calcolo delle distanze tra i nodi...")
+	forall(i, j in NODI | i<>j) do
+		DIST(i,j) := sqrt((XCORD(i)- XCORD(j))^2 + (YCORD(i)-YCORD(j))^2)
+		writeln("La distanza tra i nodi ", i, " e ", j, " e' ", DIST(i,j))
+	end-do 
+	forall(i in NODI) 
+		DIST(i,i) := 0
+	writeln("Distanze tra i nodi calcolate")
+	
+end-procedure
+		
+		
+procedure Disegna_soluzione
+	
+	svgerase
+ 	svgsetgraphscale(3)
+ 	svgsetgraphpointsize(8)
+ 	svgsetgraphviewbox(0,0,250,250)		
+ 	
+ 	svgaddgroup("Group1", "Nodi", SVG_BLUE)
+	forall(i in NODI | getsol(y(i))=0) do
+		svgaddpoint(XCORD(i), YCORD(i))
+		svgaddtext(XCORD(i)+1, YCORD(i)+1, text(i))
+	end-do
+	
+	svgaddgroup("Group2", "Centroidi", SVG_RED)
+	forall(i in NODI | getsol(y(i))=1) do
+		svgaddpoint(XCORD(i), YCORD(i))
+		svgaddtext(XCORD(i)+1, YCORD(i)+1, text(i))
+	end-do
+	
+	svgaddgroup("Group3", "Archi di afferenza", SVG_BLACK)
+    forall(i,j in NODI | getsol(x(i,j)) = 1) do
+       svgaddarrow("Group3", XCORD(i), YCORD(i), XCORD(j), YCORD(j))
+       svgsetstyle(svggetlastobj, SVG_STROKEWIDTH, 1)
+    end-do
+	
+	svgsave("Clustering.svg")
+    svgrefresh
+    svgpause
+	
+end-procedure
+		
+end-model

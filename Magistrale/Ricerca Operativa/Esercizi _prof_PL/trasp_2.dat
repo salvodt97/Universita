@@ -1,0 +1,18 @@
+! Data file for 'esempio_trasp2.mos'
+
+DISP: [3000 2000]
+
+Q_ING: [500 500]
+
+P_ING: [150 170]
+
+RICH: [150 190 220 170]
+
+PREZZI: [350 280 200 270]
+
+COSTI_I_M: [ 21 25
+	         27 22 ]
+
+COSTI_M_D: [ 33 31 36 30
+	         27 30 28 31 ]
+

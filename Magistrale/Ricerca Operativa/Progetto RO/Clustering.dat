@@ -1,0 +1,24 @@
+!Questo file contiene le coordinate dei nodi da rappresentare e il centroide
+!Le coordinate sono bidimensionali (X e Y)
+
+!Numero di centroidi
+!p:	5
+
+!Nodi (tra cui i possibili centroidi)
+NODIINPUT:  [
+(1)	[25	25]
+(2)	[105	75]
+(3)	[40	120]
+(4)	[140	130]
+(5)	[195	25]
+(6)	[230	240]
+(7)	[195	90]
+(8)	[230	165]
+(9)	[185	245]
+(10)	[135	40]
+(11)	[80	175]
+(12)	[35	220]
+(13)	[175	170]
+(14)	[20	160]
+(15)	[130	245]
+]

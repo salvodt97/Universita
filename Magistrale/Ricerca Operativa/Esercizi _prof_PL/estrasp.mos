@@ -1,0 +1,45 @@
+model Trasporto
+uses "mmxprs"; !gain access to the Xpress-Optimizer solver
+
+!sample declarations section
+declarations
+ORI : set of string
+DEST : set of string
+DISP : array(ORI) of real
+RICH : array(DEST) of real
+COSTI : array(ORI,DEST) of real
+X : array(ORI,DEST) of mpvar
+end-declarations
+
+initializations from 'trasport.dat'
+DISP
+RICH
+COSTI
+end-initializations
+
+obj:= sum(i in ORI, j in DEST) COSTI(i,j)* X(i,j)
+
+! vincoli nodi origine
+
+forall(i in ORI)
+
+  origine(i):= sum(j in DEST) X(i,j) <= DISP(i)
+
+! vincoli nodi destinazione
+
+forall(j in DEST)
+  destinazione(j):= sum(i in ORI) X(i,j) >= RICH(j)
+  
+forall( i in ORI, j in DEST)
+  X(i,j) is_integer
+
+minimize(obj)
+
+writeln("Valore della funzione obiettivo=", getobjval )
+writeln("Soluzione:")
+forall(i in ORI, j in DEST)
+  if ( getsol(X(i,j)) > 0.0 ) then
+    writeln(i,",",j," =", getsol(X(i,j)))
+  end-if
+
+end-model

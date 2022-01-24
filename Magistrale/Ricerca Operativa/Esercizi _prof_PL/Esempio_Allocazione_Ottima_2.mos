@@ -1,0 +1,38 @@
+(!******************************************************
+   Esempio 1: allocazione ottima di risorse
+*******************************************************!)
+
+model Allocazione_2
+ uses "mmxprs"                      
+
+ declarations
+  p : set of integer 	! insieme dei prodotti
+  r : set of integer	! insieme delle risorse
+  
+  C : array(p) of real	! vettore dei profitti (coefficienti di costo in funzione obiettivo)  
+  R : array(r) of real  ! disponibilità di risorse (vettore dei termini noti)
+  A : array(r,p) of real ! matrice dei tassi di assorbimento
+  
+  x: array(p) of  mpvar  ! dichiarazione variabili
+ end-declarations
+ 
+ initializations from "prod1.dat"
+  C R A
+ end-initializations
+
+ ! Funzione obiettivo: massimizzare il profitto
+ MaxProf:= sum(j in p) C(j)*x(j)
+ 
+ ! Vincoli del problema
+ forall(i in r)
+   sum(j in p) A(i,j)*x(j) <= R(i) 
+                   
+ ! Risolve il modello  
+ maximize(MaxProf)     
+              
+ ! Stampa la soluzione
+ writeln("Solution:\n Objective: ", getobjval)
+ forall(i in p)
+   writeln("x(",i,") = ", getsol(x(i)))
+ 
+end-model

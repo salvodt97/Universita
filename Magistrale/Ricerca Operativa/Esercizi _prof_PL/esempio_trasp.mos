@@ -1,0 +1,82 @@
+(!******************************************************
+   Problema del trasporto 2(vedere l'esempio sul quaderno)
+*******************************************************!)
+
+model Trasporto_2
+ uses "mmxprs"                      
+
+ declarations
+  impianti = 1..2
+  magazzini = 1..2
+  centri = 1..4
+  
+  DISP : array (impianti) of integer	! capacità degli impianti 
+  Q_ING : array (magazzini) of integer  ! quantità minima da venre all'ingrosso
+  P_ING : array (magazzini) of integer 	! prezzi di vendita all'ingrosso
+  RICH : array (centri) of integer 		! richieste dei centri di distribuzione
+  PREZZI : array (centri) of integer 	! prezi di vendita nei centri
+  
+  COSTI_I_M : array (impianti,magazzini) of integer !costi di trasporto dagli impianti ai magazzini
+  COSTI_M_D : array (magazzini,centri) of integer !costi di trasporto dai magazzini ai centri
+  
+  x: array(impianti,magazzini) of  mpvar  
+  y: array(magazzini,centri) of  mpvar
+  z: array(magazzini) of mpvar  
+ end-declarations
+ 
+ initializations from "trasp_2.dat"
+  DISP 
+  Q_ING 
+  P_ING 
+  RICH 
+  PREZZI 
+  COSTI_I_M 
+  COSTI_M_D
+ end-initializations
+
+ ! Funzione obiettivo: massimizzare il profitto
+ Obj:= sum(l in centri) PREZZI(l)*(sum(j in magazzini) y(j,l)) + 
+       + sum(j in magazzini) P_ING(j)*z(j) +
+       - sum(i in impianti, j in magazzini) COSTI_I_M(i,j)*x(i,j) +
+       - sum(j in magazzini, l in centri) COSTI_M_D(j,l)*y(j,l)
+ 
+ ! Vincoli sugli impianti
+ forall(i in impianti)
+   sum(j in magazzini) x(i,j) <= DISP(i) ! Quel sum indica la somma dei vari x(i,j) al variare di j, sarebbe la sommatoria)
+   
+ ! Vincoli sui magazzini
+ forall(j in magazzini)
+   sum(i in impianti) x(i,j) = z(j) + sum(l in centri) y(j,l) 
+ 
+ forall(j in magazzini)
+   z(j) >= Q_ING(j)
+   
+ ! Vincoli sui centri di distribuzione
+ forall(l in centri)
+   sum(j in magazzini) y(j,l) >= RICH(l) 
+
+                   
+ ! Risolve il modello  
+ maximize(Obj)     
+              
+ ! Stampa la soluzione
+ writeln("Solution:\n Objective: ", getobjval)
+ 
+ forall(i in impianti, j in magazzini)
+   if ( getsol(x(i,j)) > 0.001 ) then
+     writeln("x(",i,",",j,") = ", getsol(x(i,j)))
+   end-if
+   
+ forall(j in magazzini, l in centri)
+   if ( getsol(y(j,l)) > 0.001 ) then
+     writeln("y(",j,",",l,") = ", getsol(y(j,l)))
+   end-if
+   
+ forall(j in magazzini)
+   if ( getsol(z(j)) > 0.001 ) then
+     writeln("z(",j,") = ", getsol(z(j)))
+   end-if
+ 
+end-model
+
+!Nel file di input, il .dat, per i vettori non devo specificare gli indici del vettore in quanto non ho usato allocazione dinamica

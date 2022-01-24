@@ -1,0 +1,5 @@
+! Data file for "Esempio_Allocazione_Ottima_1.mos"
+PROFITTO: [20 20 25 25]
+Q1: [10 20 5 5]
+Q2: [10 5 20 5]
+Q3: [10 5 5 20]

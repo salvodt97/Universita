@@ -1,0 +1,32 @@
+!esempio di problema di programmazione non lineare
+model Silos
+uses "mmxnlp"; !gain access to the Xpress-Optimizer solver
+
+!optional parameters section
+parameters
+   PI = 3.14159265358979
+end-parameters
+
+!sample declarations section
+declarations
+	r: mpvar
+	h: mpvar
+end-declarations
+
+ ! Funzione obiettivo: massimizzare il volume
+ MaxVol:= PI*r^2*h
+              
+ ! Vincolo 1            
+ C_1:= 2*r <= 10
+ ! Vincolo 2            
+ C_2:= 2*PI*r^2 + 2*PI*r*h <= 200  
+ ! Vincolo 3           
+ C_3:= 0.4*r + h <= 5 
+ 
+maximize(MaxVol)
+
+writeln("Valore della soluzione: ", getobjval)
+ writeln("raggio = ", getsol(r))
+ writeln("altezza = ", getsol(h))
+
+end-model

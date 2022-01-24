@@ -1,0 +1,38 @@
+(!******************************************************
+   Esempio 1: allocazione ottima di risorse
+*******************************************************!)
+
+model Allocazione
+ uses "mmxprs"                      ! Load the optimizer library
+
+ declarations
+  x1, x2, x3, x4: mpvar          ! dichiarazione variabili
+ end-declarations
+
+ ! Funzione obiettivo: massimizzare il profitto
+ MaxProf:= 20*x1 + 20*x2 + 25 * x3 + 25 * x4   
+              
+ ! Vincolo 1            
+ Q_1:= 10*x1 + 20*x2 + 5*x3 + 5*x4 <= 5000
+ ! Vincolo 2            
+ Q_2:= 10*x1 + 5*x2 + 20*x3 + 5*x4 <= 7000  
+ ! Vincolo 3           
+ Q_3:= 10*x1 + 5*x2 + 5*x3 + 20*x4 <= 3500 
+
+ x1 is_integer
+ x2 is_integer
+ x3 is_integer
+ x4 is_integer
+
+ 
+ ! Risolve il modello  
+ maximize(MaxProf)                   
+
+ ! Stampa la soluzione
+ 
+ writeln("Valore della soluzione: ", getobjval)
+ writeln("x1 = ", getsol(x1))
+ writeln("x2 = ", getsol(x2))
+ writeln("x3 = ", getsol(x3))
+ writeln("x4 = ", getsol(x4))
+end-model

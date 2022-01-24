@@ -1,0 +1,73 @@
+-------------------------------------------------------ESEMPIO-XPRESS-METTERE IN UN ALTRO FILE	----------------------------------------------------------------------------------------------------------------------------------------------------
+Xpress usa un lingìuaggio chiamato Mosel. Apro l'IDE che si trova in bin e si chima IVE, e posso usare degli esempio con open dat.
+La prima riga inizia con la parola chiave "model" e poi ci indico il nome; dentro sìci faccio il programma. L'ultima riga sarà "end model". La seconda riga invece sarà "users" seguita dal nome del
+motore o dei motori che usiamo inserito in apici, noi usiamo il motore *mmxprs*(senza *, ma tra ""). 
+Ho poi una prima sezione, parametres, dove definisco le costanti del modelo, e lo termino con end parameters.
+Il paragrafo declaration è un sezione che mi serve per dichiarare le variabili, e ci deve essere sempre; com "x: array(1..4) of mpvar" definisco il vettore delle variabili x di 4 elementi e di tipo
+mpvar, che è standard, MA POSSO DEFINIRE ANCHE ALTRI VETTORI DI INTERI.
+Con il paragrafo "inizaliation from "nomefile.dat"" inizializzo i miei vettori(in particolare il file deve stare nella stessa cartella del model) con dei valori cge scrivo in questo file .dat, che posso
+scrivere anche con notepad; i vettori nel .dat li inizializzo con, per esempio Q1: [2 5 10 43]; quindi coninizialiìation vado a leggere questi vettori dal .dat e li salva nei vettori del mio programma, che
+ovviamente devono avere lo stesso nome.
+Se le mie variabili x sono continue e positive, non devo scrivere niente; altrimenti glielo devo dire con
+*****************
+forall(i in 1--4) do			il do e end do li metto solo se mel forall ho più istruzioni
+   x(i) is_integer			mettevo is_free, per esempio, se 
+end do
+*******************
+Definisco poi le funzioni obbiettivo e i vincoli; pe esempio
+MaxProf := sum(i in 1..4)  PROFITTO(i)*x(i)	ovvero questo è l'esempio dell'espressione dlla funzione obbiettivo, che sarebbe la somma di 4 prodotti i questo caso, ovvero posso mettere una sommatoria
+Risorsa  := sum(i in 1..4) Q(i)*x(i) <= Q1_disp       è un esempio di vincolo
+
+Poi, con maxmize(Nome_funzione_obbiettivo) gli dico di massimizzare la funzione obbiettivo, ma gli devo dire anche come me lo deve scrivere; con il codice
+********************************
+writln("Soluzione:\n Objective: ", getobjval)		sarebbe la printf di C, in particolare on ln gli dico che ogni volta va a capo, e con getobjectval gli dico di scrivere il valore della funzione obbiettivo
+    forall(i in 1..4)
+      witeln("x(",i,") = ", getsol(x(i)))			con getsol gli sto dicendo di darmi il valore di x(i)
+**************************************
+Compilo andando su build->compile, e poi su build->run ed eseguo il programma
+Posso fare anche il debug mettendo un breakpoint
+
+In realtà potrei usare anche una sorta di allocazione dinamica per risolvere qualunque èroblema di allocazione ottima delle risorse, ovvero senza specificare all'inizio il numero di vettori che uso ecc...
+così da rendere il modello il più generale possibile, ovvero un modello per qualsiasi modello di allocazione ottima delle risorse; vediamo come si fa
+
+Le prime due righe saranno sempre le stesse, ovvero "model" e "users"; cancello poi il parameters e parto direttaente con declaration
+************************************
+declaration:
+p : set of integer			definisco un insieme di prodotti, senza specificare la cardinilità(potrei mettere anche set of string, per esempio, se distinguo  con le stringhe)
+r : set of integer			definisco le risorse
+
+C: array(p) of real			definisco ora il vettpore C, ovvero il vettore dei coeffiscienti di costo o di profitto della funzione obbiettuvo
+R : array(r) of real			è il vettore delle disponibilità delle risorse
+A : array(r,p) of real		questa è la matrice dei tassi di assorbimento
+
+x: array(p) of mpvar
+end declaration
+*********************************************
+Devo poi dire dove leggere i vettori C, R e A con il comando inizializations; ma la sintassi del punto dat cambia un po', visto che ad express non ho specificato la cardinalità dei vettori, ptima di ogni elemnto devo
+indicare che elemnto è; per esempio:
+C: [(1) 20 (2) 30 (3) 5]		così gli sto dicendo che C è un vettore di 3 elementi(se avessi usato una cardinalità di tipo stringa, avre scritto C:[("ar") 20 ("ce") 30 ("an") 5] per esempio)
+R: [(1) 5 (2) 4 (3) 34)]		scrivo le risorse
+A:[(12) 1 3 4			questa è la matrice; avrei dovuto scrivere prima di gìogni elemento che elemnto è, cioè dovevo scrivere anche (12), (13) ecc.., ma non serve pouchè io gli ho dato i vettori C e R
+     (21) 5 6 7			e quindi già cnosce i termini p e r, ovvero gli indici di riga e colonna
+     (31) 6 1 9]
+
+Poi scrivo, come sempre, la funzione obbiettivo (prima se serve gli dico che x deve essere intero)e i vincoli, poi gli chiedo di risolvere il modello e gli dico di stampare
+
+Mosel non è standard: se vado su build->export matrix, con lp esporto la versione standard del problema(lo devo fare dopo che l'ho risolto). Questo modello standard lo posso poi dare a qualsiasi solutore.
+Praticamente scrive le cose per esteso, senza usare nessun forall
+
+Posso dichiarare una procedura con il comando "forward procedure", indicicando i parametri tra () se li ha. Abbiamo poi visto u problema di Dikstra, dove abbiamo definito un vettore per le origini e un vettore per le destinazioni
+entrambi di cardinalità N; definisco poi una matrice NxN che conterrà il peso degli archi da un nodo origine a uno dsetinazione, e una matrice x per le variabile da associare agli archi. Le matrici però saranno sparese, in quanto
+in genere non esistono archi tra tutti i nodi possibili. LE VARIABILI X VANNO POI CREATE CON UN FOR:
+forall(m,n in N | exists(LUNG(m,n) and (m<>)) do		sono 2 cicli for inestati, il più esterno su m e il più interno su n; LUNG è la matrice dei pesi degli archi, e m<>n significa m!=n, ovvero non controllo eventuli archi che partono da un nodo e arrivano allo stesso nodo
+  create x(m,n)
+  x(m,n) is_binary					Non è proprio necessario definire x binaria perchè tanto la matrice A del problema è totalmente unimodulare
+end do
+
+Definisco poi i vincoli
+
+Implemento poi la funzione Draw_Sol che mi permette di disegnare il grafo su internet; la prima cosa da fare è creare i gruppi:
+svgaddgruop("Nome", "Contenuto", colore)
+forall(.......................)
+svgaaddpoint(cordiatax(i), coordinatay(i))
+Aggiungo un gruppo per i nodi interni, uno per l sorgente, uno per le destinazioni, uno per li archi, uno per gli archi di percorso minimo

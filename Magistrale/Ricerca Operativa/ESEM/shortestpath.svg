@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="700" height="700" data-extent="0 0 1000 1000" data-x-axis-label="" data-y-axis-label="" data-hide-axes="true" fill="none" stroke="black" stroke-width="1" font-size="x-small" font-family="sans-serif" font-weight="300">
+ <g id="Group1" class="mmsvg-plot" name="Nodi" stroke="currentColor" color="black">
+<rect x="298" y="698" width="4" height="4" fill="currentColor"/>
+<text x="301" y="698" fill="currentColor" stroke="none">
+2
+</text>
+<rect x="298" y="898" width="4" height="4" fill="currentColor"/>
+<text x="301" y="898" fill="currentColor" stroke="none">
+3
+</text>
+<rect x="398" y="698" width="4" height="4" fill="currentColor"/>
+<text x="401" y="698" fill="currentColor" stroke="none">
+4
+</text>
+<rect x="398" y="898" width="4" height="4" fill="currentColor"/>
+<text x="401" y="898" fill="currentColor" stroke="none">
+5
+</text>
+</g>
+ <g id="Group2" class="mmsvg-plot" name="Origine" stroke="currentColor" color="green">
+<rect x="198" y="798" width="4" height="4" fill="currentColor"/>
+<text x="194" y="814" fill="currentColor" stroke="none">
+OR
+</text>
+</g>
+ <g id="Group3" class="mmsvg-plot" name="Destinazione" stroke="currentColor" color="brown">
+<rect x="598" y="798" width="4" height="4" fill="currentColor"/>
+<text x="594" y="796" fill="currentColor" stroke="none">
+Dest
+</text>
+</g>
+ <g id="Group4" class="mmsvg-plot" name="Archi" stroke="currentColor" color="black">
+ <defs>
+  <marker id="EA_Group4"
+     viewBox="0 0 10 10" refX="9" refY="5" 
+     markerUnits="strokeWidth"
+     markerWidth="6" markerHeight="5"
+     stroke-width="1"
+     stroke-dasharray="1 0"
+     orient="auto" fill="currentColor">
+     <path d="M 0 0 L 10 5 L 0 10 z" />
+   </marker>
+ </defs>
+<path d="M 200 800 L 300 700" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 200 800 L 300 900" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 300 700 L 300 900" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 300 700 L 400 700" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 300 900 L 400 900" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 300 900 L 600 800" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 400 700 L 300 900" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 400 700 L 600 800" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 400 900 L 400 700" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 400 900 L 600 800" marker-end="url(#EA_Group4)" stroke-width="1"/>
+</g>
+ <g id="Group5" class="mmsvg-plot" name="Percorso" stroke="currentColor" color="red">
+ <defs>
+  <marker id="EA_Group5"
+     viewBox="0 0 10 10" refX="9" refY="5" 
+     markerUnits="strokeWidth"
+     markerWidth="6" markerHeight="5"
+     stroke-width="1"
+     stroke-dasharray="1 0"
+     orient="auto" fill="currentColor">
+     <path d="M 0 0 L 10 5 L 0 10 z" />
+   </marker>
+ </defs>
+<path d="M 200 800 L 300 900" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 300 900 L 400 900" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 400 900 L 600 800" marker-end="url(#EA_Group5)" stroke-width="2"/>
+</g>
+</svg>

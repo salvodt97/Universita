@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="700" height="700" data-extent="0 0 400 400" data-x-axis-label="" data-y-axis-label="" data-hide-axes="true" fill="none" stroke="black" stroke-width="1" font-size="x-small" font-family="sans-serif" font-weight="300">
+ <g id="Group1" class="mmsvg-plot" name="Nodi" stroke="currentColor" color="black">
+<rect x="152" y="354" width="4" height="4" fill="currentColor"/>
+<text x="155" y="354" fill="currentColor" stroke="none">
+2
+</text>
+<rect x="184" y="238" width="4" height="4" fill="currentColor"/>
+<text x="187" y="238" fill="currentColor" stroke="none">
+3
+</text>
+<rect x="332" y="348" width="4" height="4" fill="currentColor"/>
+<text x="335" y="348" fill="currentColor" stroke="none">
+4
+</text>
+<rect x="84" y="66" width="4" height="4" fill="currentColor"/>
+<text x="87" y="66" fill="currentColor" stroke="none">
+5
+</text>
+<rect x="372" y="168" width="4" height="4" fill="currentColor"/>
+<text x="375" y="168" fill="currentColor" stroke="none">
+6
+</text>
+<rect x="318" y="134" width="4" height="4" fill="currentColor"/>
+<text x="321" y="134" fill="currentColor" stroke="none">
+7
+</text>
+<rect x="308" y="204" width="4" height="4" fill="currentColor"/>
+<text x="311" y="204" fill="currentColor" stroke="none">
+8
+</text>
+<rect x="124" y="288" width="4" height="4" fill="currentColor"/>
+<text x="127" y="288" fill="currentColor" stroke="none">
+9
+</text>
+<rect x="64" y="224" width="4" height="4" fill="currentColor"/>
+<text x="67" y="224" fill="currentColor" stroke="none">
+10
+</text>
+<rect x="138" y="156" width="4" height="4" fill="currentColor"/>
+<text x="141" y="156" fill="currentColor" stroke="none">
+11
+</text>
+<rect x="64" y="118" width="4" height="4" fill="currentColor"/>
+<text x="67" y="118" fill="currentColor" stroke="none">
+12
+</text>
+<rect x="198" y="48" width="4" height="4" fill="currentColor"/>
+<text x="201" y="48" fill="currentColor" stroke="none">
+14
+</text>
+<rect x="218" y="134" width="4" height="4" fill="currentColor"/>
+<text x="221" y="134" fill="currentColor" stroke="none">
+15
+</text>
+<rect x="248" y="334" width="4" height="4" fill="currentColor"/>
+<text x="251" y="334" fill="currentColor" stroke="none">
+16
+</text>
+<rect x="284" y="70" width="4" height="4" fill="currentColor"/>
+<text x="287" y="70" fill="currentColor" stroke="none">
+17
+</text>
+<rect x="332" y="272" width="4" height="4" fill="currentColor"/>
+<text x="335" y="272" fill="currentColor" stroke="none">
+18
+</text>
+<rect x="384" y="324" width="4" height="4" fill="currentColor"/>
+<text x="387" y="324" fill="currentColor" stroke="none">
+19
+</text>
+<rect x="264" y="220" width="4" height="4" fill="currentColor"/>
+<text x="267" y="220" fill="currentColor" stroke="none">
+20
+</text>
+</g>
+ <g id="Group2" class="mmsvg-plot" name="Origine" stroke="currentColor" color="green">
+<rect x="48" y="328" width="4" height="4" fill="currentColor"/>
+<text x="44" y="344" fill="currentColor" stroke="none">
+OR
+</text>
+</g>
+ <g id="Group3" class="mmsvg-plot" name="Destinazione" stroke="currentColor" color="brown">
+<rect x="384" y="84" width="4" height="4" fill="currentColor"/>
+<text x="380" y="82" fill="currentColor" stroke="none">
+Dest
+</text>
+</g>
+ <g id="Group4" class="mmsvg-plot" name="Archi" stroke="currentColor" color="black">
+ <defs>
+  <marker id="EA_Group4"
+     viewBox="0 0 10 10" refX="9" refY="5" 
+     markerUnits="strokeWidth"
+     markerWidth="6" markerHeight="5"
+     stroke-width="1"
+     stroke-dasharray="1 0"
+     orient="auto" fill="currentColor">
+     <path d="M 0 0 L 10 5 L 0 10 z" />
+   </marker>
+ </defs>
+<path d="M 50 330 L 154 356" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 50 330 L 126 290" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 50 330 L 66 226" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 154 356 L 50 330" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 154 356 L 186 240" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 154 356 L 126 290" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 154 356" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 126 290" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 66 226" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 140 158" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 250 336" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 186 240 L 266 222" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 350 L 250 336" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 350 L 334 274" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 350 L 386 326" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 86 68 L 140 158" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 86 68 L 66 120" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 86 68 L 200 50" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 374 170 L 320 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 374 170 L 310 206" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 374 170 L 386 86" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 374 170 L 334 274" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 320 136 L 374 170" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 320 136 L 310 206" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 320 136 L 386 86" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 320 136 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 320 136 L 286 72" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 310 206 L 374 170" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 310 206 L 320 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 310 206 L 334 274" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 310 206 L 266 222" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 126 290 L 50 330" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 126 290 L 154 356" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 126 290 L 186 240" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 126 290 L 66 226" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 226 L 50 330" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 226 L 186 240" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 226 L 126 290" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 226 L 140 158" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 226 L 66 120" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 140 158 L 186 240" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 140 158 L 86 68" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 140 158 L 66 226" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 140 158 L 66 120" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 140 158 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 120 L 86 68" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 120 L 66 226" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 120 L 140 158" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 66 120 L 200 50" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 86 L 374 170" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 86 L 320 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 86 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 86 L 286 72" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 200 50 L 86 68" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 200 50 L 66 120" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 200 50 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 200 50 L 286 72" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 186 240" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 320 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 140 158" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 386 86" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 200 50" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 286 72" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 220 136 L 266 222" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 250 336 L 154 356" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 250 336 L 186 240" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 250 336 L 334 350" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 250 336 L 334 274" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 250 336 L 386 326" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 250 336 L 266 222" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 286 72 L 320 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 286 72 L 386 86" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 286 72 L 200 50" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 286 72 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 286 72 L 266 222" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 274 L 334 350" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 274 L 374 170" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 274 L 310 206" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 274 L 250 336" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 274 L 386 326" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 334 274 L 266 222" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 326 L 334 350" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 326 L 250 336" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 386 326 L 334 274" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 266 222 L 310 206" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 266 222 L 220 136" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 266 222 L 250 336" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 266 222 L 286 72" marker-end="url(#EA_Group4)" stroke-width="1"/>
+<path d="M 266 222 L 334 274" marker-end="url(#EA_Group4)" stroke-width="1"/>
+</g>
+ <g id="Group5" class="mmsvg-plot" name="Percorso" stroke="currentColor" color="red">
+ <defs>
+  <marker id="EA_Group5"
+     viewBox="0 0 10 10" refX="9" refY="5" 
+     markerUnits="strokeWidth"
+     markerWidth="6" markerHeight="5"
+     stroke-width="1"
+     stroke-dasharray="1 0"
+     orient="auto" fill="currentColor">
+     <path d="M 0 0 L 10 5 L 0 10 z" />
+   </marker>
+ </defs>
+<path d="M 50 330 L 126 290" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 186 240 L 266 222" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 320 136 L 386 86" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 310 206 L 320 136" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 126 290 L 186 240" marker-end="url(#EA_Group5)" stroke-width="2"/>
+<path d="M 266 222 L 310 206" marker-end="url(#EA_Group5)" stroke-width="2"/>
+</g>
+</svg>

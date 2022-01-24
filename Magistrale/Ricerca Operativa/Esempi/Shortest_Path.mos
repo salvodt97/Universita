@@ -1,0 +1,171 @@
+model ModelName
+uses  "mmxprs", "mmsvg"
+
+parameters
+DATAFILE = 'rete_input_model.dat' ! File da cui leggere i  dati di input
+end-parameters
+
+forward procedure Draw_Sol
+forward procedure Dijkstra
+
+declarations
+  origin: integer
+  destination: integer
+  NODI: set of integer ! Insieme dei nodi della rete
+  XCOORD: array(NODI) of real     	! coordinate x dei nodi
+  YCOORD: array(NODI) of real     	! coordinate y dei nodi
+  LUNG: dynamic array(NODI,NODI) of real 	! lunghezza di ogni arco della rete
+  x: dynamic array(NODI,NODI) of mpvar
+end-declarations
+
+forward procedure Draw_Sol_Dijkstra(DIST: array(NODI) of real, PRED: array(NODI) of integer)
+
+initializations from DATAFILE
+  origin destination
+  [XCOORD, YCOORD] as "DATINODI"
+  LUNG
+end-initializations
+
+forall(m,n in NODI | exists(LUNG(m,n)) and (m<>n)) do
+	create(x(m,n))
+	x(m,n) is_binary
+end-do
+
+!sum(i in NODI | exists(LUNG(origin,i)) and origin <>i) x(i,origin)= 0
+
+sum(i in NODI | exists(LUNG(origin,i)) and origin <>i) x(origin, i) - sum(i in NODI | exists(LUNG(origin,i)) and origin <>i) x(i,origin) = 1
+
+forall(k in NODI-{origin}-{destination})
+  sum(i in NODI|exists(LUNG(i,k)))x(i,k) - sum(j in NODI|exists(LUNG(k,j)))x(k,j) = 0
+
+!sum(i in NODI|exists(LUNG(destination,i))and destination <>i) x(destination,i)= 0
+
+sum(i in NODI|exists(LUNG(destination,i))and destination <>i) x(destination,i) - sum(j in NODI|exists(LUNG(j,destination))and destination <>j) x(j, destination) = - 1
+
+Cost:= sum(m,n in NODI | exists(LUNG(m,n))and (m<>n)) LUNG(m,n)*x(m,n)
+
+minimize(Cost)
+
+writeln
+writeln("Il minimo percorso da ", origin,"a ", destination, "è: ", getobjval)
+
+Draw_Sol
+
+Dijkstra
+
+
+	
+
+
+procedure Draw_Sol
+	
+	svgerase
+ 	svgsetgraphscale(2)
+ 	svgsetgraphpointsize(4)
+ 	svgsetgraphviewbox(0,0,200,200)
+ 	
+ 	
+	svgaddgroup("Group1", "Nodi", SVG_BLACK)
+	forall(i in NODI | i <> origin and i <> destination) do
+		svgaddpoint(XCOORD(i), YCOORD(i))
+		svgaddtext(XCOORD(i)+0.5, YCOORD(i)+1, text(i))
+	end-do
+	
+	svgaddgroup("Group2", "Origine", SVG_GREEN)
+	svgaddpoint(XCOORD(origin), YCOORD(origin))
+    svgaddtext(XCOORD(origin)-3, YCOORD(origin)-7, "OR")
+    
+    svgaddgroup("Group3", "Destinazione", SVG_BROWN)
+	svgaddpoint(XCOORD(destination), YCOORD(destination))
+    svgaddtext(XCOORD(destination)-3, YCOORD(destination)+2, "Dest")
+ 
+    svgaddgroup("Group4", "Archi", SVG_BLACK)
+    forall(i,j in NODI | exists(LUNG(i,j))) do
+       svgaddarrow("Group4", XCOORD(i), YCOORD(i), XCOORD(j), YCOORD(j))
+       svgsetstyle(svggetlastobj, SVG_STROKEWIDTH, 1)
+    end-do
+    
+    svgaddgroup("Group5", "Percorso", SVG_RED)
+    forall(i,j in NODI | getsol(x(i,j))=1) do
+       svgaddarrow("Group5", XCOORD(i), YCOORD(i), XCOORD(j), YCOORD(j))
+       svgsetstyle(svggetlastobj, SVG_STROKEWIDTH, 2)
+    end-do
+    
+	svgsave("shortestpath.svg")
+    svgrefresh
+    svgpause
+    
+end-procedure
+
+procedure Dijkstra
+	
+	writeln
+	writeln("ARBORESCENZA DEI CAMMINI MINIMI")
+	!procedure minper_dijkstra
+	declarations
+  		S:set of integer !insieme contenente i nodi definitivi etichettati
+  		DIST: array(NODI) of real
+  		PRED:array(NODI) of integer
+	end-declarations
+	
+	BIGM:=sum(i,j in NODI | exists(LUNG(i,j))) LUNG(i,j)
+	
+	S:={origin} !Inizializzo  S 
+	DIST(origin):=0 !Inizializzo a zero la distanza della radice dell'albero
+	PRED(origin):=origin !Inizializzo il predecessore della radice pari alla radice stessa
+	while (getsize(S) <> getsize(NODI)) do !Ripeto fino a riempire S con tutti i nodi della rete
+	  mm:=BIGM
+	  forall(p in S, q in NODI-S | exists(LUNG(p,q))) !per tutti gli archi uscenti dal taglio di S
+	    if (DIST(p)+LUNG(p,q) < mm) then !determino la minima distanza
+	      mm:=DIST(p)+LUNG(p,q)
+	      v:=p
+	      h:=q
+	    end-if
+		  DIST(h):=DIST(v)+LUNG(v,h) !aggiorno la distanza
+		
+	    writeln ("Lunghezza del cammino minimo da ", origin, " ad ", h, " = ", DIST(h))
+  		PRED(h):=v !aggiorno il predecessore
+		S+={h} !aggiungo il nodo in S
+	end-do
+	
+	Draw_Sol_Dijkstra(DIST, PRED)
+	
+end-procedure
+
+	
+procedure Draw_Sol_Dijkstra(DIST: array(NODI) of real, PRED: array(NODI) of integer)
+	
+	svgerase
+ 	svgsetgraphscale(2)
+ 	svgsetgraphpointsize(4)
+ 	svgsetgraphviewbox(0,0,200,200)
+ 	
+ 	
+	svgaddgroup("Group1", "Nodi", SVG_BLACK)
+	forall(i in NODI | i <> origin) do
+		svgaddpoint(XCOORD(i), YCOORD(i))
+		svgaddtext(XCOORD(i)+0.5, YCOORD(i)+1, text(i))
+	end-do
+	
+	svgaddgroup("Group2", "Origine", SVG_GREEN)
+	svgaddpoint(XCOORD(origin), YCOORD(origin))
+    svgaddtext(XCOORD(origin)-3, YCOORD(origin)-7, "OR")
+    
+    (!svgaddgroup("Group4", "Archi", SVG_BLACK)
+    forall(i,j in NODI | exists(LUNG(i,j))) do
+       svgaddarrow("Group1", XCOORD(i), YCOORD(i), XCOORD(j), YCOORD(j))
+       svgsetstyle(svggetlastobj, SVG_STROKEWIDTH, 1)
+    end-do!)
+    
+    svgaddgroup("Group5", "Percorsi", SVG_BROWN)
+    forall(i in NODI | PRED(i)<>0 and i <> origin) do
+       svgaddarrow("Group5", XCOORD(PRED(i)), YCOORD(PRED(i)), XCOORD(i), YCOORD(i))
+       svgsetstyle(svggetlastobj, SVG_STROKEWIDTH, 2)
+    end-do
+    
+	svgrefresh  
+    svgwaitclose("Close browser window to terminate model execution.", 1)
+        
+end-procedure
+
+end-model
