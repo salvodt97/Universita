@@ -1,0 +1,2 @@
+INDEX VERSION 1.131+C:\Users\39392\Desktop\Coppola_Vincenzo_Homework1\CodiceEclipse\.metadata\.plugins\org.eclipse.jdt.core
+3965134432.index

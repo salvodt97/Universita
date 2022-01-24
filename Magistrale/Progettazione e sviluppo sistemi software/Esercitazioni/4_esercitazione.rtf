@@ -1,0 +1,194 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504\cocoasubrtf840
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\csgenericrgb\c0\c0\c100000;\csgenericrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww13580\viewh15380\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\i\b\fs24 \cf0 COMANDI PER REALIZZARE UN PROGETTO AGILE IN VISUAL PARADIGM\
+\
+
+\b0 Per aggiungere delle viste al progetto cliccare sulla cartella nella 
+\b Logical View 
+\i0\b0 (se non esce andare in View \'97> Panes e inserirla) 
+\i e fare
+\i0  
+\i\b ADD VIEW
+\b0 .\
+In questo modo \'e8 possibile avere una migliore vista di tutti i diagrammi e modelli che vengono realizzati.\
+\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\
+\
+
+\b\fs36 UTILIZZO DI UML PER LA DOCUMENTAZIONE DELLE VIEWS\
+\
+
+\b0\fs28 UML conserva molte delle caratteristiche che risalgono alle sue origini OBJECT-ORIENTED.\
+Le astrazioni orientate agli oggetti non sono per\'f2 sempre i migliori strumenti per descrivere le architetture software; ad esempio UML non ha notazione per i layers, per i diagrammi di contesto o rich connectors.\
+UML mette a disposizione altri strumenti che permettono di supere tali mancanze.\
+I diagrammi si suddividono in diagrammi 
+\b strutturali 
+\b0 e diagrammi 
+\b comportamentali
+\b0 : i primi sono statici e descrivono la struttura del sistema come class diagram, component diagram, package diagram, mentre i secondi sono dinamici come activity diagram e sequence diagram.\
+Un modo per specializzare ulteriormente il significato di un simbolo UML \'e8 l\'92utilizzo di 
+\b stereotipi
+\b0 .\
+\cf2 In VISUAL PARADIGM si possono creare degli stereotipi: \
+Manage Stereotypes \'97> Edit e si aggiunge lo stereotipo di interesse.\
+\cf3 Il processo di documentazione richiede di produrre la documentazione dei requisiti, la documentazione di analisi e la documentazione di progetto/implementazione.\
+La 
+\b documentazione di analisi 
+\b0 ha come input la documentazione informale dei requisiti e ha come obiettivo quello di produrre una documentazione che sia del tutto indipendente dall\'92implementazione.\
+In genere contiene:\
+
+\b \'97
+\b0  
+\b diagrammi dei casi d\'92uso, diagrammi dei requisiti, storie utente\'85;\
+\'97 system domain model;\
+\'97 diagramma di contesto
+\b0 , che permette di definire il contesto in cui si trova il sistema e permette di capire come il sistema si interfaccia con l\'92esterno;\
+
+\b \'97 bozza dei diagrammi di architettura;\
+\'97 per ogni requisito si realizzano dei diagrammi dinamici che ne specificano il comportamento
+\b0  (activity diagram, sequence diagram o combinazioni di diagrammi).\
+\
+La 
+\b documentazione di progetto 
+\b0 ha come input la documentazione di analisi e aggiunge i dettagli di progettazione e di sviluppo delle diverse soluzioni implementative.\
+In genere questa documentazione contiene:\
+
+\b \'97 diagrammi dei componendi che definiscono l\'92architettura generale del sistema software da sviluppare;\
+\'97 
+\b0 per ogni componente 
+\b i diagrammi dei package e delle classi;\
+\'97 diagrammi di deploy.\
+
+\b0 Esistono diverse tecniche di documentazione:\
+\
+
+\b - REFINEMENT
+\b0 : serve per presentare le informazioni in sezioni separate e pi\'f9 facilmente gestibili.\
+Un raffinamento elabora viste preeesistenti e permette di catturare e rappresentare informazioni con pi\'f9 o meno dettagli.\
+Esistono due tipologie di refinement: 
+\b decomposition refinement 
+\b0 e 
+\b implementation refinement.\
+
+\b0 La prima elabora un singolo elemento al fine di rilevarne la sua struttura interna, ma bisogna mantenere la consistenza delle relazioni (\'e8 possibile raffinare un qualunque tipo di componente).\
+La seconda invece lascia invariato il livello di dettaglio ma molti degli elementi e delle relazioni sono sostituiti e serve per mostrare delle informazioni che descrivono come gli elementi originali verranno realizzati, senza per\'f2 ovviamente perdere la consistenza.\
+\
+
+\b - DOCUMENTING CONTEXT DIAGRAMS:
+\b0  servono per mostrare il contesto di una View, dove il 
+\b context
+\b0  rappresenta l\'92ambiente con cui il sistema o una specifica parte del sistema interagisce (non \'e8 detto che i context diagrams siano di 
+\b top level
+\b0 ).\
+UML non ha costrutti di base per descrivere un context diagram, per cui si pu\'f2 fare uso o di USE CASE o di CLASS DIAGRAMS, oppure si pu\'f2 usare un VOCABOLARIO DELLE VISTE utilizzate per rappresentare il contesto del sistema.\
+\
+
+\b - DOCUMENTING ARCHITECTURAL DECISIONS: 
+\b0 serve per descrivere il 
+\b rationale 
+\b0 per le scelte del progetto che sono ritenute rilevanti; la descrizione pu\'f2 essere realizzata mediante un template mediante il quale si descrivono le decisioni architetturali.\
+\
+
+\b - COMBINIG VIEWS: 
+\b0 poich\'e8 tutte le viste fanno parte di una stessa architettura e collaborano per raggiungere uno scopo comune bisogna associare tra loro le viste. Bisogna quindi capire come gestire le associazioni tra le viste e come documentare tali associazioni. \
+\cf2 Visual Paradigm mette a disposizione gli strumenti per collegare tra loro le viste.\
+\cf3 Le associazioni tra viste possono essere 
+\b many to one 
+\b0 (pi\'f9 elementi di una view sono associati ad un unico elemento di un\'92altra view), 
+\b one to many 
+\b0 (un singolo elemento di una vista \'e8 associato a pi\'f9 elementi di un\'92altra vista), 
+\b many to many 
+\b0 (un insieme di elementi di una vista sono associati a un insieme di elementi di un\'92altra vista).\
+\cf2 E\'92 molto importante non realizzare diagrammi che siano troppo grandi e complessi, ma bisogna suddividerli per realizzare un diagramma che sia pi\'f9 facilmente gestibile e leggibile.\
+\cf3 La combinazione delle view deve essere applicata quindi per ridurre la complessit\'e0 del progetto e serve a ridurre il numero di viste presenti in un documento di architettura.\
+\
+
+\b - DOCUMENTING BEHAVIOR: 
+\b0 molto importante \'e8 documentare anche il comportamento perch\'e8 le relazioni strutturali rappresentano tutte le interazioni potenziali; bisogna descrivere come gli elementi architetturali interagiscono mediante le loro strutture. Documentare il comportamento aggiunge informazioni che fanno emergere tanti aspetti come l\'92ordine delle interazioni tra gli elementi, le possibili concorrenze, le dipendenze dal tempo ecc\'85\
+Quando si modellano le viste comportamentali di un sistema si deve \
+1) decidere a quali domande la documentazione deve rispondere;\
+2) determinare quali tipi di informazioni sono disponibili o possono essere vincolate;\
+3) scegliere una notazione.\
+Il 
+\b diagramma di behaviour
+\b0  deve quindi anche specificare cosa significa una connessione e se quella connessione serve per un passaggio di dati o di controllo.\
+Per quanto riguarda le notazioni, i linguaggi che supportano la documentazione del  comportamento devono includere costrutti per descrivere sequenze di interazioni e devono mostrare le dipendenze 
+\b time-based
+\b0 .\
+Esistono due tipologie di documenti per il comportamento:\
+1) permette di descrivere ci\'f2 che accade tra gli elementi strutturai di un sistema durante uno scenario, cio\'e8 descrive come il sistema risponde ad uno stimolo e tale descrizione avviene mediante le 
+\b tracce
+\b0 ;\
+2) mostra il comportamento completo di un elemento strutturale oppure un insieme di elementi ed \'e8 spesso 
+\b state-based
+\b0  e grazie ad esso \'e8 possibile ricostruire tutti i possibili cammini da uno stato iniziale a uno stato finale.\
+\
+Bisogna anche documentare le viste 
+\b C&C
+\b0  (componenti e connettori) che devono essere rappresentate utilizzando istanze di UML components in object diagrams oppure component diagrams.\
+In UML i componenti devono essere stereotipati per indicare il nome del corrispondente tipo utilizzato nello style guide.\
+I component ports devono essere rappresentati utilizzando UML ports con un identificatore e un indicatore di molteplicit\'e0.\
+Una volta realizzati i componenti bisogna collegarli mediante connettori. Esistono due modi per descrivere i connettori:\
+1) 
+\b undecorated line: 
+\b0 il tipo di connettore deve essere identificato tramite uno stereotipo e questa scelta \'e8 limitante perch\'e8 il connettore pu\'f2 avere delle proprie propriet\'e0, un proprio comportamento;\
+
+\b roles del connettore:
+\b0  etichettando le estremit\'e0 del connettore;\
+2) 
+\b rappresentare un connettore come un componente.\
+\
+
+\b0 A questo punto si deve capire come il codice verr\'e0 allocato sui sistemi fisici reali e quindi bisogna documentare le allocazioni. Le 
+\b Allocation Views
+\b0  rappresentano il mapping tra elementi software ed elementi di environment.\
+Si usa l\'92UML 
+\b deployment diagram
+\b0  che servono per mostrare l\'92assegnazione di software artifacts a deployment targets.\
+I 
+\b nodi
+\b0  rappresentano o device hardware o ambienti di esecuzione software e possono essere connessi mediante 
+\b communication paths
+\b0 .\
+Un device \'e8 una risorsa fisica computazione con capacit\'e0 di elaborazione ed \'e8 rappresentato come un nodo con stereotipo \'93device\'94 e pu\'f2 essere \'93application server\'94, \'93client workstation\'94, \'93mobile device\'94, ecc\'85.\
+Pu\'f2 essere rappresentato con un\'92icona personalizzata.\
+Gli execution environment sono software che offrono un ambiente di esecuzione per specifici tipi di componenti ed implementa un insieme di servizi necessari ai componenti a tempo di esecuzione; vengono stereotipati con \'93executionEnvironment\'94  e si possono anche modellare mediante una 
+\b gerarchia 
+\b0 di nodi.\
+Un\'92associazione tra due deployment targets \'e8 detta 
+\b communication path 
+\b0 e permette lo scambio di segnali e messaggi; viene rappresentata come associazione e non ha notazioni in pi\'f9 rispetto alle associazioni.\
+Gli 
+\b artifacts 
+\b0 rappresentano elementi concreti risultanti da un processo di sviluppo e che sono deployed su nodi. Ogni artifatto \'e8 usato o \'e8 prodotto da un processo di sviluppo software ed \'e8 distribuito o eseguito su un sistema.\
+Gli artifatti possono avere sia propriet\'e0 che operazioni e hanno un attributo 
+\b filename
+\b0  che viene utilizzato per fare riferimento al manufatto in un contesto fisico.\
+Anche gli artifatti hanno un proprio simbolo e stereotipo, tipicamente \'93artifact\'94, e possono essere coinvolti in associazioni ad altri manufatti.\
+\
+Un altro concetto importante \'e8 la 
+\b manifestation 
+\b0 che \'e8 una relazione astratta che rappresenta l\'92implementazione di uno o pi\'f9 elementi di un modello da parte di un artefatto, oppure l\'92utilizzo degli elementi di modello nella costruzione o generazione dell\'92artefatto.\
+Un 
+\b manifest
+\b0  non fa nient\'92altro che rappresentare da quale file sorgente/eseguibile \'e8 implementato il componente.\
+Una manifestation \'e8 rappresentata come una abstraction, cio\'e8 con una freccia tratteggiata rivolta dal manufatto all\'92elemento di modello ed \'e8 etichettato con \'93manifest\'94.\
+\
+Il 
+\b deployment 
+\b0 \'e8 una relazione di dipendenza che descrive l\'92allocazione di un artefatto su una destinazione di distribuzione e pu\'f2 essere rappresentata come una dipendenza che va dall\'92artefatto al deployment target ed \'e8 stereotipata con \'93deploy\'94.\
+L\'92artifatto fa da collante tra deploy e manifestation.\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+}

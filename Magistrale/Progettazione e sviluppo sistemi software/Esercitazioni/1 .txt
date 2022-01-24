@@ -1,0 +1,48 @@
+Scaricare eclipse IDE for enterprise; poi il plugin Window builder con Help->Market place; scaricare poi visual paadigm per la versioni 30 giorni gratis.
+Creare poi il progetto in Visual paradigm; in new->textual analysis metto poi i requisiti , li copio, così da individuare entità e oggetti; sul panel view posso poi
+vedere tutte le classi candidate, e pure i sinonimi.
+ESEMPIO BIBLIOTECA:
+
+Bisogna specificare i requisiti del sistema e modellare i casi d’uso del sistema.
+
+Si usa visual paradigm che può anche generare in maniera automatica parte del codice che può essere poi utilizzato in eclipse.
+
+La prima cosa da fare è la TEXTUAL ANALYSIS in modo tale da poter analizzare le specifiche  (ATTORI, CLASSI, CASI D’USO).
+
+Incolliamo la traccia e selezionando una parola possiamo specificare con tasto destro se è attore, caso d’uso oppure classe.
+
+Posso anche specificare i sinonimi: esempio volume è un sinonimo di libro.
+
+Una volta estratti gli elementi si possono creare i casi d’uso.
+
+A questo punto bisogna descrivere il caso d’uso come sequenza di azioni che l’attore esegue col software.
+
+Tasto desto su caso d’uso e premere USE CASE DETAILS e andare su FLOW OF EVENTS dove si possono inserire gli scenari come flusso di eventi tra attore e sistema; possiamo quindi inserire gli eventi e le interazioni.
+
+PER OGNI EVENTO SI PUO DISEGNARE IL WIREFRAME che rappresenta l’interazione col sistema, si può selezione tra le varie alternative e una volta selezionato il frame basta aggiungere i vari componenti.
+
+A questo punto si può fare la sincronizzazione con ACTIVITY o SEQUENCE DIAGRAM cosi da avere automaticamente il diagramma. (in questo caso l’activity diagram non è efficiente perchè la traccia
+ esprime proprio il flusso degli eventi quindi il sequence è più adatto per questo sistema).
+
+
+ 
+
+A questo punto possiamo specificare quello che ci serve per esprimere le relazioni fra le entità e le entità del sistema per far si che le funzionalità possano essere eseguite
+
+Fatto poi il sistem domain model devo implementare la soluzione; finora ho solo specificato il sistema software come i casi d'uso e l'interazione tra casi d'uso e attori, oltre che
+le varie entità e le relazioni tra esse. Non ho ancora scelto nessun stile architetturale, non mi sono vincolato ancora a nessuna tecnologia. Scelgo poi un'architettura strict layer,
+ovvero non posso saltare da un primo livello a un terzo senza usare il seondo
+In particolare uso il BCE(Boundary-Control-Entity), dove nel Boundary metto  tutte le classi per l'interfacciamento con l'utente, nel Control la logica di business, nell'Entity il nostro modello.
+Nell'Entity praticamente uso il system domain model(SDM), ma aggiungo una maggiore navigabilità, ovvero tipo i versi delle relazioni. Ovviamente il class diagram da solo non serve, ma lo devo combinare
+con un diagramma dinamico come il Sequence Diagram usando però gli elementi messi nel BCE. Tutti gli elementi del sequence diagram di fatto sono oggetti, e ovviamente non posso realizzare
+un oggetto se nnon ho una classe: ecco perchè il diagramma delle classi(tipo BCE) lo creo praticamente in contemporanea con il Sequence, che praticamente implemeta l'algoritmo.
+Posso poi creare automaticamente il codice finito il sequence (in generale finito un diagramma della dinamica), e lo posso fare quando specifico la dinamica mediante una macchina a stati finiti.
+Questo perchè visual paradigm implemebìnta da solo il pattern state.
+Vado in tools->code->generate java code->advanced option->devo definire come definisco le collection(associazioni uno a molti) e seleziono java.util.ArrayList->ok e viene generato il codice.
+Per vederlo, io trovo i vari codici nel package; questo perchè il SDM lo creo in un package in modo tale da trovare tutte le classi del SDM in una sola artella, mentre il BCE me lo crea in 3
+cartelle diverse(B, C ed E) avendo definiti 3 package diverse.
+Vado poi in eclipse->tasto destro su project explorer->import(importo il progetto del prof)->lo importo come archivio(da uno zip) o come file system(da una cartella).
+Con project->new java project(creo un nuovo progetto)->in src poi trascino le cartelle dove ho i codici autogenerati da visual paradigm.
+Modifico poii il codice java generato per far si che il tutto funzioni. I particolare il mainform del boundary mi conviene crearlo nuovo con tasto destro->new->other->Windoew builder->Swing->Jframe e crea il codice
+dell'interfaccia grafica eliminando poi la vecchia classe dell'interfaccia. Nella parte design però posso "disegnare" l'interfaccia grafica aggiungendo gli elementi tramite il pannello, e il codice poi verrà autogenerato.
+Per avere libertà però aggiungo all'interfaccia un absolute layout(da layouts) così da poter decidere dove mettere le cose. In particolare con i textfield creo i pezi dove inserisco le cose

@@ -1,0 +1,11 @@
+[
+	{ "s": "PASSWORD", "p": [2] },
+	{ "s": "PAZIENTE", "p": [4, 5, 3] },
+	{ "s": "PER", "p": [3, 4, 2] },
+	{ "s": "PRELIMINARE", "p": [2] },
+	{ "s": "PRENOTA", "p": [7] },
+	{ "s": "PRESENTI", "p": [5] },
+	{ "s": "PRIMA", "p": [3, 4] },
+	{ "s": "PROVATO", "p": [2] },
+	{ "s": "PUÒ", "p": [4] }
+]

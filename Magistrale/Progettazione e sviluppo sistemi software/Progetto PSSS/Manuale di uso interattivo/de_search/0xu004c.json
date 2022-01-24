@@ -1,0 +1,11 @@
+[
+	{ "s": "L", "p": [5, 3, 2, 4] },
+	{ "s": "L'AGGIORNAMENTO", "p": [5] },
+	{ "s": "L'APPLICAZIONE", "p": [2] },
+	{ "s": "L'APPOSITA", "p": [3] },
+	{ "s": "L'APPOSITO", "p": [5] },
+	{ "s": "L'OPERAZIONE", "p": [3, 2, 5, 4] },
+	{ "s": "LA", "p": [4, 3] },
+	{ "s": "LE", "p": [4, 6, 3, 5] },
+	{ "s": "LOGIN", "p": [2, 3, 5, 4] }
+]

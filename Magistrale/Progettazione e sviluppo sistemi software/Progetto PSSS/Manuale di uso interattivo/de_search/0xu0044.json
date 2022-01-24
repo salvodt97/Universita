@@ -1,0 +1,13 @@
+[
+	{ "s": "DALL", "p": [5] },
+	{ "s": "DALL'INTERFACCIA", "p": [5] },
+	{ "s": "DALLA", "p": [5] },
+	{ "s": "DATI", "p": [3] },
+	{ "s": "DEL", "p": [5, 4, 3] },
+	{ "s": "DELL", "p": [5] },
+	{ "s": "DELL'AGGIORNAMENTO", "p": [5] },
+	{ "s": "DELLE", "p": [5, 2, 1] },
+	{ "s": "DI", "p": [4, 3, 5, 2] },
+	{ "s": "DISPONIBILE", "p": [7, 6] },
+	{ "s": "DOPO", "p": [3] }
+]

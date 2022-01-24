@@ -1,0 +1,59 @@
+Vediamo ora la parte di progettazione in visual paradigm dell'elaborato. Il nostro scopo è simulare un'iterazione del processo UP: quindi ci sarà la fase di ideazione e le altre. La prima cosa
+quando creiamo un nuovo progetto è quello di dividere il progetto in blocchi logici. Su view->panes imettiamo la palette "logical view" in cui creiamo il nostro progetto. Dentro con tasto destrp->add view
+posso aggiungere varie viste, come la vista "requisiti", "analisi" e "design e implementazione". Ciò è itule così possiamo aggiungere i nostri diagrammi UML nelle varie viste, piuttosto
+che tenerli sparsi nel diaamm navigtor. Per esempio in "requisiti" potrei aggiungere uns vista "textual analysis" così ci metto dentro lanalisi testuale, oppure ci potrei mettere i requisiti
+in formato breve e dettagiato, oltre che il diagramma dei casi d'uso.
+Nella vista "analisi" ci metto invece dei modelli: in paricolare ci potrei aggiungere la vista "statica"(che per esempio ha il system domain model), e la vista"dinamica"(che per esempio
+va a descrivere come è usato il pattern controller ecc...)
+
+UML conserva molte delle caratteristiche che risalgono alle sue origini OBJECT-ORIENTED.
+Le astrazioni orientate agli oggetti non sono però sempre i migliori strumenti per descrivere le architetture software; ad esempio UML non ha notazione per i layers, per i diagrammi di contesto o rich connectors.
+UML mette a disposizione altri strumenti che permettono di supere tali mancanze.
+I diagrammi si suddividono in diagrammi strutturali e diagrammi comportamentali: i primi sono statici e descrivono la struttura del sistema come class diagram, component diagram, package diagram, mentre i secondi sono dinamici come activity diagram e sequence diagram.
+Un modo per specializzare ulteriormente il significato di un simbolo UML è l’utilizzo di stereotipi.
+In VISUAL PARADIGM si possono creare degli stereotipi: 
+Manage Stereotypes —> Edit e si aggiunge lo stereotipo di interesse.
+Il processo di documentazione richiede di produrre la documentazione dei requisiti, la documentazione di analisi e la documentazione di progetto/implementazione.
+La documentazione di analisi ha come input la documentazione informale dei requisiti e ha come obiettivo quello di produrre una documentazione che sia del tutto indipendente dall’implementazione.
+In genere contiene:
+— diagrammi dei casi d’uso, diagrammi dei requisiti, storie utente…;
+— system domain model;
+— diagramma di contesto, che permette di definire il contesto in cui si trova il sistema e permette di capire come il sistema si interfaccia con l’esterno;
+— bozza dei diagrammi di architettura;
+— per ogni requisito si realizzano dei diagrammi dinamici che ne specificano il comportamento (activity diagram, sequence diagram o combinazioni di diagrammi).
+
+Useremo diverse tecnniche che vedremo nel dettaglio:
+-RAFFINAMENTO: ovvero le info si devono presentare in sezioni separate in modo che siano più facilmente gestibili, e quindi permette di rappresentare le info con diversi livelli di dettaglio. Possiamo aggiungere
+ nuovi dettagli a viste già esistenti e si raffinano le informazioni che all'inizio abbiamo dettagliato poco. Ci sono 2 tipi di raffinamento:
+  *PER DECOMPOSIZIONE: si prende un singolo elemento del modello e lo esplicita, specifica, ulteriormente mantendo empre la consistenza tra i grafici. Posso decomporre grafici, funzioni ma anche semplici
+    messaggi, anche un caso d'uso.
+   *PER IMPLEMENTAZIONE: il livello di dettaglio resta lo stesso, ma seplicemente aggiungo nuove info e molti elementi e relazioni verranno sostituiti. Ovviamente anche qui non devo perdere consistenza.
+-CONTEXT DIAGRAMM: è una vista che rappresenta l'ambiente con cui il sistema o una sua parte interagisce. Le entità possono essere sia persone, sia oggetti come sensori, device ecc... Essi sono molto ad alto livello
+  e si usano casi d'uso o classi diagramm con oppoertuni stereotipi poichè UML non ha un diagramma apposito. In questo diagramma ci mettiao le classi di interfaccia del sistema. Seve a raffinare il  caso d'uso, ne aggiuge info.
+  Ciò serve per applicare il pattern GRASP Controller
+-COMBINARE LE VISTE: molte viste hanno aspetti comuni tra loro, sono legate tra loro. Devo quindi gestire come le viste sono associate tra loro e descrivere tali associazioni. Cliccando sul tasto destro su visual paradigm
+ posso fare transit to/transit for per associare anche singoli elemnti di più viste. Non devo riappresentare tutto in un unico diagramma; se esso è molto compleso lo suddivido i più diagrammi che poi associo tra loro.
+ Solitamente accade con i diagrammi della dinamica. Inoltre i diagrammi componenti possono essere anche diversi: per esempio in un sequence diagramm posso specificarne un aspetto mediante una macchina a stati finiti per esempio.
+-DOCUMENTARE IL COMPORTAMENTO: descrivere in particolare le dipendenze tra classi o package, per specificare tutte le potenziali interazioni. Tali interazioni vanno poi specificate, per vedere come sinteragiscono le parti in esecuzione,
+ l'ordine di interazioni, concorrenza, dipendeza dal tempo, capire quali sono stati del sistema o delle sue parti eccc. Tale descrizione la faccio con sequence diagramm, o macchine a stati finiti ecc.. Per documentare il comportamento ci sono 2 tipi di documentazione:
+   *Una permette di descrivere cosa accade tra gli elementi di un sustema durante uno sceniario: la descrizione viene fatta con delle tracce, ovvro sequenza di attività o interazioni che descrivono la risposta del sistema ad uno stimolo;
+   *Un'altra che invece è state based, che mostra il comportamento completo di un elemento con una macchina a stati finiti. I questo caso è inutile usare le tracce.ezione di ce2.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Dobbiamo poi specificare i connettori con i tipo le istanze: prima efinisco i tipo con un diagramma apposito chiamato CATALOGO DEI COMPONENTI. I componenti poi li posso collegare con dei connettori, che possono essere anche complessi. Il connettore
+lo posso specificare come un associazione con un nome, e poi lo posso specificare mediante un'altro componente. Un componente in realtà è u qualsiai artefatto software che ha un suo funzionamento, una sua istanza, a runtime.

@@ -1,0 +1,182 @@
+Vediamo come gestire thread di controllo paralleli, quiindi chiamate di funzioni diverse concorrenti. La concorrenza è un requisito molto richiesto nell'ambito di un sistema software, ma anche nel caso
+ho una comunicazione client server, oppure ho più utenti(attori) che richiedono dei srvizi. Alcuni thread potrebbero anche collaborare, o essere concorrenti, per fare u'operazione.
+Vediamo quindi la programmazione concorrente in Java con i thread. Un processo incorpora 2 concetti fondamentake:
+ -Concorrenza, ovvero ogni processo ha un proprio flusso di controllo
+-Protezione, ogni processo ha un proprio spazio di indirizzamento, e un processo può accedere ad indirizzi solo nel suo spazio.
+Un processo può essere:
+-leggero, THREAD, che ha sempre un flusso di controllo sequenziale e ha un suo spazio di indirizzamento, ma non è un processo, in quanto un processo può avere più thread che lavorano in parallelo. Ogni
+-pesante, se ha più thread.
+
+Un THREAD ha qundi un flusso di cotrollo sequenziale con i suoi registri, il suo stack, ma non ha area heap e/o dati, poichè tutti i thread condividono lo stesso heap e are dati del processo. Il vanaggio dei 
+thread è che è più semplice creare termirnarlo rispetto ad un processo, in quanto non devo copiare i dati; inoltre è più semplice far comunicare tra loro i thread essendo la memoria comune; e il context
+switching tra i thread ha un oerhead minore.Inoltre in Java ogni cosa è un oggetto, anche un thread lo è.
+Quando ho più processi/thread, essi si dicono concorrenti quando la loro esecuzione si sovrappone nel tempo. Tali processi concorenti possono essere:
+-INDIPENDENTI, se l'esecuzione di uno non  influenzata dall'altro e viceversa
+-INTERAGENTI, quando l'esecuzione di uno è influenzata dall'altra e viceversa. L'interazione influsce sulla velocità relativa dei processi. C'è però il riscio di comportamenti non riproducibili, ovvero potrebbero 
+  produrre risultati non attesi.
+  Le interazioni sono di diverso tipo:
+  * COMPETIZIONE: voglio accedere a risorse cmune a cui non possono accedere più thread in parallelo, e quindi l'accesso deve essere in muta esclusione. La competizione può essere sia su dati, sia su parti
+     di codice, a cui più thread cercano il controllo. La competizione la so gestire, ma potrebbe causare comportamenti non riproducibili se non la gestisco. Dovrei indicare già nei requisiti come gestire la
+     competizione. Come vincolo c'è il fatto che un processo alla volta può accedere alla risorsa condivisa. La risorsa da usare in mjta esclusione è detta RISORSA CRITICA, mentre il codice che usa tale risorsa
+     è detta SEZIONE CRITICA
+  * COOPERAZIONE: i therad collaborano scambiandosi le risorse per raggiungere un obbiettivo. Il vincolo è che i processi acederanno alla risorsa in ordine.
+  * INTERFERENZA: che si ha quando gestisco male la competizione o la cooperazione; in questo caso avviene un errore ma non deterministico, non so quando avviene e cosa accade. Dipende per lo più dalla
+     velocità dei thread, che potrebbe causare il fatto che a seconda di quale thread arriva/opera prima, ottengo dei risultati diversi, L'interferenza deve essere sempre gestita.
+Un problema che incorre quando non gestisco bene la competizione è il DEADLOCK: un processo P1 ha una risorsa R1 che serve a P2, ma P2 ha una risorsa R2 che serve a P1, e stanno in stallo.
+
+THREAD IN JAVA
+Java per sua natura è multithread e offre primitive sia per definire attività aindipendenti(processi, thread) sia per far comunicare e sincrnizare tali attività concorrenti. Un modo per definire una classe thread è:
+
+public class Miothread extends Thread {		La classe Miothread estende la classe Thread si Java
+ 	public Miotrhead() {			Costruttore
+		start();				La chiamata del metodo start è obbligatoria per far partire il thread, e chiama in automatico il metodo run. Il metodo start sta nel costruttore, quindi quando creo 
+	}					un thread viene anche eseguito. Potrei anche non mettere start nel costruttotre, così poi nel main quando lo creo lo creo solo, per eseguirlo devo chiamare la sua run()
+	public void run(){
+		// Codice che il thread esegue
+	}
+}
+
+Miothread t=new Miothread();			Creo così il thread ed eseguo start, e quindi run
+t.start();						Chiamerei così il metodo start se non l'avvessi definito nel costruttore, così da avviare il thread
+
+Un thread è sempre una classe(un oggetto più nel dettaglio): quindi può accedere a database, interagire con le interfacce ecc... Un thread può anche istanziare, nel suo metodo run(), altri oggetti che vengono visti solo
+localmente da lui. Un thread si chiude, finisce, quando raggiungo il return del metodo run() opure, se non ha return(è void), termina quando ho eseguito tutto il suo codice. Inoltre posso avere anche una chiamata di
+interruzione su questo thread, ovvero un thread può interompere, bloccare, un altro thread. Dobbiamo far sì che un applicazione si chiuda solo quando terminano tutti i thread, altrimenti potrei sovracaricare la
+memoria in quanto questi non vengono cancellati dal Garbage Collector della JVM.
+Per creare un thread tramite un interfaccia ci sono 2 modi:
+-derivare il Miothread della clase Thread() e fare l'overriding di run() (come visto nell esempio)
+-Implementare l'interfaccia Runnable nella classe utente, e fornire un imlementazione di run(). Runnable è una classe inerfaccia di Java.
+Java non permette ereditarietà multipla: ovvero se la classe utente è la derivata(figlia) già di un'altra classe, non può essere estendere anche la classe Thread; in questo caso allora si fa sì che la mia classe Miothread
+ implementa(usa) la classe Runnable, che essendo un interfaccia non ha attributi e ha metodi astratti, non implementati. Quindi poi Miothread, se usa Runnable, deve ridefinire i metodi cheutilizza. Il codice sarebbe:
+
+public class Miaclasse extends Classe padre implements Runnable{
+	public void run(){	//codice}
+}
+Runnable r = new Miaclasse();
+Thread t = new Thread(r);
+t.start();
+
+Questo è il meodo migliore per creare un thread. Il costruttore di Thread ha 3 parametri opzionali:
+-uno di tipo Threadgroup per definire un gruppo a cui appartiene il thred
+-uno di tipo Runnable usato quando lo creo on la classe Runnable come visto prima.
+-uno di tipo String per il nome del thread
+Quando eseguo un thread lo scheduling viene univocamente deciso dalla JVM, ma ci sono diversi metodi per influenzare tale scheduling:
+-yeld(): serve a dire che uh thread è disposto ad essere interrotto da un altro thread, a cui da la precdenza
+-setPriority(priorità): permette di settare la priorità del thread, con le parole MAX_PRIORITY, NORM_PRIORITY o MIN_PRIORITY
+-sleep(time): si forza un thread a interrompersi per un tempo pari a quello indicato come parametro
+
+Le interruzioni servo a far si che un thread, se lo interrompo, deve smettere di fare quello che sta facendo e fare altro(per esempio nel caso di eccezioni): un thread o si interrompe chiamando l metodo interrupt() sull'oggetto
+thread. Posso anche far si che un thread interrompa un altro thread mediante interrupt(), e lo possiamo usare anche per forzare la chiusura del thread(). Il codice poi va messo in un try catch:
+
+try{
+	metodo che genera l'interruzione
+} catch (InterruptedException ex) {
+	codice che gestisce l'eccezione
+}
+
+Se ho un thread chiamante, per esepio il main() che è un processo, che chiama o crea altri thread, nellambito di activity diagram questo significa che sto facendo una fork() (i thread li modello con activity diagram oppure con 
+il frame PAR del sequence diagram che indica che i flussi di quel frame vengono eseguiti in parallelo: quindi modello thread paralleli con UML) può succedre che il thread chiamante termini prima di quelli che ha creato. Per 
+evitare ciò, si fa si che il thread padre chiami la funzione join() sul figlui (thread_da_aspettare.join()), così il thread padre, chiamante, simette in attesa, si blocca, fino a quando i thread figli non finiscono la propria esecuzione,
+ovvero finiscono il run(). Quando i figli finiscono, il join termina e il padre può continuare la sua escuzione, e quindi poi terminare. In oni caso, quando il figlio termina l'esecuzione, ovvero il join() è finito, non è detto che il padre
+ritorni subito ad eseguire, bensì si indica che è pronto ad eseguire ma sarà poo sempre lo scheduler a decidere quando il pare continua a lavorare.
+
+NOI USIAMO INTERRUPT() PER TERMINARE IL THREAD
+
+
+------------------------LEZIONE 2--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Java mette a disposizione metodi nativi che supportano sia la muta esclusione, sia la cooperazione: in generale aiuta quindi la sincroizzazione. In particolare si usano i metodi:
+-obect locks per la mutua esclusione, ovvero si blocca l'oggeto che devo usare in mutua escllusione;
+-wait e notify per la cooperazione: un thread aspetta la risorsa con wait, e quando viene rilasciata viene fatto un notify(notifica) al thread che la doveva usare.
+Questi metodi appartengono alla classe Thread.
+
+MUTUA ESCLUSIONE
+-Nel modello a memoria comune abbiamo diversi pocessi che possono accedere in concorrenza agli stessi dati: in java i processi saranno dei .jar istanziati ed eseguuiti nella stessa JVM; ovviamente un processo può essere
+ anche multithread. I vari dati comuni tra i thread devono sottostare solo alle regole di visibilità, e in ogni caso il rischio di interferenza è alto. La JVM può gestire la sincronizzazione con la keyword SYNCHRONIZED, che
+permette di gestire la sincronizzazione degli accessi ad una classe, ad un metodo o addirittura ad un blocco di codice, quindi a vari livelli di dettaglio. In questo caso Java definisce anche un lock, ovvero un contatore
+di accessi contemporanei all'elemento(quanti oggetti vogliono accedere contemporaneamente all'elemento). Quando l'elemento lo sta usando qualun'altro, il nuovo thread che lo vuole usare si blocca.
+Ad ogni oggetto Java in ogni caso è associato un lock(all'oggetto, non alla classe o a un blocco di codice), e per accedere a un metodo o ad una sezione synchronized, il thread deve prima acquisire il lock dell'oggetto
+che contiene quel metodo o pezzo di codice synchronized che voglio usare. Quando poi il thread esce dalla sezione synchronized(ha finito di usare la risorsa condivisa), oppure quando viene intorrotto da un'eccezione, il
+lock viene rilasciato e, se un thread vuole usare qualcosa di quell'oggetto(anche un altro metodo no synchronized) di cui però non è ancora stato rilasciato il lock, allora si mette in attesa fino a quando il lock non viene
+rilasciato.
+Un metodo synchronized viene definito anteponendo la keyword synchronized alla firma della funzione(synchronized void metodo(){..........} per esempio). In ogni caso il lock del'oggetto viene acquisito anche se accedo a un
+metodo non synchronized dell'oggetto. Quindi, ho creato uan REGIONE CRTICA (MUTEX) con il synchronized.
+Java offre anche la possibilità di definire sezioni critiche, anche quando non sono corpo di un metodo, con i blocchi sincronizzati. Si fa così:
+Object obj=new Objet();		Così definisco syncrnized tutti i metodi nel blocco, e per eseguire la pima istruzione del blocco, il thread deve acquisire il lock associato al blocco di istruzioni e, quando finisce di
+syncronized(obj){			l'utilizzo dell'ultima istruzione, rilascia il lock.
+.				Questa soluzione è più flessibbile, in quanto posso controllare un singolo blocco di codice; permette quindi di implementare regioni critiche anche se non sono veri e propri metodi,
+.				E permette di fare cotrutti più complessi, come un metodo con un blocco di istruzioni synchronized al suo interno
+}
+
+
+
+COOPERAZIONE
+In questo caso la sincronizzazione permette di evtare l'esecuzione contemporanea di parti di codice che porterebbero ad inconsistenza dei dati. In questo caso i thread cominucano tra loro, magari scambiandosi le risorse, 
+per raggiungere un obbiettivo comune. Per fare ciò Java fornisce 3 metodi nativi:
+-wait(), un thread ce invoca questo metodo rilascia il mutex(rilasciaquindi il lock, finisce di usare la sezione critica), e si mette in attessa fino a quando o non viene risveglato da un'altro thread emdiante notify o notifyall,
+ oppure fino a quando non viene interrotto. In wait() in realtà ci posso passare un parametro long che indica la durata in millisecondi per il qauale si deve fermare, passato quel tempo si sblocca da solo(ma non è detto che
+ venga eseguito, dipende dallo scheduler). wait() è un metodo final, ovvero non ne posso fare l'override(non ne posso ambiare l'implementazione).
+-notify() o notifyAll() permettono di risvegliare un thread in attesa
+La coppia wait() e notify() permettono di implementare le CONDITION VARIABLES, che sono utilizzate quando voglio eseguire una sezione critica solo nel caso in cui sia verificata una condizione R. Quindi, se R==true, il thread
+esegue il codice della sezione critica; se R==false, si pone il thread nello stato di sleeping rilasciando la sezione critica.
+In Java creeremo le sezioni critiche o con i Semafori, o combinando Mutex, wait() e notify(); in ogni caso i metodi wait() e notify() devono essere invocati all'interno di blocchi sincroizzati poichè non risolvono la mutua esclusione
+e quindi vanno combinati con i monitor per avere accessi spuri alle risorse condivise.
+
+
+
+SEMAFORI
+In java si usa la classe Semaphore per gestire un insieme di permessi: si usa acquire() per acquisire un insieme di permessi: se non ci sono il thread che chiama acquire() si blocca; release() serve a liberare un permesso. In
+particolare i permsessi sono permessi di acedere a risorse critiche, condivise. I semafori si usano per restringere il numero di thread che possono accedere ad una risorsa condivisa. In ogni caso la consistenza della risorsa
+va gestita al di fuori del semaforo: esso gestisce solo l'accesso alla risorsa.
+Il Semaoro(Semaphore()) premde in ingresso un intero che dice il numero di permessi, e un booleano che se è vero ordina in maniera FIFO i thhread che vogliono usare quel permesso.
+
+
+------------------------LEZIONE 3--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Abbiamo visto degli esempi,
+
+Thread_01_provaThreadPsss
+In esempiPreliminari, nella classe ThreadDemoFor creo un Thread con il metodo extends(meno consigliato) e viene fatto l'override del metodo run chiamato automaticamente da start(). Poi nella classe CallerTrd
+creo 3 thread e ne chiamo start, poichè non l'ho definito nel costruttore, ma se eseguo i thread() vengono eseguiti in maniera non ordinata e casuale.
+In CallerTrdAutoStart invece costruisco in un ciclo dei thread senza chiamare start(e quindi run) poichè vengono chiamati direttamente all'atto della creazione; questo perché li creo con la classe
+ThreadDemoForAutoStart, il cui metodo start viene definito nel costruttore; nemmeno qui ho ordine di esecuzione, è lo scheduler in cooperazione col sistema operativo che li fa eseguire.
+Nell'esempio invece RunnableFor creo 3 thread RunnableFor e poi ne chiamo lo start: in questo caso i thread sono Runnable, non estendono la classe Thread, e questo è utile perchè abbiamo visto
+che in Java una classe può essere fglia solo di un'altra(non di 2 o più). La classe RunnableFor h un attributo di tipo Thread, un intero che indica le iterazioni che voglio fare(poichè questi thread fanno
+dei for e quidi gli posso passare 'indice del for), e una stringa che indica il nome del thread. Nello start creo poi un Thread e ne chiamo start, così poi il metodo start di RunnableFor mi cra un Thread
+e lo avvia quando viene chiamato. In questo caso riesco a creare e a far eseguire i Thread in ordine, poichè la classe Runnable non viene proprio toccata dallo scheduler del thread; tale scheduler
+lavora per schedulare solo il Thread di Runnable, che però è unico.
+In esPriority ho creato 3 Thread, uno a MAX_PRIORITY e 2 MIN_PRIORITY: mi aspetto che quindi il thread a massima priorità venga eseguito e completato prima senza interruzioni, e quindi termina prima;
+in realtà non è detto che accada ciò, ovvero lo sceduler potrebbe non fare come gli suggerisco con le priorità.
+In esYeld abbiamo visto poi come funziona yeld: in ThreaddemoFor chimo nel metodo run(), all'interno di un if, Thread.yeld() che fa interrompere il Thread se si verifica la condizione. Quando il thread chiede
+di andare in yeld, nell'esecuzione di dopo non è detto che agisca il thred che ha chiamato yeld, dipende dalla JVM.
+In esJoin abbiamo poi visto l'esempio di jion(): nel Caller.java creo 2 Runnable, da cui creo poi 2 thread. Il join() viene chiamato in un try-catch
+Dobbiamo ricordarci che ogbi volta che lancio un thread con start(), poi ne devo fare il join() altrimenti il main in cui li lancio potrebbe finire prima.
+In esInterrupt invece abiamo visto come interrompere in thread in aniera forzata con il metodo interrupt()
+
+E' buona norma mettere il wait() sempre in un try-catch
+
+
+Theads_02-sincronizzazione
+Abbiamo visto qui l'esempio di produttore consumatore: il thread consumatore deve consumare una risorsa, che se non c'è si mette in attesa che ci sia; stessa cosa il produttore, che si blocca e non produce
+se la mailbox è piena. La mailbox fornisce 2 metodi preleva e deposita che sono sincronizzati. Il metodo preleva controlla una variabile pieno booleana: se pieno è vera, ovvero fino a quando ho !pieno, il 
+thread si ferma chiamando nel try il metodo wait(). Il metodo preleva invece si ferma se pieno=false: si ferma con wait() in un try-catch, e dopo chiama notify() dopo che ha consumato per segliare un
+consumatore che è in attesa.
+In semaphore abbiamo visto l'esempio del semaforo: essa è una risorsa condivisa che usano produttore e consumatore. Il semaforo prende un intero che mi dice quanti elemnti possono stare contemporaneamnete
+sincronizzati sul semaforo.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

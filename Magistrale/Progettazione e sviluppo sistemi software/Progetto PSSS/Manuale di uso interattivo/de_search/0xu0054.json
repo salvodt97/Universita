@@ -1,0 +1,12 @@
+[
+	{ "s": "TASTO", "p": [2] },
+	{ "s": "TERAPIA", "p": [3] },
+	{ "s": "TERAPIE", "p": [4] },
+	{ "s": "TI", "p": [3] },
+	{ "s": "TITOLO", "p": [1] },
+	{ "s": "TRAMITE", "p": [5] },
+	{ "s": "TROVATO", "p": [5, 4] },
+	{ "s": "TROVERAI", "p": [4] },
+	{ "s": "TUTTE", "p": [6] },
+	{ "s": "TUTTO", "p": [5] }
+]

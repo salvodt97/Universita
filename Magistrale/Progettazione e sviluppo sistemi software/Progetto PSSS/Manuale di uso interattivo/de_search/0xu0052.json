@@ -1,0 +1,8 @@
+[
+	{ "s": "REGISTRARE", "p": [3] },
+	{ "s": "RELATIVI", "p": [3] },
+	{ "s": "RENDERE", "p": [3] },
+	{ "s": "RICERCARE", "p": [4] },
+	{ "s": "RICOVERO", "p": [4, 3] },
+	{ "s": "RIGUARDANTI", "p": [4] }
+]

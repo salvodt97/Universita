@@ -1,0 +1,17 @@
+[
+	{ "s": "SBAGLIATO", "p": [3] },
+	{ "s": "SCEGLIERE", "p": [3] },
+	{ "s": "SCHERMATA", "p": [4, 3] },
+	{ "s": "SE", "p": [3, 5, 4, 2] },
+	{ "s": "SEZIONE", "p": [7, 6] },
+	{ "s": "SI", "p": [5, 3, 4, 2] },
+	{ "s": "SISTEMA", "p": [2] },
+	{ "s": "SOMMINISTRATA", "p": [3] },
+	{ "s": "SOMMINISTRATE", "p": [4] },
+	{ "s": "SONO", "p": [4] },
+	{ "s": "SU", "p": [5, 3, 4] },
+	{ "s": "SUA", "p": [4] },
+	{ "s": "SUL", "p": [2] },
+	{ "s": "SULLA", "p": [4] },
+	{ "s": "SUO", "p": [4] }
+]

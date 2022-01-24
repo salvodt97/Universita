@@ -1,0 +1,25 @@
+Una volta fatto il progetti in Visual Paradigm, devo creare un nuovo java Project in eclipse e selezionare lopzione separate. Poi i src trascino òe cartelle che stanno del BCE del progetto di visual paradigm.
+Così ci sono degli errori: i primi errori sono dovuti alla definizione dei vari package, per esempio package BCE.Boundary, e per risolvere elimino BCE. .Questi errori non li avevo se trascinavo tutta lartella BCE
+di VP invece che le 3 sottocartelle. Ho poi errori di tipi, tipo il tipo stringa che in visual paradigm(uml) si scrive con string, in java con String: risolvo cambiando i nomi oppure definendo in VP con i nomi giusti
+i vari attributi.
+Devo poi eliminare il mainform del boundary e aò suo posto ci metto new->other->Window builder->Jframe così sarà quella la mia interfaccia. Si apre poi il codice della jFrame al quale posso aggiungere i vari
+elemnti: il codice non lo aggiungo manualmente, ma i nuovi elementi li aggiungo selezionando designi. Mi si apre un frame vuoto con la palette di tutti gli elementi grafici che posso aggiungere. La prima
+cosa che dobbiamo selezionare è il layout "Absolute Layout" nel frame, così posso ditribuire a piacimento tutte gli elemnti sul frame(se non lo facevo, ero vincolato alla posizione da poter usare).
+Una Label è un'etichetta di dtesta; un Text Field è un elemento in cui l'utente può inserire dei dati o il sistema può restituire valori di ritorno. Sulla sinistra trovo poi le alcune delle proprietà del mo elemnto,
+come il testo che compare all,interno eccc.
+Devo poi vedere come aggiungere delle interazioni tra l'interfaccia e l'utente: cliccando sul tasto destro sull'elemento(bottone per esempio) posso aggiungere un Event Handler e Event Listener: in Handler
+dico quale evento scatena l'interazione(per esempio mousePressed, mouseClicked eccc...) che poi posso combinare per fare eventi più complessi.
+Nel codice verranno aggiunti in automatico degli attributi all'interfaccia che corrispondono agli elementi grafici inseriti e vengono poi istanziati qandoo chiamerò il sotruttore del Jframe(creo l'interfaccia).
+Ak button poi viene attaccato ulìn listener per l'evento actionListener, e nella funzione ActionPerformed devo inserire il codice che viene eseguito quando eseguo quella determinata azione(per esempio chiamo
+una funzione). Ai vari elemnti posso poi cambiare il nome, ovvero cambiare il nome della variabile; ci sono diverse azioni di refactoring che posso usare premendo sulla variabile tasto destro->refactor, come
+per esempio il rename: se cambio per esempio il nome così, il nome verrà cambiato ovunque il quel codice.
+Inoltre, su un attributo tasto destro->source posso fargli generare le funzioni get e set in automatico.
+Tornando al Jframe, nel actionPerformed nel button va messa la liogica applicativa.
+Devo poi creare un altro package, Stub, che simula il database e arebbe il livello più baso del BCE(BCE è sempre un'architettura a livelli). Il package Stub sostituisce il package di Database che si interfaccia con 
+la memoria.
+Le variabili di tipo base in java hanno anche il corrispettivo ado oggetti: Integer è l'oggetto per gli interi, e con il metodo static parseInt trasformo per esempio una stringa in intero. Un metodo static può essere
+chiamato anche senza istanziare l'oggetto con new.
+Invece con la funzione setVisible() con parametro true o false dico se quell'elemento lo faccio vedere o no.
+Un arraylist ha il metdo contains che mi retituisce un booleando che indica se quell'elemento si trova nell'arraylist, e indexof mi dice l'indice: questo mi permette di evitare un ciclo, ovvero un algoritmo di ricerca.
+Per sfruttare al massimo contains e index of devo ridefinire il metodo "equals" di java: tale metodo vuole in ingresso un oggetto e restituisce true l'oggetto che chiama la funzione e l'oggetto passato come parametro
+puntano alla stessa area di memoria(sono uguali). Il metodo equals va quindi modificato, ne devo fare l'override

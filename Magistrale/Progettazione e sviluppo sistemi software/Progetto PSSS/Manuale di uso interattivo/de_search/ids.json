@@ -1,0 +1,9 @@
+{
+	"1": ["Tit... E' richiesta la licenza Advanced!", "index.htm", []],
+	"2": ["Effettu... E' richiesta la licenza Advanced!", "effettua_login.htm", []],
+	"3": ["Creazione di una... E' richiesta la licenza Advanced!", "creazione_di_una_cartella_clinica.htm", []],
+	"4": ["Visualizza cartel... E' richiesta la licenza Advanced!", "visualizza_cartella_clinica_attiva.htm", []],
+	"5": ["Aggiornamento c... E' richiesta la licenza Advanced!", "aggiornamento_cartella_clinica.htm", []],
+	"6": ["Visualizza tutte l... E' richiesta la licenza Advanced!", "visualizza_tutte_le_cartelle_cliniche.htm", []],
+	"7": ["Prenota ... E' richiesta la licenza Advanced!", "prenota_un_esame.htm", []]
+}

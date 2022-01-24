@@ -1,0 +1,12 @@
+[
+	{ "s": "VEDIAMO", "p": [3] },
+	{ "s": "VIDEO", "p": [4] },
+	{ "s": "VIENE", "p": [5, 4] },
+	{ "s": "VISUALIZZA", "p": [6, 4] },
+	{ "s": "VISUALIZZARE", "p": [4] },
+	{ "s": "VISUALIZZATE", "p": [5] },
+	{ "s": "VISUALIZZAZIONE", "p": [4] },
+	{ "s": "VOGLIONO", "p": [5] },
+	{ "s": "VUOI", "p": [3] },
+	{ "s": "VUOLE", "p": [3] }
+]

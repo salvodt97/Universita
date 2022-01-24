@@ -1,0 +1,10 @@
+[
+	{ "s": "MA", "p": [5, 4, 2] },
+	{ "s": "MANUALE", "p": [1] },
+	{ "s": "MANUTENZIONE", "p": [7, 6] },
+	{ "s": "MEDICO", "p": [5, 3] },
+	{ "s": "MESSAGGIO", "p": [5, 3, 2] },
+	{ "s": "MODIFICA", "p": [5] },
+	{ "s": "MODIFICARE", "p": [5] },
+	{ "s": "MODIFICHE", "p": [3] }
+]

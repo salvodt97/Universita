@@ -1,0 +1,18 @@
+Abbiamo scelto lo stile architetturale Layered, ovvero la nostrea applicazione è divisa in diversi livelli: tale scelta di progetto ci pone dei
+vincoli, come il fatto che un livello può chiedere i servizi solo di un livello inferiore e offrire servizi solo ai livelli superiori, ma ciò
+di permette di avere un sistema meno disaccoppiato, comprensibile e che rispetta gli standard. I livelli in particolare sono 2: il client che 
+chiede delle funzionalità, e il server che li fornisce.
+Scendendo più nel dettaglio dell'aechitettura, come pattern architetturale abbiamo scelto il 2-tiered: abbiamo 2 tier separati, il client e il
+server, e la comunicazione tra i 2 avviene da remoto medtante il connettore Java RMI(Remote Server Invocation). Il server a sua volta comunica con
+con un database MySQL mediante Hibernate.
+Dal punto di vista logico, il Client rappresenta il Presentation Layer, ovvero il livello che si interfaccia con l'utente, mentre il Server
+è diviso in 3 layer:
+-Application Layer, che contiene la logica di business, ovvero si occupa di prendere le richieste del Clien e inoltrarle ai giusti oggetti del
+ Domain Layer;
+-Domain Layer, che contiene gli oggetti di dominio che si occupano di di realizzare le responsabilità richieste;
+-Databse Layer, che è il livello che si occupa di comunicare con il Databse MySQL per accedere ai dati.
+I livelli sono di tipo Closed Layer, ovvero la richiesta di un livello i deve passare per forza per il livello i+1 per arrivare al livello i+2,
+non può bypassarlo: questa scelta può portare ad ulteriori rallentamenti, ma abbiamo operato così perchè abbiamo pochi livelli (solo 4), e
+mediante questa scelta ottengo il massimo disaccoppiamento.
+Il client è thin, ovvero non contiene la logica applicativa, in quanto ciò permette di avere un client più leggero.
+

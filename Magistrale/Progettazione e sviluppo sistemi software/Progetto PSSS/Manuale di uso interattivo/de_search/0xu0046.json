@@ -1,0 +1,12 @@
+[
+	{ "s": "FA", "p": [3] },
+	{ "s": "FARE", "p": [4, 3] },
+	{ "s": "FATTO", "p": [5] },
+	{ "s": "FINE", "p": [3] },
+	{ "s": "FINESTRA", "p": [5] },
+	{ "s": "FISCALE", "p": [5, 4] },
+	{ "s": "FONDAMENTALE", "p": [5, 4] },
+	{ "s": "FORM", "p": [5, 3] },
+	{ "s": "FUNZIONALITÀ", "p": [7, 6] },
+	{ "s": "FUNZIONI", "p": [1] }
+]
