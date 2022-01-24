@@ -1,0 +1,22 @@
+Simuliamo ora il DMA, che è molto semplice in quanto bisogna solo inizializzarlo e attivare la trasmissione, che poi fa solo il DMA.  Il modello di Asim ha solo 2 canali e ha un chip specifico, DMA; dove
+dico l'ID del CPU master l'indirizzo di base, il gestore delle interruzioni(che sarebbe la CPU con EOP) e con com4 i 2 dispositivi(2 cifre per ciascuno) che collego al DMA
+
+ESERCIZIO 1 TRASFERIMENTO MEMORIA MEMORIA
+Nell'area dati metto il messaggio da trasferire e la destinazione. Definsico poi con degli equ divesri registri (modi, registro dati di origine e destiaione e così via..) nell'area codice invece inizializzo dicendo la modalità 
+di trasferimento(block e così via) e tra chi trasferisco (memoria e memoria);con il regstro di modo con un bit posso definire come configurare i 2 canali che ho a disoizione (per esempio con il byte $90 dico che sto facendo
+trasferimento memoria-interfaccia, in quanto comunque il trasferimento è memoria-memoria ma la memoria passa il dato al DMA in un registro temporaneo di uno dei canali, e questo poi lo manda all'altra memoria).
+
+
+
+ESERCIZIO 2 TRASFERIMENTO CON IL TERMINALE
+dAL PUNTO DI VISTA DI CODICE, DEVO spostare i dati che da il terminale in un registro di dati del DMA, setto poi il trasfermento device(terminale)-memoa settando il canale dove ci e
+
+
+
+
+
+
+
+
+
+

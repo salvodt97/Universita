@@ -1,0 +1,136 @@
+00000000                                     1  **********AREA DATI************************************************************************************
+00008000                                     2  	ORG	$8000
+00008000                                     3  MSG			DS.B	6
+00008006  00                                 4  MSGSTOP		DC.B	0						;Messaggio di stop da inviare nel caso in cui si riceve $FF dal trasmettitore
+00008007  00                                 5  COUNT		DC.B	0
+00008008                                     6  
+00008008                                     7  
+00008008                                     8  
+00008008                                     9  ************AREA MAIN***************************************************************************
+00008008                                    10  *Il ricevitore usa il poro B della PIA per ricevere i primi dati, il porto A per inviare l'eventuale carattere di stop, e la USART per ricevere gli altri caratteri
+00008008                                    11  									
+00008008  =00002004                         12  PIAPDRA		EQU		$2004						
+00008008  =00002005                         13  PIACRA		EQU		$2005						
+00008008                                    14  
+00008008                                    15  
+00008008  =00002006                         16  PIAPDRB		EQU		$2006						
+00008008  =00002007                         17  PIACRB		EQU		$2007						
+00008008                                    18  
+00008008                                    19  												
+00008008  =00002010                         20  USARTDATO	EQU		$2010						
+00008008  =00002011                         21  USARTCTR	EQU		$2011						
+00008008                                    22  
+00008008                                    23  
+00008008  4EB9 0000803C                     24  MAIN 		JSR		INITAIN
+0000800E  4EB9 00008028                     25  			JSR		INITBOUT
+00008014  4EB9 00008050                     26  			JSR		INITUSART
+0000801A                                    27  		
+0000801A                                    28  		
+0000801A  287C 00008006                     29  			MOVEA.L #MSGSTOP,A4
+00008020                                    30  
+00008020                                    31  			
+00008020                                    32  			
+00008020                                    33  *PARTE DOVE ABILITO LE INTERRUZIONI			
+00008020  40C3                              34  			MOVE.W	SR,D3						
+00008022  0243 D8FF                         35  			ANDI.W	#$D8FF,D3					
+00008026  46C3                              36  			MOVE.W	D3,SR	
+00008028                                    37  			
+00008028                                    38  
+00008028                                    39  
+00008028  11FC 0000 2007                    40  INITBOUT	MOVE.B	#0,PIACRB					;Sto inizializzndo il CRB: in particolare è interessante il bit 2 pari a 0, poiché così quando poi accedo al PIAPDRB accedo al DDRB
+0000802E  11FC 0001 2006                    41  			MOVE.B	#1,PIAPDRB					;Ora sto accedendo al DDRB (visto che in CRB(2) ho 0) e metto tutti 1 così da impostare le linee di PB ad output
+00008034  11FC 0024 2007                    42  			MOVE.B	#%00100100,PIACRB			;Ho impostato la modalità handshaking, e disabilitato le interruzioni su A in quanto la trasmissione avviene nel main
+0000803A  4E75                              43  			RTS
+0000803C                                    44  
+0000803C  11FC 0000 2005                    45  INITAIN 	MOVE.B	#0,PIACRA
+00008042  11FC 0001 2004                    46  			MOVE.B	#1,PIAPDRA
+00008048  11FC 0025 2005                    47  			MOVE.B	#%00100101,PIACRA			;Sul porto A invece abilito l'interruzione, poichè il porto B riceve il arattere di stop 
+0000804E  4E75                              48  			RTS
+00008050                                    49  
+00008050  11FC 005D 2011                    50  INITUSART	MOVE.B	#%01011101,USARTCTR		;Il primo accesso a questo indirizzo della USART mi fa accedere al registr di MODE, dove setto modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+00008056  11FC 0036 2011                    51  			MOVE.B	#$36,USARTCTR				;Dal secondo accesso in poi accedo al registro di controllo, dove abilito ricezione, e attivo l'handshaking. 
+0000805C  4E75                              52  			RTS
+0000805E                                    53  
+0000805E                                    54  
+0000805E  4EF9 0000805E                     55  LOOP		JMP	LOOP
+00008064                                    56  
+00008064                                    57  
+00008064                                    58  
+00008064                                    59  
+00008064                                    60  
+00008064                                    61  
+00008064                                    62  
+00008064                                    63  **********************Questa è la ISR che si occupa di ricevere i caratteri sulla PIA**********************************************************************************************************************
+00008700                                    64  		ORG $8700
+00008700  2F08                              65  			MOVE.L 	A0,-(A7)
+00008702  2F09                              66  			MOVE.L	A1,-(A7)
+00008704  2F0A                              67  			MOVE.L  A2,-(A7)
+00008706  2F01                              68  			MOVE.L  D1,-(A7)
+00008708  2F00                              69  			MOVE.L  D0,-(A7)
+0000870A                                    70  			
+0000870A  207C 00008000                     71  			MOVEA.L	#MSG,A0
+00008710  1039 00008007                     72  			MOVE.B 	COUNT,D0
+00008716  247C 00002006                     73  			MOVEA.L #PIAPDRB,A2
+0000871C  227C 00002004                     74  			MOVEA.L	#PIAPDRA,A1
+00008722                                    75  			
+00008722  1191 0000                         76  			MOVE.B	(A1),(A0,D0)			;Ricevo
+00008726                                    77  			
+00008726  5200                              78  			ADD.B	#1,D0
+00008728  13C0 00008007                     79  			MOVE.B	D0,COUNT
+0000872E                                    80  			
+0000872E                                    81  *Confronto per vedere se il carattere ricevuto è $FF: se ciò accade, Z2 deve inviare a Z1 il carattere di stop $00
+0000872E  123C 00FF                         82  			MOVE.B	#$FF,D1
+00008732  B251                              83  			CMP		(A1),D1
+00008734  6600 0018                         84  			BNE		RIPRISTINO
+00008738                                    85  			
+00008738                                    86  
+00008738  11FC 0020 2005                    87  			MOVE.B  #%00100000,PIACRA		;Disabilito la ricezione sulla pia mettendo tutti 0 nel CRA: è importatnte che il bit 0 venga messo a 0 in particolare
+0000873E  4241                              88  			CLR		D1
+00008740  1212                              89  			MOVE.B  (A2),D1				;Lettura fittizia per abbassare CB2, quindi per azzerare CRB(7)
+00008742  1213                              90  			MOVE.B	(A3),D1				;Inserisco uno per volta nel registro di appoggio il carattere corrente da inviare
+00008744  1481                              91  			MOVE.B	D1,(A2)				;Scrittura del dato da inviare su PDRB: visto che in DDRB ho messo tutti 1, questo andrà a finire sul bus PB. Scrivere in PDRB significa abbassare la linea CB2, e quindi anche la linea CA1 a cui è connessa del dispositivo che riceve00008746                                    92  
+00008746                                    93  			
+00008746  1211                              94  RICACK		MOVE.B	(A1),D1				;Parte in cui aspetto di ricevere l'ack dall'alro dispositivo, ovvero che il bit 7 del CRB si abbassi.
+00008748  0201 0080                         95  			ANDI.B 	#%10000000,D1				
+0000874C  67F8                              96  			BEQ		RICACK	
+0000874E                                    97  
+0000874E  221F                              98  RIPRISTINO	MOVE.L (A7)+,D1
+00008750  245F                              99  			MOVE.L (A7)+,A2
+00008752  225F                             100  			MOVE.L (A7)+,A1		
+00008754                                   101  			
+00008754  4E73                             102  			RTE
+00008756                                   103  			
+00008756                                   104  
+00008756                                   105  **********************Questa è la ISR che si occupa di ricevere i caratteri sulla USART**********************************************************************************************************************
+00008800                                   106  		ORG $8800
+00008800  2F08                             107  			MOVE.L 	A0,-(A7)
+00008802  2F09                             108  			MOVE.L	A1,-(A7)
+00008804  2F0A                             109  			MOVE.L  A2,-(A7)
+00008806  2F01                             110  			MOVE.L  D1,-(A7)
+00008808  2F00                             111  			MOVE.L  D0,-(A7)
+0000880A                                   112  			
+0000880A  247C 00002011                    113  			MOVEA.L	#USARTCTR,A2
+00008810  227C 00002010                    114  			MOVEA.L	#USARTDATO,A1
+00008816  207C 00008000                    115  			MOVEA.L	#MSG,A0
+0000881C  1039 00008007                    116  			MOVE.B 	COUNT,D0
+00008822                                   117  
+00008822  1212                             118  CHECKDSR	MOVE.B	(A2),D1 
+00008824  0201 0080                        119  			ANDI.B	#$80,D1					;Controllo se il primo bit del CTR è 1: se è 1 attendo, altrimenti posso trasmettere, poichè DSR è legato a DTR della USART dell'altro dispositivo.
+00008828  67F8                             120  			BEQ 	CHECKDSR
+0000882A                                   121  
+0000882A  1191 0000                        122  			MOVE.B (A1),(A0,D0)
+0000882E                                   123  			
+0000882E  5200                             124  			ADD.B	#1,D0
+00008830  13C0 00008007                    125  			MOVE.B	D0,COUNT
+00008836                                   126  			
+00008836  201F                             127  			MOVE.L  (A7)+,D0
+00008838  221F                             128  			MOVE.L  (A7)+,D1
+0000883A  245F                             129  			MOVE.L  (A7)+,A2
+0000883C  225F                             130  			MOVE.L  (A7)+,A1
+0000883E  205F                             131  			MOVE.L  (A7)+,A0
+00008840                                   132  
+00008840                                   133  
+00008840                                   134  			END		MAIN
+
+No errors detected
+No warnings generated

@@ -1,0 +1,57 @@
+00000000                                     1  *Suppongo, per esercizio, N=1: invio quindi un solo vettore di 5 interi su 8 byte
+00000000                                     2  
+00000000                                     3  
+00000000                                     4  
+00000000                                     5  
+00000000                                     6  ******************AREA DATI*********************************************************************
+00008000                                     7  		ORG	$8000
+00008000  1E 1C 08 0F 5A                     8  MSG			DC.B	30,28,8,15,90		;Messaggio da inviare
+00008005  05                                 9  DIM			DC.B	5
+00008006                                    10  
+00008006                                    11  
+00008006                                    12  *******************AREA MAIN************************************************************************
+00008200                                    13  		ORG	$8200
+00008200                                    14  *Della PIA il sistema S2 usa il porto B per inviare i 5 interi
+00008200  =00002006                         15  PIAPDRB		EQU		$2006						
+00008200  =00002007                         16  PIACRB		EQU		$2007
+00008200                                    17  
+00008200                                    18  
+00008200  4EB9 0000823C                     19  MAIN 		JSR		INITBOUT
+00008206                                    20  
+00008206                                    21  
+00008206  227C 00002007                     22  			MOVEA.L	#PIACRB,A1			;Indirizzo del registro di controllo CRB
+0000820C  247C 00002006                     23  			MOVEA.L	#PIAPDRB,A2			;Indirizzo di PDRB e DDRB
+00008212  207C 00008000                     24  			MOVEA.L	#MSG,A0				;Indirizzo dell'area messaggio
+00008218  1039 00008005                     25  			MOVE.B	DIM,D0				
+0000821E                                    26  	
+0000821E  4241                              27  			CLR	D1						;Registro di appoggio
+00008220  4242                              28  			CLR	D2						;Contatore di interi inviati
+00008222                                    29  
+00008222                                    30  
+00008222  1212                              31  INVIO		MOVE.B	(A2),D1            	;Lettura fittizia per abbassare in CRB(7) e permettere l'invio del primo carattere
+00008224  1218                              32  			MOVE.B	(A0)+,D1			;Numero corrente da trasferire
+00008226  1481                              33  			MOVE.B	D1,(A2)				;Inserimento del numero nel PDRB così che inizi la trasmissione
+00008228                                    34  			
+00008228  5202                              35  			ADD.B	#1,D2				;Incremento del contatore dei caratteri trasmessi
+0000822A                                    36  
+0000822A  1211                              37  ciclo		MOVE.B	(A1),D1		
+0000822C  0201 0080                         38  			ANDI.B	#%10000000,D1		;Attesa che si alzi il bit CRB(7), quindi che si possa inviare un nuovo numero o terminare			
+00008230  67F8                              39  			BEQ	ciclo
+00008232                                    40  
+00008232  B042                              41  			CMP	D2,D0					;Verifio se la PIA ha finito di trasmettere
+00008234  66EC                              42  			BNE	INVIO
+00008236                                    43  
+00008236  4EF9 00008236                     44  LOOP		JMP		LOOP				;Attesa attiva
+0000823C                                    45  
+0000823C                                    46  *******************INIZIALIZZAZIONE PIA****************************************
+0000823C  11FC 0000 2007                    47  INITBOUT 	MOVE.B	#$00,PIACRB						;E' importante sottolineare che con questa istruzione metto a 0 CRB(2), così poi quando accedo al PIAPDRB in realtà accedo al DDRB
+00008242  11FC 00FF 2006                    48  			MOVE.B	#$FF,PIAPDRB					;Mettendo tutti 1 nel DDRB setto come OUTPUT le linee PB
+00008248  11FC 0024 2007                    49  			MOVE.B	#%00100100,PIACRB				;Seconda scrittura in CRB: abilito l'handshaking, disabilito le interruzioni (invio nel MAIN) e metto a 1 il CRB(2) così da accedere al PDRB ogni volta che accedo a PIAPDRB
+0000824E  4E75                              50  			RTS	
+00008250                                    51  
+00008250                                    52  *****************************************************************************************************************************
+00008250                                    53  
+00008250                                    54  			END		MAIN
+
+No errors detected
+No warnings generated

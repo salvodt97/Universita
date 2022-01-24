@@ -1,0 +1,156 @@
+Noi vediamo la pipeline, ma prevedremo anche di replicare dell'hardware. Noi vedremo architeture le cui le uiche istruzioni di accesso alla memoria siano Load e Store, ovvero se devo spostare un 
+operando i un registro non uso la Move. Noi vedremo il processore DLX che ha una pipe a 5 stadi, e le fasi sono:
+ -IF, ovvero prelievo dell'istruzione
+ -ID, ovvero decodifica e preparazione degli operandi che suppongo si trovano già nei registri interni per aumentare la velocità, e quindi le modalità di indirizzamneto sono limitate
+ -EX, ovvero eseguo e calcolo l'indirizzo effettivo per sempio in un salto
+ -MEM, dove accedo la memoria e completo i salti, ovvero calcolo l'indirizzo della prossima istruzione da eseguire se devo saltare
+ -WB, ovvero faccio il write back.
+Il modello DLX è dotato almeno di una memoria cache che contiene dati e sitruzioni(una chache o 2 cache separate, una per i dati e una per le istruzioni nel caso in cui volessi accedere a dati e istruzioni
+in parallelo); ovviamente un modello generale, esteso, prevede coe più complicate, come per esempio più pipe che lavorano in parallelo, e le varie pipe di profondità diversa(con diversi stadi), ma questo
+significa che in istruzione che inizia prima e va in una pipe più lunga finisce dopo un istruzione che è iniziata dopo ma si trova nella pipe più corta, e quindi non avrei più l'ordine corretto. In realtà potrei
+prevedere il completmento delle istruzioni anche non in ordine se non ci sono conflitti o problemi.
+Teoricamente, il tempo di esecuzione di un istrzione a regime è Ti=(tempo istruzione senza pipe/N livelli della pipe); ma ciò accade solo se tutti gli stadi usano lo stesso tempo per operare, ma in realtà non
+è così, infatti per garantire la sincorinizzazione tra gli satdi si mettono elementi di memoria come buffer, latch ecc..., e questo mi genera dei rallentamenti; inoltre potrei avere dello skew.
+Quindi nella realtà, tre  2 unità elaborative che fanno 2 fasi c'è un buffer in cui l'unità precedente salva ciò che ha fatto e da cui l'unità successiva preleva i dati da elaborare. Quindi tra  unità elaborative
+(Pipe che fa 5 istruzioni) ci sono 4 buffer a cui devo accedere e vado più lento. Quindi lo spedd-up diminuisce solo per far sincronizzare le fasi di una pipe che però lavorano indipendentemente l'una dall'altra.
+Nel DLX viene incluso un addzionatore speciale nell'ALU per aumentare il PC, quindi ad ogni colpo di clock riesco a caricare una nuova istruzione; inoltre ad ogni colpo di clock viene carivìcata una nuova word
+di dati(MEM); uso 2 registri separati per load e store(LMDR e SMDR), e l'accesso in memoria deve essere 2N volte più veloce rispetto alla macchina senza pipe.
+I limiti iguardano per lo più la sincornizzazione e posso avere diversi conflitti:
+ -STRUCTURAL HAZARD, conflitti nell'utilizzo della pipe
+ -DATA HAZARD, ovvero conflitto nell'suo dei registri legati per esempio al fatto che il dato in cache non c'è oppure un dato lo scrivo e o leggo in tempi molto vicini
+-CONTROL HAZARD, legato a variazioni nel flusso di caricamento delle istruzioni(salti, interruzioni).
+La tecinca prinicpale per aumentare il parallelismo prevede di duplicare determinate risorse; ciò è importante sopratutto per  gli structural hazard, dove la pipe anderbbe in stallo senza duplicazione. 
+Per esempio se avessi un solo porto di accesso alla memoria, non potrei contemporaneamente fare MEM di dati e prelievo di un'altra istruzione. Per il Data Hazard, tutti i registri se non gestiti in
+maniera opportuna portano in stallo il processore. Un esempio di data Hazard è READ AFTER WRITE, che accade quando un istruzione vuole leggere un dato che è stato scritto nella fase precedente,
+ovvero scrivo e poi leggo in tempi troppo vicini(vedi appunti 5). 
+I data Hazard sono 4:
+-Read after Write, che abbiamo visto prima come risolvere.
+-Write after Read, potrebbe non essere un problema, ma se la write cambia lo stato e devo interrompere nel mezzo l'istruzione che da il problema, allora è un problema
+-Write after Read, che si verifica in architetture dove psso scrivere in memoria in più fasi(non solo in WB) o se le istruzioni possono procedere l'elaborazione anche se ce n'è una in stallo.
+-Read after Read, non produce stallo.
+Poss risolvere un Data Hazard in diversi modo a seconda del tipo:
+ -Evito Read after Write facendo entrare nell'alu un dato in uscita dal multiplexer, che seleziona i valori del registro in conflitto o i valori retroazionati. Quindi miglioro la sitazione aggungedo un buffer, 
+  un compratore e un mux. Quindi l'uscita dell'alu non la mando in realtà in u registro dove dovrei salvare il risultato, ma la mando in un buffer con un mux. Questo perchè l'unità di esecuzione potrebbe
+  prendere in ingresso sia l'uscita di decodifica precedente, sia il risultato dell'esecuzione della prcedente pipe. Quindi l'ALU esegue l'operazione dell'esecuzione della prima pipe, e lo salva in un buffer che
+  poi retrazione in ingresso, ovvero in ngresso l'alu ha un mux che prende in ingresso l'uscita del buffer(risultato dell'operazione che l'alu ha calcolato prima) e l'uscita del latch che si trova prima della fase di
+  esecuzione della seconda pipe (ingresso che prendo normalmente senza hazard). Tale strategia si chiamaINTERNAL FORWARDING, e sarà la UC che deve capire se c'è stato un hazard e quindi selezionare
+  il giusto ingresso dell'alu, ovvero dare il giusto segnale di sleezione del mux. Si potrebbero usare, per risolvere, fronti differenti del clock per leggere e scrivere e quindi risparmiare cicli di clock o numero
+  di dati per fare Internal Forwanding. Ciò si può fare però solo se oero sui registri interni del processore e se ogni fase impiega un ciclo di clock.
+ -Se il data hazard accade perchè attendo un dato per esepio nel caso di cache miss, si parla di PIPELINE INTERLOCK, ovvero faccio eseguire l'istruzione finchè posso, e poi mando la pipe in stallo a metà
+ dell'esecuzione e i dati vengono poi forwardati nell'ALU. 
+ -Un altro modo per evitare lo stallo sarebbe quello di cambiare l'ordine delle istruzioni, quando posso, da compilatore, per evitare il conflitto sui dati. Si usa quindi il compilatore, e si  parla di PIPELINE 
+  SCHEDULING. Ciò si fa quando 2 fasi accedno quasi contemporaneamnet ad uno stesso registro.
+
+
+
+----LEZIONE 2-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------RIPETIZIONE INUTILE----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Quindiabbiamo detto che voglio tenere la pipeline sempre alimentata, così almeno teoricamente ho lo speed-up pari alla profondità della pipeline(ovviamnete senza hazard, senza problemi di accesso alla
+memoria ecc...). In ogni caso non riesco ad alimentare sempre la pipeline a causa degli azard(sopratutto data e structural), e prima o poi dovrò o svuotare la pipeline(PIPELINE SLASH) oppure fermarla, o
+addirittura un istruzione problematica potrebbe aver cambiato, in maniera scorretta, lo stato della macchina e quindi divrei ripristinare lo stato precedente.
+Ci sono 3 approcci per affrontare gli azard:
+ -CONSERVATIVO: quado prelevo l'istruzione, aspetto di eseguirla tutta prima di caricare un'altra istruzione, e se da problemi blocco la pipeline; così però perdo praticamente tutti i vantaggi della pipeline e lo
+  speed-up
+ -OTTIMISTICI: si cerca in tutti i modi di non bloccare la pipe. Ce ne sono diverse:
+   *INTERLOCKING, si creca di bloccare la pipe nel mezzo di esecuzione dell'istruzione così le istruzioni precedenti, che o già eseguito, le lascio lì poichè non hanno modificato lo stato del processore, e quindi
+     non devo svuotare la pipe
+   *INTERNAL FORWARDING, già visto prima, che usa un hardware aggiuntivo per risolvere il data-hazard read-after-write modificando l'unità di esecuzione
+   *Invertire l'ordine di esecuzione delle istruzioni(compilatore migliore)
+----------------------FINE RIPETIZIONE------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Vediamo ora il CONTROL HAZARD, che si verifica per istruzioni di salto: potrei usare l'approccio conservativo, ovvero fermare la pipe e calcolare il salto, ma non è efficiente. Si può usare un approccio 
+ottimistico però: si cerca di prevedere l'istruzione da caricare in caso di salto, e se non salto, allora si ripristina lo stato del processore(roll back).
+Tale tecnica di previsione prevede una memoria ssociativa che contiene quali sono le 2 potenziali istruzioni da eseguire dopo(quella successiva o quella del salto): quindi precarico le 2 possibili istruzioni, 
+e l'idirizzo dell'istruzione da caricare vene usata come chiave per accedere alla memoria ssociativa; potreri noltre mettere nella tabella dei bit per aiutare a fare la previsione.Tale approccio è detto 
+BRENCH PREDICTION. Solo nella fase ID(decodifica) capisco che un'istruzione è di salto, ma avrei già caricato l'istruzione successiva nella fase di fetch: in questo caso dovrei  rispristibare lo stato e caricare 
+poi l'istruzione corretta pagado una brench penalty(lo speed-ip diminusice), ma io non vorrei pagare tale penalty. Inoltre, solo nella fase di esecuzione capisco qual'è l'istruzione prossima da caricare in fase 
+di salto. Se usassi l'apprccio conservativo(blocco la pipe fino a quando non caloclo l'indirizzo della prossima istruzione da eseguire) non guadagno granchè, anzi lo speed-up resta uguale. Vediamo altre 
+tecniche:
+ -BRANCH DELAY: uso degli accorgimenti in fase di compilazione per evitare l'approccio conservativo. Si cerca in questo caso di verificare prima una condizione di if(di salto), e mentre la valuto eseguo 
+  l'istruzione prima dell'if o dopo l'if then else: non sempre posso farlo.
+ -BRENCH PREDICTION: si creca di prevedere se salto oppure no. Si costruisce una tabbella(memoria associativa) con le 2 possibili sitruzioni da esegure dopo(quella successiva o quella di slto). Una smplice 
+  condizione di salto sarebbe un if-then-else, ma già se usassi un cilco(for, while...) oppure cilci innestati la situazione sarebbe molto complessa, e sopratutto è complesso prevedere il salto. La tabella la 
+  posso realizzare on un diagramma degli stati. Vediamo un esempio:
+  60    LOOP			Inizialmente suppongo ottimisticamente di non saltare, quindi sto in uno stato NT in cui non salto(quindi in questo scenario carico 84 e 88) . Se in tale scenario(stato) 
+             .				ho sbaglaito. Allora dovrei svuotare la pipe e caricare l'indirizzo di salto(ovvero 60), quindi nella tabella associativa salvo poi 60 e suggerisco di ssaltare sempre nella
+             .				tabella. Quindi mi costruisco u automa con 2 stati: il primo stato NT(not taken) e un secondo stato T(taken); se sto in NT e la previsione di non saltare è corretta, allora 
+  80     CMP  #0, D0			resto in questo stato, altrimenti vado a finire nello stato di T. Stessa cosa accade nello stato di T. Quindi su 100 confronti(100 iterazioni di un for), senza brench predictio 
+  84     BNE LOOP			sbaglierei 100 volte, mentre con brach prediction sbaglio solo 2 volte(quando esco dal for ma dovevo saltare, e quando salto ma dovevo uscire). Se invece di un for 
+  88     ........			dovessi fare un if-then-else, in teoria ho il 50% di possibiltà di sbagliare, ma accadono alltre cose. Ci sono diversi vantaggi da tale tecnica:
+				1) conosco a priori lindirizzo di destinazione della prossima istruzione
+				2) se nell'if metto la condizione che è più probabimente vera, ho un vantaggio, pichè se lo stato dell'auotma di default è settato a NT, e nell'if metto la condizione vera
+				    (per la quale non salto)allora la predizione è corretta, e quindi riduco il tempo. Se invece avessi sbagliato, comunque ho già l'indirizzo della prossima istruzione da 
+				    eseguire in caso di salto. Se invece nell'if metto la condizione che mi fa saltare, allora ho il 50% di possibilità dierrore.
+Noi finora stiao usando solo un bit per la previsione nella tabella(salto oppure no), ma potrebbe essere poco
+In ogni caso tale automa richiede una modifica dell'architettura, della pipeline: prima della pipeline ho un blocco di PRE-FETCH che al suo interno la brench prediction table(memoria associativa), e quindi 
+quando devo saltare in ingresso alla pipeline non do un'indirizzo dalla memoria, bensì lo prendo dal pre-fetch.
+In ogni caso con un for a N cicli sbaglio 2 volte: quando entro e quando esco. Supponiamo ora di aavere 2 for innestati
+for i=0-10	Io all'inizio parto della stato non taken, ma la condizione del for è falsa e quindi dovevo saltare, quindi poi vado a finire nollo stato di Taken ed esegui il secono for. Finito poi il secondo for,
+  for j=0-100	quando esco poi sbaglio, percè non devo saltare, e quindi devo cambiare nello stato di taken, ma poi quando esco dallo stato del secondo cilco sbalgio 2 volte. Ciò è dovuto al fatto che ho
+     .		2 taken e 2 not-taken consecutivi. Allora cambio l'automa, aggiungendo 4 stati in totali: Salta forte, salta debole, non salta forte, non salta debole.
+     .		Se mi trovo nello stato di non saltare debole(punto di partenza): se vin presa la decisione di non saltare vado a finire nello stato di non saltare forte, e rimango lì se non salto: quaando invece
+  end for j		sbaglio(e quindi dovevo saltare), vado a finire in salta debole, e se sbaglio di nuovo(dovevo saltare di nuovo) vado a finire in salta forte. Inoltre, più previsione consecutive corrette mi fanno 
+end ofr i                  rimanere nello stato di forte: se invece sbaglio una volta, vado a finire nello stato opposto(salta o non salta) ma debole, solo se sbalio 2 volte consecutive vado a finire nello stato di forte. 
+		Se invece sto in uno stato di salta forte per esempio, ma ho sbagliato e non dovevo saltare, vado a finire nello stato di salta debole e, se sbaglio di nuovo, vado poi in non saltare forte.
+Quindi nella tabella ssociativa, che accedo per chiave, uso 2 bit per la previsione, non 1. Questa situazione va bene sia per  un for , sia per 2 for innenstati. Capisco poi anche quale for conviene 
+mettere dentro: Il ciclo all'interno sarà quello con maggiori iterazioni, perchè mi fa sagliare ,meno volte quando esco. Pago comunque una penality, ma minore, e in ogni caso l'automa funziona sempre bene.
+
+
+
+----LEZIONE 3---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+L'untà di pre-fetching, oltre a prevedere l'indirizzo della prossima istruzione e quindi se salto o no; cerca anche di prevedere se la prossima istruzione che carico è di salto prima di decodificarla. Ci sono altre
+tecnihe per gestire il control hazard in realtà:
+ -si può gestire il salto in maniera statica grazie al compilatore(Brench Delay visto prima)
+ -INTERNAL FORWARDING MEDIANTE IBERNAZIONE DELLE ISTRUZIONI(diverso dal forwarding nel caso del data hazard). Laddove io abbia dei conflitti sui dati(read after write), abbiamo visto che possiamo 
+  mandare in stallo la pipe(che non conviene) o usare il forwarding sull'alu. Con questa tecnica la pipeline è sempre attiva, e quando c'è un conflitto i dati non li scrivo direttamente sui registri interni reali, 
+  ma li scrivo in un banco di registri temporanei: questo lo faccio perchè tali dati non sono corretti, non sono definitivi, ma solo temporanei poichè per avere i dati definitivi mi servirebbe aspettare altre 
+  istruzioni. Quando il conflitto si risolve, i dati saranno definitivi e li scrivo sui registri interni. Per tale tecnica serve molto hrdware aggiuntivo, in particolrae una copia dei registri interni temporanei, una 
+  copia dei registri del processore che punteranno a tali registri temporanei, e una tabella di ibernazioneche conterrà le istruzioni che generano i conflitti.
+  La tabella di internazione conterrà poche istruzioni: 2 ADD, 2 MUL(moltiplicazioni) una DIV, ua BOO(brench di DLX) una LOAD e una STORE: queste sono le istruzioni che posso mandare in parallelo quando 
+  lavoro sui dati temporanei(le istruzioni stanno per riga). Sulle colonne ho i 2 operandi(rappresentati dal VALORE e da un TAG, un puntatore al registro temporaneo dove devo mettere l'operando) e il 
+  risultato. In particolare ho una sola load e store perchè faccio un accesso per volta alla memora. Vediamo un esempio:
+  i	 R1=MEMa
+  i+1	R2=R2+R3
+  i+2	R4=R2+R5
+  i+3	R2=R6+R7
+  i+4	R4=R2+R4
+  Vedo che le prime 3 istruzioni mi generano un conflitto su R2, la i+3 nonmi genera conflitto, la i+4 mi genera un conflitto. Vediamo come funziona: i REGISTRI OPERANDO sono una copia dei registri del
+  processore(R0-R7) (i registri del processore contengono non l'operando, ma un puntatore al registro opeando) che contengono il valore degli operandi, e anche i valori che i vari registri hanno avuto 
+  durante l'elaborazione, questo perchè un operando assume più valori temporanei; ad ogni operando inoltre viene associato un contatore per sapere quante istruzioni sono in attesa del valore definitivo di 
+  quell'operando, e un bit per sapere se quell' operando è stato occupato(0) o meno(1) da un altro registro. Quindi un registro del processore R(una copia) punta al registro operando, che è complesso come 
+  abbiamo. Ritornado all'esempio precdente, ogni istruzione che mi da problemi la inserisco nella tabella di ibernazione. Supponiamo che l'istruzione i generi un chache-miss(ovvero non c'è in memoria); 
+  nella tabella di ibernazione quindi scrivo nella linea di LOAD l'struzione i, il tag(che sarebbe l'indirizzo MEMA), e dico che il risultato lo devo mettere in R1, ma non ce l'ho e quindi in R1 metto un puntatore 
+  ad OP(7)(registro operando 7) dove metto quindi un valore temporaneo. Quindi l'istruzione i+1 la metto sempre nella tabella nella linea di ADD, dove nella colonna del primo operando(quello di R1) metto 
+  nel tag OP(7) e nell'operando R3 un tag a OP(8) per esempio(l'operando lo metto nel registro temporaneo libero). Poi però nel registro OP(7) devo incrementare il contatore delle istruzioni sospese, adesso 
+  sono  istruzioni che aspettano il reale valore di R1(l'iatruzione i e i+1). Dico di salvare il risultato in R2. L'istruzione i+2 poi mi genera conflitto su R2 e quindi si procede allo stesso modo. Quando poi arrivo 
+  all'istruzione i+4, il reale valore di R1 è disponibile(MEMA ha finito), e quindi scrivo il suo valore nel registro operando e decremento il contatore di OP(7)(dove aspettavo il valore di R1) poiché adesso 
+  l'itruzione i non è più sospesa. 
+  Capisco che ora però, guardando i registri operandi(che formano proprio una tabella), il modello di Von Neumann non è più rispettato, poichè non è rispettato lo stato del processore. In particolare se
+  avessi un'interruzione ci sarebbe un grave problema; io sto modificando l'esecuzione del processore, e quindi potrei avere altri conflitti. Il forwarding però mi permette di risparmiare cicli di clock e di non 
+  mandare mai in stallo la pipe. Quindi se sto facendo l'istruzine i e la mado in ibernazione, e supponiamo di avere un istruzione i+1 che non genera conflitti e quindi la posso eseguire, se quando finisco di 
+  eseguire i+1 ho il risultato per l'sitruzione i (ovvero esce dall'ibernazione), dopo mentre l'istruzione i+1 fa il write bakc, eseguo in parallelo grazie alla pipe non l'istruzione i+2, ma l'istruzione i che era
+  uscita dall'ibernazione. Questo perchè dopo la  fase di decodifica l'istruzione la mando in ibernazione( e dopo essere uscita dall'ibernazione la posso eseguire in parallelo ad un'altra istruzione che non stava
+  in ibernazione). 
+  Con questo modello le istruzioni vengono prelevate in ordine(in sequenza), ma non vengono terminate in ordine. In particolare chiamiamo FORWARDRG REGISTER quesi registr che contengono i puntatori
+  ai registri operando(OPERAND REGISTER), mentre la tabella di ibernaziome la chiamiamo RESERVATION STATION. Inoltre, nel registro operando per vedree dove salvare l'operando nel nei registri operandi
+  (Non salvo per forza R1 in OP(1)) ma cerco il primo registro operando libero che trovo, uardando il bit di disponibiltà: se il bit è 0 il registro è usato da un'altra istrzione per un altro operando, se invece è 1,
+  allora lo uso per salvare temporaneo(e attendere quello corretto) e incremento di 1 il contatore che mi dice quante istruzioni aspettano quell'operando, Poi vado nella reservation stationper ricordarmi che
+  quell'istruzione ha conflitto: come primo operando ci scrivo quindi il nome dell'operando register(nella sezione operando2 e risultato ci metto gli opportuni registri generali o operand register temporanei)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

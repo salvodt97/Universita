@@ -1,0 +1,60 @@
+*Suppongo, per esercizio, N=1: invio quindi un solo vettore di 5 interi su 8 byte
+
+
+
+
+******************AREA DATI*********************************************************************
+		ORG	$8000
+MSG			DC.B	30,28,8,15,90		;Messaggio da inviare
+DIM			DC.B	5
+
+
+*******************AREA MAIN************************************************************************
+		ORG	$8200
+*Della PIA il sistema S2 usa il porto B per inviare i 5 interi
+PIAPDRB		EQU		$2006						
+PIACRB		EQU		$2007
+
+
+MAIN 		JSR		INITBOUT
+
+
+			MOVEA.L	#PIACRB,A1			;Indirizzo del registro di controllo CRB
+			MOVEA.L	#PIAPDRB,A2			;Indirizzo di PDRB e DDRB
+			MOVEA.L	#MSG,A0				;Indirizzo dell'area messaggio
+			MOVE.B	DIM,D0				
+	
+			CLR	D1						;Registro di appoggio
+			CLR	D2						;Contatore di interi inviati
+
+
+INVIO		MOVE.B	(A2),D1            	;Lettura fittizia per abbassare in CRB(7) e permettere l'invio del primo carattere
+			MOVE.B	(A0)+,D1			;Numero corrente da trasferire
+			MOVE.B	D1,(A2)				;Inserimento del numero nel PDRB così che inizi la trasmissione
+			
+			ADD.B	#1,D2				;Incremento del contatore dei caratteri trasmessi
+
+ciclo		MOVE.B	(A1),D1		
+			ANDI.B	#%10000000,D1		;Attesa che si alzi il bit CRB(7), quindi che si possa inviare un nuovo numero o terminare			
+			BEQ	ciclo
+
+			CMP	D2,D0					;Verifio se la PIA ha finito di trasmettere
+			BNE	INVIO
+
+LOOP		JMP		LOOP				;Attesa attiva
+
+*******************INIZIALIZZAZIONE PIA****************************************
+INITBOUT 	MOVE.B	#$00,PIACRB						;E' importante sottolineare che con questa istruzione metto a 0 CRB(2), così poi quando accedo al PIAPDRB in realtà accedo al DDRB
+			MOVE.B	#$FF,PIAPDRB					;Mettendo tutti 1 nel DDRB setto come OUTPUT le linee PB
+			MOVE.B	#%00100100,PIACRB				;Seconda scrittura in CRB: abilito l'handshaking, disabilito le interruzioni (invio nel MAIN) e metto a 1 il CRB(2) così da accedere al PDRB ogni volta che accedo a PIAPDRB
+			RTS	
+
+*****************************************************************************************************************************
+
+			END		MAIN
+
+
+
+
+
+

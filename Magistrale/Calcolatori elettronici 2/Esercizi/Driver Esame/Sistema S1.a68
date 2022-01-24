@@ -1,0 +1,127 @@
+*Suppongo, per esercizio, N=8: come periferica seriale uso la USART, come parallela la PIA
+
+
+
+******************AREA DATI*********************************************************************
+		ORG	$8000
+MSGINV		DC.B	27,3,14,7,9,11,30,21		;Messaggio da inviare
+N			DC.B	8							;Dimensione del messaggio da inviare 			
+FLAG		DC.B	1							;Flag che dice se posso inviare un nuovo messaggio
+CONTRIC		DC.B	0							;Contatore dei caratteri (eco) ricevuti sulla PIA
+MSGRIC		DS.B 	8							;Spazio per il messaggio (eco) ricevuto
+
+*******************AREA MAIN************************************************************************
+		ORG	$8200
+*Della PIA il sistema S1 usa il porto A per ricevere, il porto B quindi non verrà proprio utilizzato
+PIAPDRA		EQU		$2004						;Il PDRA si trova allo stesso indirizzo di DDRA, l'accesso viene disciplinato da CRA(2)
+PIACRA		EQU		$2005
+
+*Registri della USART
+USARTD		EQU		$2002
+USARTCTR	EQU		$2003						;Il Control Register si trova allo stesso indirizzo del Mode: la prima volta si accede al Mode, dalla seconda in poi al Control
+
+
+MAIN		JSR		INITUSART
+			JSR		INITAIN
+			
+						
+*Configurazione registro di stato		
+			MOVE.W	SR,D0						;Lettura registro di stato
+			ANDI.W	#$D8FF,D0					;Configuro il registro di stato impostando la modalità utente, e ponendo la maschera delle interruzioni a 000 per accettarle tutte (su qualsiasi linea)
+			MOVE.W	D0,SR						
+
+			MOVEA.L	#USARTD,A0
+			MOVEA.L #USARTCTR,A1
+			MOVEA.L #MSGINV,A2
+			MOVE.B 	N,D1
+			MOVE.B	FLAG,D4
+			
+			CLR 	D2							;Registro di appoggio
+			CLR 	D3							;Contatore caratteri inviati
+	
+	
+CHECKRIC	CMP		#1,D4						;All'inizio il flag vale 1, così posso inviare il primo messaggio
+			BNE		CHECKRIC
+			
+CHECKDSR	MOVE.B	(A1),D0						 
+			ANDI.B	#%10000000,D0				;Controlla se il segnale DSR è attivo: se si trasmette, atrimenti attende. La configurazione in ogni caso prevede DTR=1, e visto che
+			BEQ		CHECKDSR					;DTR è legato a DSR dell'altra USART, la connessione è stabilita
+			
+CHECKTxRDY	MOVE.B 	(A1),D0			
+			ANDI.B	#%00000001,D0				;Controlla se TxRDY è attivo, ovvero se la USART è pronta a trasmettere un nuovo carattere
+			BEQ 	CHECKTxRDY
+			
+INVIO		MOVE.B	(A2)+,D2	
+			MOVE.B	D2,(A0)						;Invio del primo carattere sulla USART
+			ADD.B	#1,D3						;Incremento il contatore di caratteri inviati
+
+			CMP 	D3,D1
+			BNE 	CHECKTxRDY					;Se non ho inviato tutti i caratteri, invio quello nuovo
+
+			MOVE.B 	#0,D4
+			MOVE.B  D4,FLAG						;Adesso il flag è stato messo a 0: non posso inviare fino a quando qualcuno non lo mette a 1, e ciò viene fatto dalla ISR della ricezione
+			
+				
+LOOP		JMP		LOOP						;Attesa attiva per eventuali interruzioni
+
+
+*******************INIZIALIZZAZIONI****************************************
+INITUSART	MOVE.B	#%01011101,USARTCTR			;Inizializzazione Mode register: modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+			MOVE.B	#%00100011,USARTCTR			;Inizializzazione Cntrol register: abilito trasmissione e handshaking. 
+			RTS	
+			
+			
+INITAIN 	MOVE.B	#$00,PIACRA					;E' importante sottolineare che con questa istruzione metto a 0 CRA(2), così poi quando accedo al PIAPDRA in realtà accedo al DDRA
+			MOVE.B	#$00,PIAPDRA					;Mettendo tutti 0 nel DDRA setto come input le linee PA
+			MOVE.B	#%00100101,PIACRA			;Seconda scrittura in CRA: abilito l'handshaking, abilito le interruzioni (per rivecevere) e metto a 1 il CRA(2) così da accedere al PDRA ogni volta che accedo a PIAPDRA
+			RTS
+			
+	
+******************INTERRUZIONE IN RICEZIONE***********************************************************************
+		ORG 	$8700
+RICEZIONE	MOVE.L 	A1,-(A7)					;Salvataggio contesto software
+			MOVE.L 	A0,-(A7)
+			MOVE.L 	D1,-(A7)
+			MOVE.L 	D0,-(A7)
+			
+			MOVEA.L	#PIAPDRA,A1
+			MOVEA.L	#MSGRIC,A0
+			MOVE.B 	CONTRIC,D1
+			MOVE.B 	FLAG,D0
+			
+			MOVE.B	(A1),(A0,D1)				;Acquisizione del carattere e salvataggio in memoria
+			
+			ADD.B 	#1,D1
+			MOVE.B 	D1,CONTRIC
+			MOVE.B 	CONTRIC,D1
+			
+			CMP		#8,D1						;Controllo se sono stati ricevuti tutti i caratteri
+			BNE 	RIPRISTINO
+			MOVE.B	#1,D0						;Se sono stati ricevuti tutti, metto a 1 il FLAG così S1 può invire con la USART un nuovo messaggio
+			MOVE.B 	D0,FLAG
+			
+RIPRISTINO	MOVE.L	(A7)+,D0					;Ripristino del contesto software	
+			MOVE.L	(A7)+,D1	
+			MOVE.L	(A7)+,A0	
+			MOVE.L	(A7)+,A1	
+			
+			RTE
+			
+****************************************************************************************************************************						
+		ORG	$8800								;Questa è la ISR per la trasmissione con la USART: la devo mettere per forza in quanto non posso disabilitare l'interruzione sulla trasmissione, ma non fa niente poichè trasmetto nel main.	
+TRUSART													
+			RTE	
+		
+			
+			END		MAIN
+
+
+
+
+
+
+
+
+
+
+

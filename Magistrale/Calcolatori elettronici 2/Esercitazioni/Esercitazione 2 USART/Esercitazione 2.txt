@@ -1,0 +1,89 @@
+---------------------------------SACRIACRE VERSIONE 2020 DA DOCENTI UNINA---------------------------------------------------------------------------------------
+Ho sempre, in tutti gli esercizi, 2 sistemi S1 che trasmette e S2 che riceve. Nel primo esercziozio S1 invia con un cislo e S2 riceve con un'interruzioni, nell'esercizio 2 entrambi usano le interruzioni.
+
+ESERCIZIO 1
+TRASMETTITORE
+Ho sempre l'area dati con i messaggi, lo spazio per i messaggi e il contatore per inviare i messaggi. Nel main ho poi la parte di indirizzi, che contiene gli indirizzi 204(pari) a cui associo il registro dati,
+e l'indirizzo 2005(indirizzo dispari) gli altri registri. La prima cosa da fare è l'inizializzazione nel registro di modo. Suppongo caso asincrono, con 8 bit
+di informazione, con parità e parità dispari, e us 2 bit di stop.
+INIITUSART	 MOVE.B		#$5D, USARTC	In USARTC sta l'indirizzo del registro di mode e di controllo: la prima volta accedo al registro di modo, e con $5D è il codice esadecimale per settare il mode
+		 MOVE.B		#$23, USART C
+Poi inizializzo il registro di controllo (seconda istruzione) per dire che sto trasettendo e settare i bit dell'handshaking DTR e RTS. In asim su usa la modalità non modem. ovvero le 2 periferiche sono legatedirettamente con
+i bit di handshaking incrociati. Io pongo DTR e RTS pari a 1 (bit1 e bit5 rispettivamente), il collegamento lo fa asim. Abilito quindi la trasmissione disabilito la ricezione, il bit4 mi dice di valutare i bit di 
+errore che non mi servono però in trasmissione, il bit7
+
+Nel main poi faccio:
+MOVE .W 	SR,D0		azzero il registro di stato, così posso lavorare con tutte le interruzioni
+ANDI.W		#$D8FF,D0
+MOVE.W		D0,SR
+Queste 3 istruzini servono perchè non posso disabilitare le interuzioni co la UASART, quindi ce l'ho lo stesso anche se in treasmissione no la uso. Allora nel reistro di stato metto 0 per vedere tutte le interruzioni,
+e poi l'interruzione del tasmettiitore sarà vuota.
+
+Ho poi 2 cicli:
+CHECKDSR	MOVE.B	(A2),D0
+		ANDI	#
+
+S	ERVE A CONTROLLARE SE IN RICEZIONE DTR=1, ovvero se è collegato: in realtà è inutile visto che l'handshaking è stabilito settando i bit a 1
+Invece il secondo cislo serve ad assicurarmi se il bit TxRDY è attivo, ovvero invio il messaggio solo il messaggio di prima è arrivato
+CHECKTxRDY	MOVE.B	(A2),D0		Il sistema S1 non sa però se il sistema S2 ha ricevuto il messaggio, non riceve nessuna info da lui: però so quanto tempo ci vuole a far avviare il messagio, quindi alzo il messaggio TxRDy
+..............					quando è finito il tempo utile per trasmettere) In A2 c'è il registro di stato e faccio una and guardando il primo bit che è il TxRDY
+Per l'invio, prendo il dato e lo metto il registro dato, incremento il contatore, e pi controllo se ci sono altri caratteri da inviare: se ci sono, aspetto(controllo) il TxRDY per inviare.
+
+RICEZIONE
+Ho sempre l'area dati, la dimensione, e un contatore globale. Nel main faccio cose simili al trasmettitore settando gli indirizzi. Nel registro di modo farò la stessa csa del trasmettitore po, mentre nel registro di modo pongo sempre i bit DTR
+e RTS pai a 1, ma stavolta faccio una move #$36, che è un codice che mi permette di abilitare la ricezione e disabilitare la trasmissione.
+Nell'interruzione in ricezione, prendo il dato del registro in ingresso (shift register), e lo metto in (A0,D0), cioè prendo il regstro in A0, gli sommo D0, e all'indirizzo risultante muovo il dato che mi è arrivato. Questo perchè ho il memory mapped,
+ovvero ho il registro dato diretamente in memoria.
+
+Anche la USART lavora con autovettori, dove in configurazione metto 4 com: in com1 il gestore delle interruzioni(CPU), com2 è l'autovettore per il gestore delle interruzioi, com3 è la linea di priorità
+ in com4 la modalità di collegamneto tra i due sistemi(con i fili incrociati), in particolare il com4 è 0008, e sono i primi 2 bit che mi dicono che i fili sono incrociati, gli ultimi 2 bit mi dicono l'ID dell'altr usart.
+
+Se clicco sulla finestra del dispsitivo, su device, posso vedere la velocità del clock associato ad ogni pressione del mouse(ogni operazione), ma il trasmettitore è più lento del ricevitore(non sovracampiona) e ciò glielo dico mettendo per esempio
+nell'opzione del clock 3(ovvero vado più lento, uso 3 "tick"), cioè clicco sul mouse 3 volte per trasmettere ogni bit ce sta nello shift register. Finito di nviare tutti i bit, si alza il bit 1 dello status register, cioè si alza il bit TxRDY.
+Poi c'è la ricezione: esso copia nel nuffer il dato ricevuto controllando se RxRDY è 0, ovvero se la CPU ha letto.
+In ricezione, quando passo il dato dal buffer allo shiftregister, si alza il TxRDY e si avvia quindi per forza 'interruzione, che però metto vuota perchè non voglio fare niente. L'iterruzione si alza perchè faccio il primo invio
+
+ESERCIZIO 2
+Ora cambio in trasmissione che uso l'interruzione. Per fare ciò almeno il primo carattere lo invio, e poi mi metto in loop: lavora l'interruzione qui, che prende ogni volta il carattere(byte) e lo invia, ma il funzionamento interna della periferica è sempre lo stesso.
+Quindi qua quello chefaccio è inviare i un'interruzione, non in un ciclo.
+
+
+
+
+
+
+ESERCIZIO SINCRONO
+Ora cambia la fase di inizializzazione: glielo devo dire nel registro di modo(con bit 0), e con il bit7 gli dico quanti byte di sincronizzazione uso. Dopo aver specificato il modo, gli devo dare i caratteri di sync:
+doo aver acceduto al mode register, se ho messo la modalità sincrona, il secondo accesso a quell'indirizzo mi fa andare nel registro Sync1 e ci metto il carattere. Nel terzo acesso invece, se dico che uso 2
+caratteri di sync, mi fa accedere al registro sync2 per il carattere, altrimenti dal terzo accesso in po accedo al control register. Per il resto è tutto uguale.
+
+Anhe in ricezione avrò delle differenze in inizializzazione: specifico che sono sincrono, dico i caratteri, e poi nel control register dico che è ricevitore e alzo il bit7 per dire che st in mdìodalità HUNT MODE, 
+pvvero che il ricevitore quando riceve il dato la prima cosa da fare è cercare il byte di sync e confrontarlo con quello che ha lui.
+
+
+
+
+
+
+
+
+ESERCIZIO CON TERMINALE
+Ho 8 dispositivi: usart, processore, memoria e terminale sia per ricezione che trasmissione. Il terminale mi permette di scrivere e leggere i dati, e per le usart abiilito ciascuna sia ricezione e trasmissione: deciderò poi
+da tastira chi deve fare cosa: se il processore scrive allora è trasmettitore, se legge è ricevitore. uso la modalità asincrona, quindi setto il registro di mode come l'esercizio di prima e poi setto il contro,l register abiliabdi
+ù
+-------------------------MINUTO 50..................................................
+Devo poi settare il terminale: si fa:
+MOVE.B	#%3F, 1(A0)
+	full,
+ANDI	#$F8FF, SR
+
+Il suo main è vuoto, non fa niente, pichè il sistema è in attesa di interruzioni: ho 2 interruzioni associate al terminale e 3 alla usart: l'interruzione della pressione del tasto va a vedere se sono pronto a trasmettere guardando il TxRDY
+del trasmettitore. Se vale 1, si prende il dato dal buffer di tastiera e lo mette nel registro
+
+
+
+
+
+
+
+

@@ -1,0 +1,99 @@
+*************************************************************************************************
+*Il sistema S2 riceve dei byte tramite una PIA
+*Questo driver serve solo a testare il funzionamento del trasferimento mem-dev del DMA 
+*e quindi si occupa solo dell'inizializzazione della PIA
+*************************************************************************************************
+
+
+***********************************************************
+***********AREA MAIN*********************************	
+	ORG    $8200
+
+PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in input
+PIACA	EQU    $2005	;indirizzo di PIA-A stato/controllo
+
+MAIN	JSR	DVAIN	;inizializza PIA porto A
+				
+	MOVE.W	SR,D0	;legge il registro di stato
+	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+	MOVE.W	D0,SR	;pone liv int a 000
+
+	
+LOOP  	JMP LOOP	;ciclo caldo dove il processore attende interrupt		
+	
+
+*********************************************************************************************************
+*********************************************************************************************************
+*INIZIALIZZAZIONE DELLA PIA: PORTO A	        	
+*   CRA |0 |0 |1 0 0 |1 |0 1|
+*	            |        |   |____Controllo CA1: interruzioni abilitate su IRQA, CA1 sensibile a fronte 1->0
+*                      |         |	
+*		|        |________Accesso a DRA: il prossimo accesso ad indirizzo pari è per PRA
+*	            |_______________Controllo CA2: 1=>linea di uscita, con gli altri due bit a 00 diventa alto sul fronte
+*						             attivo di CA1 e si riabbassa a seguito di una lettura su PRA
+*							  0=>linea di ingresso, si comporta come CA1 (CRA3 come CRA0,
+*											    CRA4 come CRA1, IRQA2 come IRQA1)
+*
+*	DRA=0 => PORTO A PORTO DI INGRESSO
+*
+***********************************************************************************************************
+DVAIN	MOVE.B	#0,PIACA		;mette 0 nel registro controllo così al prossimo accesso a PIADA (indirizzo pari)
+*								;selezionerà il registro direzione del porto A
+	MOVE.B	#$00,PIADA		    ;accede a DRA e pone DRA=0 : le linee di A sono linee di input	
+	MOVE.B	#%00100101,PIACA  	;abilito le interruzioni	
+    RTS
+
+	
+********************************************************************************************************
+	ORG $8500
+
+int3	MOVE.B	PIADA,D5
+	RTE	
+
+		
+
+
+	END	MAIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

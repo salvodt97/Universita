@@ -1,0 +1,103 @@
+************************************************************************************
+*Questo esercizio mostra l'impiego del DMA per effettuare il trasferimento di un blocco di dati 
+*da memoria a memoria. Viene selezionata una modalità di trasferimento single.
+*Il DMA ha una linea di interruzione collegata sulla linea di priorità 7 del processore.
+*L'indirizzo della ISR, che segnala il completamento di un trasferimento, è $8700 e viene scritto
+*in ROM in corrispondenza dell'indirizzo 7C (settimo autovettore)
+* 
+*
+*
+*
+dma		EQU 	$2010
+caddr0		EQU	0
+caddr1		EQU	2
+ccount1	EQU	3
+cntrl		EQU	8
+mode		EQU	11
+reset		EQU	13
+clearmf	EQU	14
+writeamf	EQU	15	
+nbyte		EQU	34
+* ------------------------------------------------------------------------------------------------------
+
+*Area Dati
+		ORG 		$9500
+origine	DC.B		'0123456789 messaggio da trasferire'
+destinazione	DS.B	34	
+
+* ------------------------------------------------------------------------------------------------------
+
+*Area Programma
+
+		ORG	$8200
+start
+
+*inizializzazione del device DMA
+
+		MOVE.W	#dma,A0			;Carica in A0 l'indirizzo base del DMA
+
+		MOVE.W	#origine,caddr0(A0)		;Carica l'indirizzo base del blocco sorgente nel
+*										registro indirizzo del canale 0
+
+		MOVE.W	#destinazione,caddr1(A0)		;Carica l'indirizzo base del blocco destinazione nel
+*										registro indirizzo del canale 1
+		
+		MOVE.B	#nbyte,ccount1(A0)		;Carica il numero di byte da spostare nel registro
+*										conteggio 
+
+		MOVE.B	#$90,mode(A0)		;CANALE 0: setta il trasferimento da memoria ad
+*										interfaccia, si autoinizializzazione dei registri
+*										addr e count dopo trasferimento, incremento del
+*										registro indirizzo,trasferimento in modalità BLOCK	
+	
+		MOVE.B	#$91,mode(A0)		;CANALE 1: setta il trasferimento da memoria ad
+*										interfaccia, si autoinizializzazione dei registri
+*										addr e count dopo trasferimento, incremento del
+*										registro indirizzo,trasferimento in modalità BLOCK
+							    		
+		MOVE.B	#$A0,cntrl(A0)			;CNTRL=1010|0000: abilita trasmissione mem-to-mem e
+*										abilita il DMA controller (automaticamente viene
+*										spedita la richiesta di bus al processore)
+
+loop	JMP	loop						;Loop di attesa del trasferimento, simula un impegno 
+*									fittizio del processore
+		
+*	
+*
+*
+
+
+*     INTERRUZIONE DI FINE TRASFERIMENTO    *
+*     questa interruzione è generata dal segnale EOP quando il conteggio dei byte da trasferire si azzera.
+*     L'interruzione deve essere sempre prevista: in questo caso specifico l'interruzione resetta il DMA
+*
+
+	ORG $8700
+
+int7		MOVE.L	A0,-(A7)			;Salva il contesto
+		MOVE.W	#dma,A0					
+		MOVE.B	#0,reset(A0)			;Resetta il DMA
+		MOVE.L	(A7)+,A0			;Ripristina i registri utilizzati
+		RTE
+
+
+
+		
+
+
+		
+		end		start
+
+
+
+
+
+
+
+
+
+
+
+
+
+

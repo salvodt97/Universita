@@ -1,0 +1,119 @@
+00000000                                     1  *Suppongo, per esercizio, N=8: come periferica seriale uso la USART, come parallela la PIA
+00000000                                     2  
+00000000                                     3  
+00000000                                     4  
+00000000                                     5  ******************AREA DATI*********************************************************************
+00008000                                     6  		ORG	$8000
+00008000  1B 03 0E 07 09 0B 1E 15            7  MSGINV		DC.B	27,3,14,7,9,11,30,21		;Messaggio da inviare
+00008008  08                                 8  N			DC.B	8							;Dimensione del messaggio da inviare 			
+00008009  01                                 9  FLAG		DC.B	1							;Flag che dice se posso inviare un nuovo messaggio
+0000800A  00                                10  CONTRIC		DC.B	0							;Contatore dei caratteri (eco) ricevuti sulla PIA
+0000800B                                    11  MSGRIC		DS.B 	8							;Spazio per il messaggio (eco) ricevuto
+00008013                                    12  
+00008013                                    13  *******************AREA MAIN************************************************************************
+00008200                                    14  		ORG	$8200
+00008200                                    15  *Della PIA il sistema S1 usa il porto A per ricevere, il porto B quindi non verrà proprio utilizzato
+00008200  =00002004                         16  PIAPDRA		EQU		$2004						;Il PDRA si trova allo stesso indirizzo di DDRA, l'accesso viene disciplinato da CRA(2)
+00008200  =00002005                         17  PIACRA		EQU		$2005
+00008200                                    18  
+00008200                                    19  *Registri della USART
+00008200  =00002002                         20  USARTD		EQU		$2002
+00008200  =00002003                         21  USARTCTR	EQU		$2003						;Il Control Register si trova allo stesso indirizzo del Mode: la prima volta si accede al Mode, dalla seconda in poi al Control
+00008200                                    22  
+00008200                                    23  
+00008200  4EB9 00008266                     24  MAIN		JSR		INITUSART
+00008206  4EB9 00008274                     25  			JSR		INITAIN
+0000820C                                    26  			
+0000820C                                    27  						
+0000820C                                    28  *Configurazione registro di stato		
+0000820C  40C0                              29  			MOVE.W	SR,D0						;Lettura registro di stato
+0000820E  0240 D8FF                         30  			ANDI.W	#$D8FF,D0					;Configuro il registro di stato impostando la modalità utente, e ponendo la maschera delle interruzioni a 000 per accettarle tutte (su qualsiasi linea)
+00008212  46C0                              31  			MOVE.W	D0,SR						
+00008214                                    32  
+00008214  207C 00002002                     33  			MOVEA.L	#USARTD,A0
+0000821A  227C 00002003                     34  			MOVEA.L #USARTCTR,A1
+00008220  247C 00008000                     35  			MOVEA.L #MSGINV,A2
+00008226  1239 00008008                     36  			MOVE.B 	N,D1
+0000822C  1839 00008009                     37  			MOVE.B	FLAG,D4
+00008232                                    38  			
+00008232  4242                              39  			CLR 	D2							;Registro di appoggio
+00008234  4243                              40  			CLR 	D3							;Contatore caratteri inviati
+00008236                                    41  	
+00008236                                    42  	
+00008236  B87C 0001                         43  CHECKRIC	CMP		#1,D4						;All'inizio il flag vale 1, così posso inviare il primo messaggio
+0000823A  66FA                              44  			BNE		CHECKRIC
+0000823C                                    45  			
+0000823C  1011                              46  CHECKDSR	MOVE.B	(A1),D0						 
+0000823E  0200 0080                         47  			ANDI.B	#%10000000,D0				;Controlla se il segnale DSR è attivo: se si trasmette, atrimenti attende. La configurazione in ogni caso prevede DTR=1, e visto che
+00008242  67F8                              48  			BEQ		CHECKDSR					;DTR è legato a DSR dell'altra USART, la connessione è stabilita
+00008244                                    49  			
+00008244  1011                              50  CHECKTxRDY	MOVE.B 	(A1),D0			
+00008246  0200 0001                         51  			ANDI.B	#%00000001,D0				;Controlla se TxRDY è attivo, ovvero se la USART è pronta a trasmettere un nuovo carattere
+0000824A  67F8                              52  			BEQ 	CHECKTxRDY
+0000824C                                    53  			
+0000824C  141A                              54  INVIO		MOVE.B	(A2)+,D2	
+0000824E  1082                              55  			MOVE.B	D2,(A0)						;Invio del primo carattere sulla USART
+00008250  5203                              56  			ADD.B	#1,D3						;Incremento il contatore di caratteri inviati
+00008252                                    57  
+00008252  B243                              58  			CMP 	D3,D1
+00008254  66EE                              59  			BNE 	CHECKTxRDY					;Se non ho inviato tutti i caratteri, invio quello nuovo
+00008256                                    60  
+00008256  183C 0000                         61  			MOVE.B 	#0,D4
+0000825A  13C4 00008009                     62  			MOVE.B  D4,FLAG						;Adesso il flag è stato messo a 0: non posso inviare fino a quando qualcuno non lo mette a 1, e ciò viene fatto dalla ISR della ricezione
+00008260                                    63  			
+00008260                                    64  				
+00008260  4EF9 00008260                     65  LOOP		JMP		LOOP						;Attesa attiva per eventuali interruzioni
+00008266                                    66  
+00008266                                    67  
+00008266                                    68  *******************INIZIALIZZAZIONI****************************************
+00008266  11FC 005D 2003                    69  INITUSART	MOVE.B	#%01011101,USARTCTR			;Inizializzazione Mode register: modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+0000826C  11FC 0023 2003                    70  			MOVE.B	#%00100011,USARTCTR			;Inizializzazione Cntrol register: abilito trasmissione e handshaking. 
+00008272  4E75                              71  			RTS	
+00008274                                    72  			
+00008274                                    73  			
+00008274  11FC 0000 2005                    74  INITAIN 	MOVE.B	#$00,PIACRA					;E' importante sottolineare che con questa istruzione metto a 0 CRA(2), così poi quando accedo al PIAPDRA in realtà accedo al DDRA
+0000827A  11FC 0000 2004                    75  			MOVE.B	#$00,PIAPDRA					;Mettendo tutti 0 nel DDRA setto come input le linee PA
+00008280  11FC 0025 2005                    76  			MOVE.B	#%00100101,PIACRA			;Seconda scrittura in CRA: abilito l'handshaking, abilito le interruzioni (per rivecevere) e metto a 1 il CRA(2) così da accedere al PDRA ogni volta che accedo a PIAPDRA
+00008286  4E75                              77  			RTS
+00008288                                    78  			
+00008288                                    79  	
+00008288                                    80  ******************INTERRUZIONE IN RICEZIONE***********************************************************************
+00008700                                    81  		ORG 	$8700
+00008700  2F09                              82  RICEZIONE	MOVE.L 	A1,-(A7)					;Salvataggio contesto software
+00008702  2F08                              83  			MOVE.L 	A0,-(A7)
+00008704  2F01                              84  			MOVE.L 	D1,-(A7)
+00008706  2F00                              85  			MOVE.L 	D0,-(A7)
+00008708                                    86  			
+00008708  227C 00002004                     87  			MOVEA.L	#PIAPDRA,A1
+0000870E  207C 0000800B                     88  			MOVEA.L	#MSGRIC,A0
+00008714  1239 0000800A                     89  			MOVE.B 	CONTRIC,D1
+0000871A  1039 00008009                     90  			MOVE.B 	FLAG,D0
+00008720                                    91  			
+00008720  1191 1000                         92  			MOVE.B	(A1),(A0,D1)				;Acquisizione del carattere e salvataggio in memoria
+00008724                                    93  			
+00008724  5201                              94  			ADD.B 	#1,D1
+00008726  13C1 0000800A                     95  			MOVE.B 	D1,CONTRIC
+0000872C  1239 0000800A                     96  			MOVE.B 	CONTRIC,D1
+00008732                                    97  			
+00008732  B27C 0008                         98  			CMP		#8,D1						;Controllo se sono stati ricevuti tutti i caratteri
+00008736  6600 000C                         99  			BNE 	RIPRISTINO
+0000873A  103C 0001                        100  			MOVE.B	#1,D0						;Se sono stati ricevuti tutti, metto a 1 il FLAG così S1 può invire con la USART un nuovo messaggio
+0000873E  13C0 00008009                    101  			MOVE.B 	D0,FLAG
+00008744                                   102  			
+00008744  201F                             103  RIPRISTINO	MOVE.L	(A7)+,D0					;Ripristino del contesto software	
+00008746  221F                             104  			MOVE.L	(A7)+,D1	
+00008748  205F                             105  			MOVE.L	(A7)+,A0	
+0000874A  225F                             106  			MOVE.L	(A7)+,A1	
+0000874C                                   107  			
+0000874C  4E73                             108  			RTE
+0000874E                                   109  			
+0000874E                                   110  ****************************************************************************************************************************						
+00008800                                   111  		ORG	$8800								;Questa è la ISR per la trasmissione con la USART: la devo mettere per forza in quanto non posso disabilitare l'interruzione sulla trasmissione, ma non fa niente poichè trasmetto nel main.	
+00008800                                   112  TRUSART													
+00008800  4E73                             113  			RTE	
+00008802                                   114  		
+00008802                                   115  			
+00008802                                   116  			END		MAIN
+
+No errors detected
+No warnings generated

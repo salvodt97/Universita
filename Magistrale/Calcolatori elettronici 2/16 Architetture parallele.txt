@@ -1,0 +1,138 @@
+Vediamo le architetture parallele per soingere le prestazione del mio sistema: un aspetto importante già visto è stata la ppeline, che mi parallelizzava l'esecuzione delle istruzioni. In realtà ci sono 
+altri modi per parallelizzare, ma in genere tale parallelismo mi da macchine che sono specifiche, non general pourpose.
+Vediamo ora le architetture VLIW, ch sono usate per DSP usate per elaborare i segnali digitali: si parla di Very Long Istruction Word: si cerca di mettere più istruzioni impacchettate in una sola istruzione;
+nella VLIW abbiamo prorpio unità hardware separate, non per forza di tipo pipelined, che esguono ciascuna determinate istruzioni specifiche(una fa l'addizione, una la moltiplicazione ecc...).
+Le istruzioni vegono messe insieme dal compilatore per cercare di utilizzare in parallelo tutte le diverse stazioni (unità hardware); l'esecuzione in parallelo è possibile perchè le unità sono disgiunte.
+Quindi è importante questo concetto di MACROISTRUZIONE, ma ci sono comunque dei problemi: se per esempio ho una sola unità per fare l'addizione, non posso mettere due addizioni in parallelo
+altrimenti avrei dei conflitti, e le istruzioni dovrebbero essere eseguite con un certo ordine; ci sono ancora più problemi per i salti in quanto non posso fare previsioni, ne svuotare la pipeline(perchè non
+ce l'ho), e quindi non posso tornare indietro.
+Le architetture VLIW si usano per realizzare i DSP: in ogni caso tali processori non si programmano ma si usano delle librerie già pronte per costruire le macroistruzioni, ed offrono la migliore
+implementazione per ciascuna istruzione sfruttando al meglio il parallelismo.
+Vediamo ora quali sono le diverse architetture parallele:
+ -SIMD, si applica una singola istruzione su più dati in parallelo: per esempio se devo sommare gli elemnti di un vettore, tali architeture sommano direttamente tutto il vettore. La fase di fetch
+  la eseguo una sola volta, che per esempio fa riferimento all'intero vettore, poichè l'istruzione è sempre la stessa. Possono sembrare simile alle SMPD. E' quindi importante dire che la fetch
+  la faccio una sola volta, ma mi serve una banda maggiore per prelevare i dati. Usano quindi la pipeline ma almeno non hanno problemi di brench prediction per esempio poichè faccio il fetch
+  una sola volta. La fase di execute si divide tra più pipeline.
+ -MIMD, posso effettuare istruzioni multiple su dati multipli: possiamo quindi vedere le SPMD come u caso particolare delle MIMD.
+ -SPMD(singolo programma per più dati), ovvero ho un singolo programma che lavora su più dati(anche su diversi processore), non una singola istruzione. Una SMPD è quindi rappresentata da
+  più SIMD.
+
+Ci sono dei problemi: come collegare insieme i diversi processori per sincronizzarli per seguire lo stesso programma, una stassa sequenza di istruzioni o una parte; devo poi capire come programmare
+un sistema simile. Vediamo come connettere i processori:
+-SISTEMI MULTIPROCESORI, connetto più processori ma ci sono molte risosre condivise, e i processori condividono dati e istruzioni mediante una memoria condivisa. Posso chiaramente avere dei problemi,
+ sopratutto la gestione della coerenza delle cache, poichè io ho tante cache e tanti processori che comunicano tra di loro mediante "variabili condivise". Ho poi problema circa il traffico sul bus, che devo 
+ gestire in maniera hardware menter in software faccio piccol accorgimenti cone sfruttare la località. Cioè io devo gestire la coerenza della cache tra una sola memoria e più cache: se per esempio ho
+ un dato X che prendo dalla meoria e lo metto in 2 cache, e una cache lo mdifica, non ho allineamento ne tra quella cache e la memoria, ne tra quella cache e tutte le altre cache che hanno preso quel dato
+ X ma non l'hanno modificato. Dati N processori, vorrei avere in parallelo N istruzioni, ovvero avere uno spedd-up pari a N (tempo di esecuzione sequenziale/tempo di esecuzione in parallelo).
+-SISTEMI MULTICOMPUTER, ho un'infrastruttura di rete dedicata, con caratteristiche di banda e instradamento, che mi fa connettere i diversi processori, che comunicano tra di loro mediante lo scambio di
+ messaggi. La rete viene gestita con tecniche generali, con un protocollo generale e un sistema di interconnesione che non tiene conto delle diversi applicazoioni che comunicano; o specifiche dove si cerca
+ di capire l'infrastruttura migliore, il collegamneto migliore, per i casi specifici.
+
+Lo scopo delle architetture parallele è miglioreare lo SPEED-UP (velocità di esecuzione del processore) facendolo tendere ad N, che è un valore teorico che non tiene cont dell'overhead, overo scambio delle 
+info, gestione della meoria ecc...Un altro parametro utile è l'EFFICIENZA E, che è il rapposrto tra lo speed-up S e N: teoriamente lo vorrei pari ad 1.
+
+Nelle architetture multiprocessore devo capire cosa deve fare ogni processore, overo parallelizzare il codice dividendolo in parti possibilmente della stessa dimensione da mandare ai processori: mi servono 
+dei compilatori paallelizzanti che fanno quesa divisione in automatico, ma devo sempre programmare bene per evitare ritardi, overhead e quindi per sfruttare l'architettura che sto usando, ma che
+ovviamente devo conoscere per bene. Le modalità di comunicazione sono di due tipi(scabio di messaggi o memoria condivisa).
+-Nella MEMORIA CONDIVISA ho tante memorie cache, quindi tamte memorie locali, ed una sola memoria centrale: avere tante cache mi ottimizza il tutto ma ho problemi di allineamento. In particolare:
+  *se uso una politica di write back,io aggiorni il dato nella memoria centrale solo quando lo devo eliminare dalla cache locale, ma se più processori stavanolavorando su quello stesso dato, allora il dato lo
+    devo invalidare: questo perchè se ho due processori che lavorano su un dato X, e il processore uno lo modifica in X1, quando poi lo deve sostituire lo scrive in memoria. Se però il processore2 modifica in 
+    locale anche lui il dato X in un X2, poi lo devo scrivere in memoria ma a questo punti non so se devo sostiture a X1 o no in memoria. Lo devo gestire: si gestisce ciò con una SNOOPY CACHE che guarda sul
+    bus per capire se il dato interessato viene modificato e quindi devono avvisare il processore. Lavorao con degli automi in harware, che lavorano in maniera differente se uso write back e write trough.
+  *se uso write trough, ho un allinemaneto più costante tra cache locale e memoria centrale: ciò però mi occupa troppo il bus e quindi glia ltri processori potrebbero avere difficoltà ad accedere a quello
+    stesso  dato in memoria. Ciò mi causa parecchio overhead, e quindi speed-up che diminuisce molto poichè cresce il tempo di comunicazione: quindi avrò che Tp=1/N*Tseq+Tc, ovvero il tempo parallelo è 
+    aumentato del tempo di comunicazione (non è un'ennesimo del tempo sequenziale).
+
+Devo considerare anche quanto spesso i processori devono comunicare tra di loro, ovvero quanto sono accoppiati: se fossero completamente indipendenti tra di loro avrei un tempo di comunicazione pari
+ a 0, ed è il caso in cui i processori usano pochissimi dati comuni. Ma no accade sempre, in genere i processori si scambiano dati per realizzare un'operazione, e quindi ho un tempo di comunicazione 
+maggiore, e quindi anche tempo parallelo: quindi ho meno speed-up di N. Potrei avere addirittura un tempo peggiore di quello sequenziale a causa del tempo dicomunicazione. Devo quindi capire quanto 
+i processori devono comunicare tra di loro: se sono moto accoppiati uso un mecanismo di scambio di messaggi, altrimenti no. La frequenza di accoppiamento è esprimibile con il rapporto tra tempo di
+calcolo Tc e tempo di modifica dei dati comuni Tm.
+
+-Nella modalità di SCAMBIO DI MESSAGGI, i singoli processori hanno un sistema di I/O e devono avere una serie di canali generali, o specializzai, per comincare. Ogni processore avrà una propria scehda di 
+  rete. Devo capire inanzitutto la topologia di rete (non per forza tutti i processori devono comunicare con tutti) per evitare conflitti sulla reti. Quindi a differeza di prima devo conoscere il protocollo di scambio
+  di messaggi,e tali protocolli devono essere più efficenti. Inoltre ogni processore potrebbe avere un proprio paralelismo per comunacre, ovvero più schede di rete. I problemi sono quindi driver per 
+  comunicare, protocolli, topolgia e banda, che esprimo come prodotto tra la velocità su ciascun canale e il numero di canali.
+  Questa quindi è la modalità multicomuter, dove ohni sistema a la propa cache e la propria memoria centrale privata. In ogni caso si parla ancora di computer diversi ma distribuiti sulla stessa macchina, 
+  non su parti fisiche diverse.
+
+
+Devo ora capire come èarallelizzare il programma, le istruzioni quindi, per scrivere un'applicazione paallela che mi ottimizzi lo speed-up. Vediamo ora quindi come scrivere un'applicazione parallela.
+Abbiamo visto che le SIMD sono fortemente sicnrone, mentre le MIMD sono asincrone in quanto hannoprocessri separati, ciascuno con il proprio clock, che lavorano in maniera indipendenti. Supponiamo 
+per esempio di fare (A+B)*(C+D): potremmo mandare le due somme in parallelo a due processori, che eseguonole oprazioni in parallelo e in modo indipendente, e poi un terzo processore si prnde i 2
+risultati e fa la moltiplicazione: quindi invece di fare due somme e una moltiplicazione, faccio una sola somma(ne faccio 2 in parallelo), comunico il risultato al terzo processore e poi faccio la moltipliazione.
+Quindi ho un tempo di comunicazione, In generale, se dovrei fare il prodotto tra N addizioni, il tempo che perdo è per fare N/2 operazioni, una moltiplicazione e la comunicazione. Più N è grande, più mi 
+conviene passare ad un'architettura parallela: in realtà mi conviene fare ciò quando nel programma, algoritmo, valgono le proprietà associativa e distributiva, ovvero se l'algoritmo lo posso scomporre in 
+più parti che posso eseguire in maniera indipendente (associativa) e in qualsiasi ordine (commutativa). Devo quindi trovare il modo più efficiente di appliare tali rporpietà (come distribuire i dati), e potrei
+avere più soluzioni. Supponiamo ora di fare il prodotto tra 2 matrici: C=A*R; calcolo il generico Cij=Rij*Rij: tale operazione è parallelizzabile e devo capire come distribuire i dati tra i processori: potrei 
+pensare di sitribuire le matrici A e R su tutti i processori, ma ciò mi da molto overhead, ma è anche inutile, poichè io sto facendo il prodotto riga per colonna, e tale prodotto altro non è che la somma dei 
+prodotti dei singoli elementi. Devo quindi capire fino a chre grana voglio scegliere, fino a che livello di dettaglio scegliere: valogono le proprietà associative e ditributive, ma più fine è la grana (più preciso 
+sono), più aumenta l'overhead di comunicazione poichè poi tutti i processori che hanno fatto il singolo prodotto riga per colonna lo devono mandare a un altro processore.
+Supponiamo di avere delle matrici 5x5: devo fare 25 prodotti scalari, e potrei pensare di avere 25 processori (caso SPMD) e ciascunomi fa il prodotto, ma ho troppa comunicazione e in genere ho meno 
+processori. Supponiamo di avere quindi 2 processori (uno lavora su 2 righe, uno su 3 e avrei sbilancamento); se invece avrei 5 processori, ogni processore lavora su 5 elemti (ogni nodo lavora su una sola 
+riga), quindi ad ogni processore potrei pensare di dare una sola riga di A e tutta la matrice R(così il processore mi calcola la riga Ci facendo il prodottoto tra la sua riga che ha e la matrice B). Diventa però 
+oneroso distriburie B su tuti i processori, e mi da molto overhead sia per anda occupata, sia per memoria occupata nel singolo processore.
+Potrei quindi fare una divisione differente: Se su un nodo 1 metto solo la riga A1 e la colonna R1, il processore mi può calcolare solo un elemento (C11), quindi se faccio così con tutti i processori posso 
+calcolare solo gli elementi diagonali: allora si fa una "rotazione" di R, ovvero in oni processore la riga A resta fissa, ma cambia la colonna di R(fatto il rpomo calcolo, mando R1 nel processore 2, R2 in 3....R5
+ in 1). Ora però, se T è il tempo di comunicazione per comunicare (scambiare) una sola colona (o riga in generale), ho un tempo di comunicazione pari a NT. In queto caso quindil'efficienza sta più nella 
+comunazione che nel calcolo. Si può pensare quindi di realizzare uhn collegamento ad ANELLO, ovvero ogni nodo è legato al suo nodo precedente e successivo, così se un nodo 2 riceve un dat da 1, 
+contemporaneamente manda il rporpio dato a 3. Quindi ogni processore ha 2 schede di rete, una di ingresso e una di uscita: riduco molto i conflitti per lo scambio, ma potrei avere qualche conflitto quando 
+si legge la riga dalla memoria, non ho conflitto quando scrivo. L'altro tipo di connessione è detta COMPLETAMENTE CONNESSO , ovvero tutti i processori legati a tutti.
+
+Vediamo ora come calcolare lo speed-up e l'efficienza: detto S lo spedd-up, abbiamo detto lo posso calcolare come S=Tseq\Tpar, e il suo valore teorico è N poichè Tpar=Tseq/N. Ma in realtà calcolo
+S=Tseq\(Tseq/N+Tin), dove Tin è un tempo di interazione che sarebbe il tempo di comunicazione, scambio dei dati ecc.. Se metto però Tseq\N in evidenza, ho che S=1\(NTint/Tseq+1), e quidi capisco che mi 
+serve NTint/Tseq<<1, ovvero Tin/Tpar/N<<1, ovvero Tin/Tcal<<1, dove Talc è il tempo di calcolo. Se ho processori molto veloci e rete lenta, e meglio sbilanciare la dstribuzione del carico così i processori 
+lavorano molto ma si cominica poco. Invece l'efficienza E=S/N=1/(1+alpha) ~=1-aplha, dove alpha=Tin/Tcal.
+
+E' interessante non solo capire il calcolo dello spedd-up, ma anche fare l'inverso: ovvero fissato lo speed-up, capire quanti processori voglio, oppure fissata l'efficienza, possiamo calcolare quanti processori 
+massimo posso associare ad una sola richiesta. Quindi quesi 2 parametri mi fanno capire come distribuire le operazioni e i singoli dati multipli sulle varie macchine.
+
+
+-------------------------ESEMPIO------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Calcoliamo la sommatoria di i che va da uno a 2000 di (ai*bi) e volgio callcolare lo spedd-up nel caso in cui ho:
+-N=8 con topologia completamnete connesso(tutti legati a tutti). Ho quindi Tpar=1000Tmolt+1000somm, Ogni processore deve fare quindi Tpar/8, ovvero 125Tmolt+125Tmolt. Una volta ce ogni processore 
+ha fatto ciò, tali risultati devono essere scambiati per fare la sommatori totale. Ora entra in gioco la comuicazione: potrei suppore che il processore 1 manda a 2, 3 manda a 4, 5 a 6, 7 a 8. Faccio quandi 
+altr4 somme in paralleo. POi ne faccio altre 2 in  parallelo per sommare i 4 risultati precedenti, e una somma finae. quindi intotale aggiungo solo 3 tempi di somma da eseguire in sequenza (4 in parallelo, 
+2 in paralleo e 1), e quindi il tempo sarebbe: 125Tmol+125Tsom+3Tsom +3Tcom(tempo di comunicazione): se suppongo di avere Tsom=Tmol, alloa vrei che lo speed-up è S=2000Ts/(253Ts+3Tcom).
+-N=4 con topoligia ad anello, avrei un caso diverso dal precedente
+
+In questi esempi però non abbiamo visto i tempi di distribuzione iniziale sui singoli processori.
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+---------------------------------------------------------LEZIONE 2----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Un primo problema che dovremmo vedere è la gestione della coerenza dei dati in un'architettura multiprocessore. Innanzitutto la emoria condivisa può generare dei conflitti di accesso, che devo gestire.
+Una possibile soluzione viene dato dalla pssibiltà di avere non solo una memoria centrale condivisa, ma ci sono anche tante memorie locali (cache); inoltre potre avere anche uno spazio di memoria privato
+per il singolo processore, oltre che lo spazio condiviso a tutti.
+Guardando la coerenza, uno stesso dato X della memoria viene usato da più procesori, e quindi nelle cache creo delle copie locali di quella variabile, però se modifico quel dato ci sono dei disallineamenti. 
+Dipende anche dalla politica che uso, se write trough o write back che abbiamo già visto prima. Bisogna agire sul bit di validità, per dire che la copia del dato che il processore che ha nella cache è non 
+valido: cioè se il processore modifica quel dato, allora si mette nella cache di tuti gli altri processori il bit da validità a invalido, per dire che quel processore sta lavorado su una copia locale non più valida e
+che deve riprendere il dato dalla memoria.
+Ci sono diverse tecniche, ma le più interessanti sono quelle in hadware come le Snoopy Cache che controlla se i dato è stato modifiato (visto prima): si cmporta diversamente se sto usando write trough o 
+write back, e usiamo degli auotmi
+-WWRITE TROUGH: se il processore modifica un dato in cache, tutti gli altri processori controllano all'indirizzo di quel dato e, se è stato modificato, invalidano il bit che ho mettendo il it di validità a 0. Ci saranno 
+ solo 2 stati in memoria, ovvero lo stato di dato valido(ho totale allinemanto) o dato non valido. Ora, posso fare 3 tipi di operazioni: read, write e replace(sostituisci), e ogni processore ha quest'automa. 
+ Ora carico il dato in cache con una read e quindi sto nello stato valido, e anche quando lo scrivo rimango nello stato valido; se però un altro processore scrive quello stesso dato, allora io vado a finire nello 
+ stato invalido, e ci resto fino a quando non rileggo il dato dalla memoria corretto(vhe è stato modificato).Io ovviamente quando scrivo il dato per me resta valido, ma gli altri processori vanno tutti nello 
+ stato di invalido
+-In WRITE BACK invece il problema è che se il dato viene modificato, questo non è disponibile subito in memoria e quindi il processore che modifica dovrà avvisare gli altri. Qua mi servono più stati, in
+ particolare 3. Ho 2 stati di validità: uno per dire che sto sia scrivendo che leggendo, uno per dire che sto solo leggendo e qualche altro processore si è preso quello stesso dato e sta solo leggedo. Da questo 
+ stato, appeno qualcuno vuole scrivere, allora passo nello stato di invalido e ritorno nello stato di validità quando leggo o scrivo. Ovviamente quindi mi serviranno 2 bit per cdificare lo stato.
+-WRITE ONCE: è una tecinca che fonde i vantaggi di write back(veloce perchp scrivo solo una volta) e write trough(sempre allineato) usando un automa a 4 stati. In particolare, la prima volta che un 
+ processore scrive usa la write trugh, ovvero allineo anche la memoria, invece per le successive scritture si usa write back(scrivo alla fine di tutte le modifiche). Ho lo stato di RESERVE(stato scritto per la
+ prima volta) e DIRTY(dato scritto più di una volta), oltre agli stato valido e invalido. Reserve e Dirty sono un'esplosione dello stato read write di write back.
+
+Ci sono però altre tecniche, software, che non usano snoopy cache ma salvano in memoria condivisa che contiene una lista di puntatori ai processori che hanno quel dato prelevato. Quando un processore 
+ha un dato invalido, perchè per esempio è stato modificato da uqlacun altro, dalla lista si elimina il puntatore ai processori che hanno il nodo invalido. Così, la lista punta a tutti i processori che hanno il 
+dato valido. Si parla di tecinca del DIRETTORIO(sarebbe la lista, che è relativa a quel dato X condiviso), che ha 3 tecniche differenti:
+-Full mapped: la memoria centrale ha la lista di puntatori dove dice chi è che ha quel dato condiviso. Quando un processore modifica quel dato, si invalida il puntatore camncellando il link al processore che 
+ ha il dato invalido, così so quali processori hano il dato valido. Questo direttorio ha n locazioni, una per ogni processori, visto che ogni processore potrebbe avere il dato valido
+-Limited mapped: si usa un direttorio più corto: se ho un direttorio con 2 locazioni, ma ho 3 CPU che hanno il datp corretto, allora si elimia uno dei due puntatori dal direttorio contecniche random o LRU 
+ per esempio, e  il processore eliminato però se deve accedere a quel dato se lo deve ricaricare dalla memoria anche se in realtà il dato era ancora dato, ma per ol direttorio gli è stato detto che era 
+ invalido. Fa fare molti swap
+-Chained mapped: non ha il direttorio nella meoria condivisa, m si costruisce una lista dinamica linkata: nella memoria centrale ho la lista del direttorio, e tale testa punta alla sottolista di un altro 
+ processore. Se poi un'altro procesore accede a quel dato condiviso, allora nella nuova CPU si crea una lista di 2 elemnti, una testa e una coda. La testa ora viene puntata dalla testa(unico puntatore) nella
+ memoria condivisa, e la coda punta a quel precedente processore che aveva il dato. Quindi si costrusce una lista di puntatori, dove la testa nella shared memory punta all'ultima CPU che ha acceduto al
+ dato, e ogni CPU punta poi l processore precedente (quello che prima di lui era l'ultimo che aveva quel dato). Occupa molto spazio in software a è dfficile da gestire, poichè per cercare una CPU ce ha il 
+ dat devo scorrere tutte le altre CPU fino ad arrivare a qullo che cerco.

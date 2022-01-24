@@ -1,0 +1,34 @@
+Ci permette di gestire le interruzioni, infatti si chiama Priority Interrupt Controller: ci permette di fare sia interruzione vettorizzato che autovettorizzato. Il dispositivo interrompente è quindi
+egato al PIC, non alla CPU, e il PIc mi dirà qual'è il vettore dove sta la ISR per quel dispositivo. Al pic sono legate tutte le 7 linee di interruzione che escono dal decoder(generate dalle IPL), ed
+è anche legato il databus per l'idirizzo della ISR nel vettore delle interruzioni. E' il PIC che si occupa di associare all'interruzione che mi arriva un'indice del vettore delle interruzioni. Inoltre posso
+gestire anche le priorità. Il PIC può avere fino ad 8 linee di nterruzione, ma lo posso estendere a 64 legando più PIC in cascata.
+Nella modalità PIC i dispositivi I/O sono legati sia al PIC con la linea di interruzione, sia al bus della CPU per dati, indirizzi e controllo: e quindi in realtà il PIC il gestore delle interruzioni, che è
+legato al processore attraveso ad una sola linea di interruzioni. Il pic fa sia la maschera di interruzioni, sia la gestione della priorità, sia quella delle ISR.
+Noi ci riferiamo all'INTEL, e gestisce le priorità in due modi diversi:
+-Full nested: le richieste di interruzioni sono preordinate su uno schema a priorità prefissata, ovvero dipende dalla linea a cui è legato il dispositivo
+-Round Robin: mi permette di fare una rotazione delle priorità sulle linee: se la linea 1 è la èiù prioritaria, quando la servo diventa la meno prioritaria e la seconda linea diventa più prioritaria
+
+I registri intero spno:
+-IMR che mi fa da maschera delle interruzioni: disabilita una o più linee di interruzione;  accesibile in lettura e in scrittura con un indirizzo dispari, ma quando ci acedo in scrittura il pic non deve
+ essere in stato di reset, overo devo aver già caricato il registro TR.
+-TYPE REGISTER(TR) memorizza la parte base dell'indirizzo del vettore:  nei 3 bit meno significativi ha poi lo spiazzamento che sommo all'inidirizzo base della isr per trovare il vero indirizzo della
+ isr(del vettore).Accedo al TR con un indirizzo dispari dopo il reset.
+-IRR memorizza i segnali di interruzioni, cioè raccoglie le richieste: ha 8 bit, uno per ogni linea di interruzione. Se mi arriva un intrruzione sulla linea 0, alzo il bit 0; quando poi la richiesta arriva
+ al gestore delle interruzioni(CPU o un'altro PIC), si setta a 0 il relativo bit di IRR. E'accessibile in sola lettura con indirizzo pari quando RR=1 e RIS=0 del CNTRL regster.
+-CONTROL REGISTER(CNTRL), per controllare il dispositivo: accessibile in scrittura ad indirizzo pari, dove i bit 0,1 e 2 mi dicono i bit da cancellare nel registro ISR il bit 3 dice che l'interruzione è
+ finita, cioè fa mettre a 0 il bit dell'ISR relativo; il bit 4 fa fare la cancelazione automatica del bit di ISR; il bit 7(RR) se settato da 1 mi permette di accedere in lettura a IRR e ISR a seconda del bit 
+ 6(RIS):
+  *se il bit 6 vale 1, accedo all'ISR
+  *se il bit 6 vale 0, accedo all'IRR
+ Ciò è dovuto perchè questi 3 registri stano allo stesso indirizzo pari: se voglio scrivere vado sicuramente nel CNTRL, se voglio leggere vado in IRR o ISR a seconda di come visto prima.
+-ISR, che memorizza le interruzioni(attraverso le relative linee). I bit relativi alle interruzioni vengono abbassati automaticamente se ho settato tale comportamento nel CNTRL, altrimenti lo dovrà
+ fare la routine che serve l'interruzione. E' accessibile solo in lettura con indirizzo pai quando RR=1 e RIS=1 del CNTRL. Paricamente quando la CPU decide di servire un dispositivo, abbassa il relativo bit
+ di IRR e alza quello di ISR
+
+Vediamo un po' come funziona:
+Un dispositivo avvia un interruzione su una linea vero il PIC che fa alzare il relativo bit nel registro IRR; il priority resolver decide sulla base delle priorità dei dispositivi e con la maschera dell'IMR
+quale dispositivo la CPU deve gestire. Quando poi il pic ha ricevuto l'ack che la CPU  che dice che è pronto a servire l'interruzione, setta il bit del registro ISR dellalinea interrompente a maggiore 
+priorità, resetta il relativo bir di IRR; trasmette poi il vettore(l'identificatore) relativo a quel dispositivo interrompente sul bus dati, e ressto il bit del registro ISR per dire che sto servendo quel
+dispositivo
+
+In realtà l'architettura che abbiamo visto ora, con i relativi registri, è solo il modello di simulazione in ASIM che è più semplice. Il vero PIC è più complesso.

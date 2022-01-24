@@ -1,0 +1,156 @@
+00000000                                     1  ********************************************************************************************
+00000000                                     2  *Programma di prova del dispositivo PIC
+00000000                                     3  *Viene presentata una configurazione composta da un dispositivo M68000, un bus/memoria,
+00000000                                     4  *un PIC e un generatore di interruzione/timer 1TO4INTGEN.
+00000000                                     5  *L'indirizzo della ISR viene calcolato sommando lo spiazzamento di valore 0-7 a seconda delle linee di interruzione interrompenti 
+00000000                                     6  *all'indirizzo base $40 che corrisponde al vettore 64 della tabella
+00000000                                     7  *
+00000000                                     8  *In questo esempio il bit AEOI è posto a 1: si noti che in questa modalità il simulatore 
+00000000                                     9  *non mostra i bit del registro ISR e non ha il comportamento atteso.
+00000000                                    10  *Gli studenti sono invitati a riferirsi al datasheet per studiare il corretto funzionamento.
+00000000                                    11  *
+00000000                                    12  ********************************************************************************************	
+00000000                                    13  *	NAME Prova PIC	;tale direttiva non e' allo stato supportata dall'assemblatore
+00000000                                    14  
+00000000                                    15  	
+00000000                                    16  *
+00000000  =00002000                         17  ter	EQU	$2000	indirizzo base associato al dispositivo TERMINAL ter
+00000000  =00002004                         18  intg1	EQU	$2004	indirizzo base associato al primo dispositivo 1TO4INTGEN
+00000000  =0000202C                         19  pic	EQU	$202C	indirizzo base associato al dispositivo PIC
+00000000                                    20  
+00000000                                    21  
+00000000                                    22  *
+00000000                                    23  *Area Programmi
+00000000                                    24  *	
+0000A000                                    25  	ORG 	$A000	
+0000A000                                    26  begin
+0000A000                                    27  
+0000A000                                    28  *codice di inizializzazione degli indirizzi base dei 4 device utilizzati
+0000A000                                    29  	
+0000A000  307C 202C                         30  	MOVEA.W	#pic,A0			memorizza la base degli indirizzi dei device utilizzati 
+0000A004  327C 2004                         31  	MOVEA.W	#intg1,A1		nei registri A0, A1, A3
+0000A008  367C 2000                         32  	MOVEA.W #ter,A3
+0000A00C                                    33  
+0000A00C                                    34  *scrittura nel registro TR: viene settato il valore $40 = 01000|000 che corrisponde al valore 64 ($40 in decimale), che indica
+0000A00C                                    35  *il vettore di base (primo vettore utile per le ISR definite da utente). Tale vettore è memorizzato alla locazione 64*4=256=$100;
+0000A00C                                    36  *i successivi accessi all' indirizzo dispari interesseranno il registro IMR 
+0000A00C                                    37  	
+0000A00C  117C 0040 0001                    38  	MOVE.B	#$40,1(A0)		
+0000A012                                    39  
+0000A012                                    40  *inizializza il terminale: abilitazione eco e tastiera, pulisci buffer,canc video e disab. interrupt							
+0000A012                                    41  							 
+0000A012  177C 003C 0001                    42  	MOVE.B 	#%00111100,1(A3)	
+0000A018                                    43  
+0000A018                                    44  *primo accesso in scrittura all'indirizzo pari: viene settato il registro CTRL ponendo AEOI=1 per il reset automatico 
+0000A018                                    45  *del bit di ISR dopo la trasmissione dell'interruzione 
+0000A018                                    46  *i prossimi accessi in lettura saranno al 
+0000A018                                    47  	*CTRL: se bit7=0, (è questo il caso)
+0000A018                                    48  	*IRR: se bit7=1 e bit6=0
+0000A018                                    49  	*ISR: se bit7=1 e bit6=1
+0000A018                                    50      
+0000A018  10BC 0010                         51  	MOVE.B	#$10,(A0)	
+0000A01C                                    52  
+0000A01C                                    53  *accesso al registro IMR: abilitazione di tutte le interruzioni							
+0000A01C                                    54  	
+0000A01C  117C 0000 0001                    55  	MOVE.B	#$00,1(A0)		
+0000A022                                    56  
+0000A022                                    57  *Inizializzazione sistema: modifica dello SR in modo che nessuna interruzione sia mascherata
+0000A022  2E7C 00009000                     58  	MOVE.L	#$9000,A7		inizializza stack supervisor
+0000A028  40C0                              59  	MOVE.W	SR,D0			legge il registro di stato
+0000A02A  0240 D8FF                         60  	ANDI.W	#$D8FF,D0 		maschera per reg stato (stato utente, int abilitati): 1101 1000 1111 1111
+0000A02E  46C0                              61  	MOVE.W	D0,SR			pone liv int a 000
+0000A030                                    62  	
+0000A030                                    63  *Inizializzazione registri timer 1	
+0000A030                                    64  
+0000A030  137C 0011 0004                    65  	MOVE.B	#$11,4(A1)		inizializza pr=1; linea=1
+0000A036  137C 0001 0005                    66  	MOVE.B	#$01,5(A1)		inizializza vect#=1
+0000A03C  137C 001F 0006                    67  	MOVE.B	#$1f,6(A1)		inizializza CountH
+0000A042  137C 0000 0007                    68  	MOVE.B	#$00,7(A1)		inizializza CountL
+0000A048                                    69  
+0000A048                                    70  *Inizializzazione registri timer 2	
+0000A048                                    71  
+0000A048  137C 0012 0008                    72  	MOVE.B	#$12,8(A1)		inizializza pr=1; linea=2		
+0000A04E  137C 0002 0009                    73  	MOVE.B	#$02,9(A1)		inizializza vect#=2
+0000A054  137C 001E 000A                    74  	MOVE.B	#$1e,$a(A1)		inizializza CountH
+0000A05A  137C 0000 000B                    75  	MOVE.B	#$00,$b(A1)		inizializza CountL
+0000A060                                    76  
+0000A060                                    77  *Inizializzazione registri timer 3	
+0000A060                                    78  
+0000A060  137C 0023 000C                    79  	MOVE.B	#$23,$c(A1)		inizializza pr=2; linea=3	
+0000A066  137C 0003 000D                    80  	MOVE.B	#$03,$d(A1)		inizializza vect#=3
+0000A06C  137C 001F 000E                    81  	MOVE.B	#$1f,$e(A1)		inizializza CountH
+0000A072  137C 0000 000F                    82  	MOVE.B	#$00,$f(A1)		inizializza CountL
+0000A078                                    83  
+0000A078                                    84  *Inizializzazione registri timer 4	
+0000A078                                    85  
+0000A078  137C 0040 0010                    86  	MOVE.B	#$40,$10(A1)	inizializza pr=1; linea=0	
+0000A07E  137C 0004 0011                    87  	MOVE.B	#$04,$11(A1)	inizializza vect#=4
+0000A084  137C 001B 0012                    88  	MOVE.B	#$1b,$12(A1)	inizializza CountH
+0000A08A  137C 0000 0013                    89  	MOVE.B	#$00,$13(A1)	inizializza CountL
+0000A090                                    90  
+0000A090                                    91  *Inizializzazione device 1to4intgen
+0000A090  12BC 0057                         92  	MOVE.B	#$57,(A1)		Intgen inizializza registro I con pr=5 e linea=7	
+0000A094  137C 0002 0002                    93  	MOVE.B	#$02,2(A1)		Intgen registro C lancia int sulla linea fisica indicata
+0000A09A                                    94  
+0000A09A  4EF9 0000A09A                     95  loop	JMP	loop		<<<loop di attesa di int
+0000A0A0                                    96  
+0000A0A0                                    97  *
+0000A0A0                                    98  *Area ISR per la gestione delle interruzioni generate da 1to4intgen
+0000A0A0                                    99  *Vengono definite 8 ISR che sono mappate in memoria a partire dall'indirizzo $100 e corrispondono
+0000A0A0                                   100  *alle ISR relative alle 8 linee di interruzione del PIC
+0000A0A0                                   101  *
+0000A0A0                                   102  * ISR associata alla linea 0
+00008000                                   103  	ORG	$8000
+00008000  16BC 0030                        104  int0	MOVE.B	#48,(A3)			stampa 0 a terminale
+00008004  4E71                             105  	NOP
+00008006  4E73                             106  	RTE
+00008008                                   107  
+00008008                                   108  * ISR associata alla linea 1
+00008100                                   109  	ORG	$8100
+00008100  16BC 0031                        110  int1	MOVE.B	#49,(A3)			stampa 1 a terminale
+00008104  4E71                             111  	NOP
+00008106  4E73                             112  	RTE
+00008108                                   113  
+00008108                                   114  * ISR associata alla linea 2
+00008200                                   115  	ORG	$8200
+00008200  16BC 0032                        116  int2	MOVE.B	#50,(A3)			stampa 2 a terminale
+00008204  4E71                             117  	NOP
+00008206  4E73                             118  	RTE
+00008208                                   119  
+00008208                                   120   * ISR associata alla linea 3
+00008300                                   121  	ORG	$8300
+00008300  16BC 0033                        122  int3	MOVE.B	#51,(A3)			stampa 3 a terminal
+00008304  4E71                             123  	NOP
+00008306  4E73                             124  	RTE
+00008308                                   125  
+00008308                                   126   * ISR associata alla linea 4
+00008400                                   127  	ORG	$8400
+00008400  16BC 0034                        128  int4	MOVE.B	#52,(A3)			stampa 4 a terminale
+00008404  4E71                             129  	NOP
+00008406  4E73                             130  	RTE
+00008408                                   131   
+00008408                                   132   * ISR associata alla linea 5
+00008500                                   133  	ORG	$8500
+00008500  16BC 0035                        134  int5	MOVE.B	#53,(A3)			stampa 5 a terminale
+00008504  4E71                             135  	NOP
+00008506  4E73                             136  	RTE
+00008508                                   137  
+00008508                                   138  
+00008508                                   139   * ISR associata alla linea 6
+00008600                                   140  	ORG	$8600
+00008600  16BC 0036                        141  int6	MOVE.B	#54,(A3)			stampa 6 a terminale
+00008604  4E71                             142  	NOP
+00008606  4E73                             143  	RTE
+00008608                                   144  
+00008608                                   145  
+00008608                                   146   * ISR associata alla linea 7
+00008700                                   147  	ORG	$8700
+00008700  16BC 0037                        148  int7	MOVE.B	#55,(A3)			stampa 7 a terminale
+00008704  4E71                             149  	NOP
+00008706  4E73                             150  	RTE
+00008708                                   151  *
+00008708                                   152  
+00008708                                   153  	end	begin
+
+No errors detected
+No warnings generated

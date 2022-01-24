@@ -1,0 +1,92 @@
+00000000                                     1  ******************AREA DATI*********************************************************************
+00008000                                     2  		ORG	$8000
+00008000                                     3  MSG			DS.B	8						;Spazio per i caratteri ricevuti
+00008008  08                                 4  N			DC.B	8						;Dimensione del messaggio
+00008009  00                                 5  COUNT	DC.B	0						;Contatore caratteri ricevuti
+0000800A                                     6  
+0000800A                                     7  
+0000800A                                     8  *******************AREA MAIN************************************************************************
+00008200                                     9  		ORG	$8200
+00008200                                    10  *Della PIA il sistema S2 usa il porto B per inviare l'eco del carattere che ha ricevuto
+00008200  =00002006                         11  PIAPDRB		EQU		$2006						
+00008200  =00002007                         12  PIACRB		EQU		$2007
+00008200                                    13  
+00008200                                    14  *Registri della USART: S2 usa la USART per ricevere
+00008200  =00002002                         15  USARTD		EQU		$2002
+00008200  =00002003                         16  USARTCTR	EQU		$2003
+00008200                                    17  
+00008200                                    18  
+00008200  4EB9 00008230                     19  MAIN		JSR		INITUSART
+00008206  4EB9 0000823E                     20  			JSR		INITBOUT
+0000820C                                    21  			
+0000820C                                    22  *Configurazione registro di stato		
+0000820C  40C0                              23  			MOVE.W	SR,D0						;Lettura registro di stato
+0000820E  0240 D8FF                         24  			ANDI.W	#$D8FF,D0					;Configuro il registro di stato impostando la modalità utente, e ponendo la maschera delle interruzioni a 000 per accettarle tutte (su qualsiasi linea)
+00008212  46C0                              25  			MOVE.W	D0,SR
+00008214                                    26  			
+00008214  227C 00002003                     27  			MOVEA.L #USARTCTR,A1
+0000821A  247C 00002006                     28  			MOVEA.L #PIAPDRB,A2
+00008220                                    29  			
+00008220                                    30  			
+00008220  1011                              31  CHECKDSR	MOVE.B	(A1),D0						 
+00008222  0200 0080                         32  			ANDI.B	#%10000000,D0				;Controlla se il segnale DSR è attivo: se si trasmette, atrimenti attende. La configurazione in ogni caso prevede DTR=1, e visto che
+00008226  67F8                              33  			BEQ		CHECKDSR					;DTR è legato a DSR dell'altra USART, la connessione è stabilita
+00008228                                    34  			
+00008228  1212                              35  LETFIT		MOVE.B 	(A2),D1						;Lettura fittizia del PDR per azzerare la linea CB2, quindi CRB(7), perchè la macchina potrebbe essere in reset
+0000822A                                    36  			
+0000822A                                    37  			
+0000822A  4EF9 0000822A                     38  LOOP		JMP		LOOP
+00008230                                    39  
+00008230                                    40  *******************INIZIALIZZAZIONI****************************************
+00008230  11FC 005D 2003                    41  INITUSART	MOVE.B	#%01011101,USARTCTR			;Inizializzazione Mode register: modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+00008236  11FC 0036 2003                    42  			MOVE.B	#%00110110,USARTCTR			;Inizializzazione Cntrol register: abilito ricezione, handshaking e cancello flag di errore 
+0000823C  4E75                              43  			RTS	
+0000823E                                    44  			
+0000823E                                    45  			
+0000823E  11FC 0000 2007                    46  INITBOUT 	MOVE.B	#$00,PIACRB					;E' importante sottolineare che con questa istruzione metto a 0 CRB(2), così poi quando accedo al PIAPDRB in realtà accedo al DDRB
+00008244  11FC 00FF 2006                    47  			MOVE.B	#$FF,PIAPDRB					;Mettendo tutti 1 nel DDRB setto come OUTPUT le linee PB
+0000824A  11FC 0025 2007                    48  			MOVE.B	#%00100101,PIACRB			;Seconda scrittura in CRB: abilito l'handshaking, abilito le interruzioni (per inviare) e metto a 1 il CRB(2) così da accedere al PDRB ogni volta che accedo a PIAPDRB
+00008250  4E75                              49  			RTS			
+00008252                                    50  	
+00008252                                    51  
+00008252                                    52  ******************INTERRUZIONE PER LA RICEZIONE***********************************************************************
+00008700                                    53  		ORG 	$8700
+00008700  2F08                              54  INTERRUPT	MOVE.L 	A0,-(A7)					;Salvataggio contesto software
+00008702  2F09                              55  			MOVE.L 	A1,-(A7)
+00008704  2F0A                              56  			MOVE.L 	A2,-(A7)
+00008706  2F00                              57  			MOVE.L 	D0,-(A7)
+00008708  2F01                              58  			MOVE.L 	D1,-(A7)
+0000870A                                    59  
+0000870A                                    60  
+0000870A                                    61  			
+0000870A  207C 00008000                     62  			MOVEA.L #MSG,A0
+00008710  227C 00002002                     63  			MOVEA.L #USARTD,A1
+00008716  247C 00002006                     64  			MOVEA.L #PIAPDRB,A2
+0000871C  1039 00008009                     65  			MOVE.B 	COUNT,D0
+00008722                                    66  
+00008722  1212                              67  			MOVE.B 	(A2),D1						;Lettura fittizia
+00008724                                    68  			
+00008724  1191 0000                         69  RICEZCAR	MOVE.B	(A1),(A0,D0)				;Ricezione del carattere ricevuto, che lo prendo da USARTD e lo salvo in A0 spiazzato di D0
+00008728  14B0 0000                         70  INVIOECO	MOVE.B 	(A0,D0),(A2)				;Invio come eco il carattere appena ricevuto: questo lo posso fare perchè ho scelto di fare il punto 2, in cui S2 può inviare l'eco appena ricevuto il carattere
+0000872C                                    71  
+0000872C                                    72  			
+0000872C  5200                              73  			ADD.B	#1,D0						;Il contatore dei caratteri ricevuti lo incremento dopo l'invio dell'eco, poichè utilizzo lo stesso contatore sia per spiazzare la posizione in cui salvo, sia per 
+0000872E  13C0 00008009                     74  			MOVE.B	D0,COUNT					;spiazzare la posizione da cui prendo il carattere da inviare, che è sempre la stessa
+00008734                                    75  
+00008734                                    76  
+00008734                                    77  	
+00008734  221F                              78  RIPRISTINO	MOVE.L	(A7)+,D1					;Ripristino del contesto software
+00008736  201F                              79  			MOVE.L	(A7)+,D0
+00008738  245F                              80  			MOVE.L	(A7)+,A2
+0000873A  225F                              81  			MOVE.L	(A7)+,A1
+0000873C  205F                              82  			MOVE.L	(A7)+,A0
+0000873E                                    83  
+0000873E  4E73                              84  			RTE
+00008740                                    85  *****************************************************************************************************************************
+00008740                                    86  
+00008740                                    87  
+00008740                                    88  
+00008740                                    89  			END MAIN
+
+No errors detected
+No warnings generated

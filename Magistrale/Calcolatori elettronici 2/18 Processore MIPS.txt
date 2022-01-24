@@ -1,0 +1,85 @@
+Vedremo ora il processore MIPS: è RISC quindi lavora molto diversamente dl motorola 68000, ed è pipelined. Esso è dotato non solo di una CPU, ma anche di coprocessori. Si basa inoltre sul modello
+Harward, ovvero troviamo 2 memorie, cache sul processore proprio, che contengono una i dati e una le istruzioni. In particolare troviamo:
+-CPU che ha 32 registri generali su 32 bit, e nell suo core troviamo anche l'ALU è un'unità separata che fa moltiplicazioni e divisioni
+-COPROCESSOR 0 che permette di gestire interruzioni, eccezioni e contiene il reistro di stato
+-COPROCESSOR 1 è l'unità floating point che contiene 32 registri generali per operazioni in floating point
+Questo processore ha 2 modi di funzionamento, ovvero USER e KERNEL; e i task in modalità user non possono accedere al processor 0.
+La memoria invece ha in totale 4 GB: i 2 più in basso dedicati a user, poi 512 mega per gli indirizzi acceduti dalla cache., 512 per fare il boot e mappare i device memory mapped, e l'ultimo giga in alto 
+per il kernel. La memoria è byte addressable e la memoria utente contiene un'area codice, un'area dati e uno stack. La memorizzazione può avvenire sia in modalità BIG ENDIAN che LITTLE ENDIAN: però
+noi useremo il simulatore MISP, che usa la modalità di memorizzazione a seconda del processore che usa.
+
+Vediamo ora le eccezioni: esse sono lo stesso tipo di eccezioni del Motrola 68000, a parte la diviosione per zero, che non mi restuisce un eccezione ma un valore NOT A NUMBER per segnalare questa 
+particolare condizione; gestisce anche le interruzioni, sia da device esterni ma anche dal Coprocessor 1 per esempio. 
+Inoltre, qualsiasi sia la causa di eccezzione, esiste un'unico EXCEPTION HANDELR che le gestisce tutte, è un unica routine: poi si capisce via software cosa deve fare l'hendler per gestire una particolare 
+interruzione.  Per capire ciò guarda il coprocessor 0, che contiene:
+-REGISTRO CAUSA, che contiene la codifica della causa che ha generato l'eccezione, ed è la prima cosa che fa. Contiene un bit di Brench Delay per il delay slot, e tanti bit (6) quante sono i dispositivi
+ d'interruzione
+-REGISTRO EPC: contiene l'indirizzo dell'istruzione a cui poi devo tornare quando finisco l'eccezione
+-STATUS REGISTER, contiene ancora il concetto di maschera delle interruzioni: contiene un bit per dire che ci è stata un interruzione, un bit per modalità user o kernel, un bit per disabilitare le interruzioni.
+ Inoltre posso gestire una sola interruzione per volta, e mentre la gestisco no ne faccio arrivare altre. Quini in hardware non viene gestita la priorità tra le interruzioni, ma viene fatto n softwar dall'handler.
+-BAD VADDR, memorizza l'indirizzo di memoria a cui volevo accedere ma che m ha causato un'eccezione(per esempio è un registro kernel a cui però l'user ha vpluto accedere)
+In particolare non viene salvato il contesto (status register e programm counter), ma una volta salvata la causa e l'indirizzo dell'istruzione a cui poi ritorno, e poi salto all'hendelr proprio, così da ridurre
+al minimo la latenza per le interruzioni.
+Inoltre c'è una particolare gestione dei control hazard: si parla di DELAY SLOT: si inverte l'ordine delle istruzioni nel caso di un salto, ovvero l'sitruzione che eseguo prima del salto la metto invece subito
+dopo il salto, o qualcun altra, così da non mandare in stallo la pipe. Viene fatto anche quando devo fare un'istruzione di Load. Nel caso non ho istruzione da invertire, allora prima del salto ci metto una NOP 
+(no operation) così il processore non fa niente ma almeno non mando in stallo la pipe.
+Tale approccio si usa anche per le eccezioni: se mi genera l'eccezione un isruzione del DELAY SLOR, nell'EPC non si mette l'istruzione del DELAY SLOT, ma l'istruzione del salto.
+
+L'unità delle motlipicazioni e divisioni contiene i due registri LOW e HIGH che contengono i due pezzi per il risultato(come visto in ASE), e vengono riempiti man mno duramte l'operazione. Questa unità 
+lavora con un certo numero di colpi di clock(non 1), e non si può interrompere mentre lavora: ciò implica che se sbaglio, non si può fermare mentre lavora ma devo aspettare che finisce l'operazione 
+prima di potergli dare i dati corretti. Per accedere a questi registri si usano 2 istruzioni speciali
+
+La prima cosa da dire è che un registro o viene chiamato da un numero, o un codice che indica il numero. Inoltre non tutti i registri generali sono accessibli, e a ciscun registro corrisponde una particolare 
+funzionalità. 
+-Per esempio i registro 0 contiene la costante 0 ($zero come codice) su 32 bit, Ciò serve perchè le istruzioni hanno lunghezza fissa (32 bit) non variabile come nel 68000, e quindi avrei un  problema invece 
+ se dovessi spostare valori di 32 bit tra registri. Allora mi cnviebe salvare in un regisro quei valori di 32 bit così per spostarli uso indirizzi dei registri che sono più piccoli.
+-Il registro 1 ($at) è riservato per l'assempblatore per le costanti
+-Registri $vo e $v1 si usano per salvare dei valori di ritorno, i regstri $a0-$a3 per i valori di ingresso.
+-8 registri $t0-$t7 che sono registri NON SALVATI che posso usare come voglio.
+-8 registri $s0-$s7 che sono SALVATI poichè contengono valori che posso usare in futuro
+-altri 2 registri $t8 e $t9 temporanei non salvati.
+-2 registri $k0 e $k1 per gestire le eccezioni.
+-Un puntatore all'area dati $go
+-Lo stack pointer $sp
+-Il frame pointer
+-Un regstro per salvare l'indirizzo di ritoeno quando faccio la chiamata a procedura
+Non abbiamo il registro di satto, che noi usavamo solo per i codici di condizioni(i 5 flag settati dalle operazioni). Ciò perchè in MIPS in realtà non esistono tali codici di condizioni, bensì ogni volta vengono 
+salvati in dei registri che diende dall'operazione che sto acendo.
+Anche il programm cunter non è un vero poprio registro, n quanto non ci posso accedere
+
+Ricordiamo che nel 68000 un'istruzione può essree lunga da 16 bit(una word) a 5 word: la prima word contiene indicazioni come come numero di operandi e codice operativo ecc..., le latre word vengono 
+usate per esempio l'indirizzo del registro in cui prendo l'operando, un operando immediato ecc...Quindi le istruzioni sono a lunghezza variabile
+
+Posso avere 3 operandi, il cui il primo è sorgente gli altri 2 destinazione: il fatto che ho 3 operadi accade perchè le uniche istruzioi che mi fanno accedere in memoria sono Load e Store(essendo un 
+processore RISC), e quindi non ho tutti i modi di indirizzamento del motorola 68000. Tutte le altre istruzioni lavorano sui regisri, e quindi nel codice operativo dell'istruzione ho molto spazio per salvare 
+3 operndi.
+
+Per le istruzioni ho solo 3 formati diverse, e voglio capire come un istruzione assembler vinee tradotta in codice macchina. In realtà molte istruzioni che usiamo nell'Assembler dell'ISA sono pseudo-istruzioni,
+ovvero non sono istruzioni ISA, ma in realtà impacchettano piùistruzioni che poi lìassemblatore separerà dopo. Quindi ad un'istruzione potrebbero corrispondere due o più istruzioni. Vediamo i 3 formati:
+-RTYPE ha 3 operandi registro: nel codice operativo, i primi 2 registri sno sorgenti e il terzo destinazione (ma noi n Assembler Mips scriviamo il primo regstro come destinazione e glia ltri 2 come sorgente)
+ Ho poi 2 campi shamt che indica il numero di shift, e funct che specifica l'istruzione in base al codice operativo. Viene usato per lo più per le istruzioni arimetiche, come add, and, div e mul(queste ultime
+ eseguite dall'unità divione e moltiplicazione), ma  anche la move che è una pseudo-istruzioe
+-ITYPE ha solo 2 oerandi registri e uno immediato su 16 bit: i primi 6 bit sono codice perativo come sempre, e può essere usata per fare operazioni aritmetiche con un immediato. Può anche fare l'istruzione 
+ LUI, che prende la rima metà alta dell'immediat e la mette nella prima metà del secondo registro che specifico(destinazione) e meto a 0 la seconda metà. Inoltre può servire anche per fare i salti: in particolare 
+ il BRANCH in cui come immediato specifico l'offest (su 16 bit fissi) da sommare al programm counter per avere il nuovo indirizzo del programm counter. Le istruzioni in totale sono lunghe di 4 bye, quindi
+ ogni volta devo saltare avanti di 4 (o indietro), ovvero l'offest con cui slto ha sempre come ultimi 2 bit 00. Allora in realtà l'offset per saltare è di 18 bit, di cui i primi 16 bit sono l'offset dell'istruzione Itype, 
+ e a quelli poi gli accodo 00 per dire che posso saltare avanti o indietro di multipli di 4, visto che l'istruzione successiva sarà 4 byte dopo (ogni istruzioni ha 32 bit).
+ Tra i salti ci sono anche pseudo istruzioni. Il tipo I serve a fare anche Load e Store: prendo un dato dalla memoria e lo metto in un registro o viceversa. Per accedere al dato in memoria mi serve in ogni caso
+ l'indirizzo della locazione in cui si trova (nel 68000 c'erano le modalità assoluta, indiretta con post incremento e pre decremento eccc...): l'inidirzzo di accesso alla memoria si costruisce sommando il campo
+ offset(quind visto come spiazzamento) all'indirizzo del registro sorgente per ottenere il registro di memoria in cui sta l'operando. L'indirizzo sorgente lo indico quindi con ($1), quindi con le parentesi come
+ nel 68000, ma non posso fare la modalità assoluta (MOVE $8000,R2 per esempio): quindi in con ($1) dico che nel registro 1 ho l'indirizzo a cui ci devo sommare l'offset  per ottenere l'indirizzo di memoria
+ in cui sta l'operando. Questi 2 pezzi di indirizzo venono sommati dall'alu in fase di esecuzione così poi nella fase successiva(memorizzazione) ho l'indirizzo di memoria che uso per esempio per salvare un
+ risultato. Questa è la modalità di indirizzamento BASE ADDRESSING, ma posso fare anche cose più complesse, astratte.
+ Se ho operandi più grandi di 16 bit, per esempio uso costanti grandi, uso una pseudo  istruzione in 2 passi: carico con una LUI nel registro $1 riservato all'assemblatore i 16 bit dell'ofest nei primi 16 bit del
+ registro, poi gli altri 16 li ottengo con una and bit a bt tra prima parte di $1 e seconda parte(quello che c'era prima): questa sarebbe listruzione LA (Load address). Se invece volessi scorrere dei vettori
+ (nel 68000 lo facevo con post decremento) uso la pseudo istruzione Ib $(t0),V($s0): quetsa istruzione praticamente fa 3 istruzioni: supponiamo di avere un vettore a un certo indirizzo di partenza, faccio la
+ LUI per caricare in $1 (registro dell'assemblatore) nei primi 16 bit i primi 16 bt dell'indirizzo di partenza del vettore; poi con un AADU somma a $1 il contenuto della locazione del vettore a cui voglio accede
+ re mettendo tale contenuto della locazione nei 16 bit meno significativi di $1, e poi uso  l'istruzione LB  per caricare in un registro temporaneo il contenuto del registro (particolare locazione del vettore) a
+ cui accedo tramite l'indirizzo che trovo facendo la somma tra il contenuto $1 e i 16 bit meno significativi  dell'indirizzo di partenza che non ancora avevo usato e che resta costante. Questo perchè non
+ posso modificare dinamicamente la costante di cilco (i di v(i) per esempio) per accedere alle varioe locazioni del vettore.
+-JTYPE ha solo un operando immediato e serve a fare un salto assoluto (Jump) dando direttamnete al programm counte l'indirizzo a cui saltare. In pratica ha 6 bit di operando e 26 bit di offset, a cui accodo 
+ poi 00 sempre per accedere a indirizzi multipli di 4, e poi lo si giustappone al programm counter(cioè lo metto negli ultimi 26 bit del programm counter e lascio i primi 4 del programm counter invariato)
+
+Il codice operativo è sempre su 6 bit, quindi in totale ho 64 codice operativi e sono i primi 6 bit dell'istruzione
+
+POsso poi usare il codice operativo SYSCAL per invocare na system call.

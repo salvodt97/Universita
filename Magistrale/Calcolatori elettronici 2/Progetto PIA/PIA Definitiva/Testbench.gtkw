@@ -1,0 +1,84 @@
+[*]
+[*] GTKWave Analyzer v3.3.95 (w)1999-2018 BSI
+[*] Wed Jul 01 15:00:35 2020
+[*]
+[dumpfile] "C:\Users\Windows_10\Desktop\CE2\Progetto PIA\PIA Definitiva\dump.vcd"
+[dumpfile_mtime] "Wed Jul 01 14:59:53 2020"
+[dumpfile_size] 7632
+[savefile] "C:\Users\Windows_10\Desktop\CE2\Progetto PIA\PIA Definitiva\Testbench.gtkw"
+[timestart] 0
+[size] 1366 745
+[pos] -35 -35
+*-26.728859 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 197
+[signals_width] 110
+[sst_expanded] 1
+[sst_vpaned_height] 204
+@28
+pia_test.ca1
+pia_test.ca2
+pia_test.cb1
+pia_test.cb2
+@22
+pia_test.cra[7:0]
+pia_test.crb[7:0]
+@28
+pia_test.cs[2:0]
+@22
+pia_test.d[7:0]
+pia_test.d_in[7:0]
+pia_test.ddra[7:0]
+pia_test.ddrb[7:0]
+@28
+pia_test.enable
+@22
+pia_test.gestione_bus_d.bidi[7:0]
+@28
+pia_test.gestione_bus_d.enable
+@22
+pia_test.gestione_bus_d.input[7:0]
+@28
+pia_test.gestione_bus_d.interr
+@22
+pia_test.gestione_bus_d.temp1[7:0]
+pia_test.gestione_bus_pa.bidi[7:0]
+@28
+pia_test.gestione_bus_pa.enable
+@22
+pia_test.gestione_bus_pa.input[7:0]
+@28
+pia_test.gestione_bus_pa.interr
+@22
+pia_test.gestione_bus_pa.temp1[7:0]
+pia_test.gestione_bus_pb.bidi[7:0]
+@28
+pia_test.gestione_bus_pb.enable
+@22
+pia_test.gestione_bus_pb.input[7:0]
+@28
+pia_test.gestione_bus_pb.interr
+@22
+pia_test.gestione_bus_pb.temp1[7:0]
+@28
+pia_test.interr
+pia_test.irqa
+pia_test.irqb
+@22
+pia_test.pa[7:0]
+pia_test.pa_in[7:0]
+@28
+pia_test.pa_interr
+@22
+pia_test.pb[7:0]
+pia_test.pb_in[7:0]
+@28
+pia_test.pb_interr
+@22
+pia_test.pdra[7:0]
+pia_test.pdrb[7:0]
+@28
+pia_test.reset
+pia_test.rs[0:1]
+pia_test.rw
+[pattern_trace] 1
+[pattern_trace] 0

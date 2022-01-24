@@ -1,0 +1,64 @@
+Vedremo come configurare il driver di queste periferiche per vedere come interfacciare con il processore dispositivi di I/O. Questo perchè il processore comuica con l'esterno sia per ricevere dati
+che inviarli all'esterno. Le periferiche per poter comunicare con un processore hanno 2 diversi meccanismi:
+ -POLLING: il processore in maniera attiva interroga lo stato della periferica per vedere se queta è pronta per comunicare
+ -INTERRUZIONE: in paticolare abbiamo visto i casi vettorizzati e autovettorizzati(casi del Motorola 68000), e le varie problematiche.
+In ogni caso ogni periferica ha 3 registri: uno di Stato, uno di Modo, e uno di Dato: la periferica è legata alla CPU mediante la linea di interruzione che serve per comunicare, e mediante una linea
+dato e indirizzi per scambiare dati. Noi dobbiamo prima legare la periferica alla CPU mediante il simulatore ASIM, e poi programmarla in 2 fasi:
+ 1) Inizializzazione: dove si setta il registro di Modo per inizializzare il modo di funzionamento
+ 2)Scrittura di una o più periferiche che permettono di scambiare i dati: usiamo il registri di Stato e le linee di controllo per realizzare un protocollo di comunicazione, e il registro Dato per scambiare
+   i dati.
+
+La PIA è un dispositivo periferico (Periferal interrupt adapter): è un dispositivo parallelo con parallelismo a 8 bit: il bus tra CPU e adattatore, e tra adattatore e periferica, sono entrambi di 8 bit. Quindi
+in realtà la periferica è legata fisicamente alla PIA, che è un adattatore, e serve per gestire il protocollo di comunicazione e la gestione delle interruzioni. Quindi la PIA sta tra CPU e periferica, e il 
+vantaggo è che qualsiasi sia la periferica che uso, la PIA(che è quindi un interfaccia tra CPU e periferica) è la stessa. La PIA ha 2 porti separati, A e B, quindi ci posso anche legare due dispsitivi differenti da 8
+bit (poichè ogni porto ha un parallelismo a 8 bit co un registro Dato) e configurarli diversamente, oppure un solo dispositivo da 16 bit che usa entrambi i porti. Ho poi 2 coppie di linee di controllo, che sono
+realtài bit 0 e 1 del registro di controllo:
+-CA1 e CB1 che sono sempre in  ingresso al dispositivo
+-CA2 e CB2 che sono programmabili
+I segnali che ha la PIA:
+-Il data BUS a 8 bit D0..D7 legato alla CPU di tipo tristate e bidirezionale: la direzione dipende dall'operazione che ha chiesto la CPU
+-3 segnali di chip select per abilitare periferica
+-un segnale di read/write
+-un segnale di enable e di reset
+-2 Data Bus verso le periferiche a 8 bit, che sono unidirezionali ma la direzione la posso programmare. La direzione la programmo con il registro DDR . I data bus sono PA0...PA7 per il porto A; PB0..PB7 per
+ il porto B.
+-2 linee di interruzioni esterne CA1 e CB1, che vanno dalla periferica alla PIA
+-2 linee di conrollo 
+-6 registri interni, 3 per porto, mappati direttamente nella memoria principale, e quindi il motorola 68000 può accedere a tutti i registri interni della periferica normalmente con delle move, 
+  senza istruzioni particolari: si parla di MEMORY MAPPED. La mappatura in particlare avviene riservando 6 registri in memoria in cui ci metto i dati dei 6 registri della PIA(3 per porto). Tali
+  registri sono indirizzati con soli 2 bit, e vedrremo come accade.
+
+Vediamo come funziona il tutto.
+La PIA dice alla CPu quale dispositivo ha richiesto un'interruzione mediante due linee(2 bit che sono del registro di controllo): IRQA per il porto A e IRQB per il porto B: tali linee sono legate alla CPU in
+maniera Open Drain per realizzare una Wired Or, cioè non c'è una porta or tra tutte le linee di interruzione, ma le linee di interruzioni le ho proprio costruite in modo tale che una volta legate formano 
+una or e quindi le collego direttamente. Dopo la riciesta di interruzione ci sarò una ISr che legge i bit nel registro di stato per capire cosa è stato richiesto e cosa deve fare la CPU. Se c'è un interruzione
+oviamente vengono poi disbilitate eventuali altre richieste di interruzioni.
+Inoltre per il porto A ho il registro PDR(il data register), il resgitro DDR e il registro di controllo CR; gli stessi registri stanno per il porto B(Quindi DDRA, PDRA e CRA e DDRB, PDRB e CRB).
+I PDR sono legati alla periferica parallela con un bus bidirezionale a 8 bit; le linee di controllo sarebbero invece i bit 1 e 2 del registro di controllo(CA1, CA2, CB1, e CB2), dove i C*1 sono solo in
+ingresso, le C*2 sono programmabili. Verso il processore ho poi, in uscita dalla PIA, 2 linee di interruzioni(per A e B), un segnale di reset, un segnale per read/write, 8 linee dati(D0-D7) per spostare un dato
+tra CPu e periferica che interrompe ,linee di chip select. Invece uso solo 2 linee RS0 e RS1 per accedere a uno dei sei reistri della PIA; combinati cn il secondo bit (CR*2) del registro di controllo di A o B. 
+In particolare, e nelle linee RS scrivo 10 allora sto accedendo al  CRA, mentre se scrivo 11 sto accedendo a CRB, e una volta acceduto ai registri di controllo ne giardo il bit 2 che, combinato alle altre 2 
+combinazioni che mi restano(00 per i registri di A e 01 per quelli di B). Quindi con la combinazione 00+CRA2 accedo ai registri DDRA e PDR, mentre con la cobinazione 00 + CRB2 accedo ai registri
+di B. In particolare:
+ -se il CR*2=0, allora accedo al registro DDR e quindi , quindi 000 per DDRA e 010 per DDRB
+-se il CR*2=1, allora accedo al registro di dato PDR, quindi 001 per PDRA e 011 per PDRB
+Ho quindi una tecnica di indirizzamento interno.
+
+Vediamo ora come vengono usati i bit del registro di controllo
+I bit 0 e 1 del registro di controllo mi dicono se la PIA è sensibile all'interruzione e su quale fronte(CRA0 e CRA1 per A e gli altri per B): in particolare il bit CR*0 mi dice se devo vedere la richiesta di
+interruzione che mi arrvia dalla linea C*1(CA1 o CB1) e quindi se la devo inoltrare al processore( è priprio una maschera), invece il bit CR*1 mi dice sul quale fronte sono sensibile(se vedo il segnale di 
+interrupt sulla line C*1 sul fronte di salita o discesa).  Se quindi accetto l'interruzione(l'ho vista è l'ho presa sul giusto fronte), allora la PIA setta a 1 il bit IRQ* (IRQA o IRQB) per inoltrare la richiesta di
+interrupt alla CPU. Il bit CR*2 abbiamo visto invece che serve per accedre ad uno dei 6 registri del PIA.I nvece i bit CR*5, CR*4 e CR*3 mi permettono di pilotare le linee C*2(CA2 o CB2): in particolare il
+CR*5 mi dice se la linea C*2 è di ingresso e uscita: se Cr*5=0 allora C*2 viene pilotata come ingresso esattamente come C*1 e i bit CR*3 e Cr*4 si comportano proprio come i bit 0 e 1(cioè mi dicono
+se vedo quello che c'è sulla linea C*2 e su quale fronte(CR*3 come maschera e CR*4 come fronte). Se invece CR*5=1, allora C*2 è configurata come linea di uscita e i bit 3 e 4 determinano un protocollo
+di trasferimento dei dati, e quindi come i dati della periferica vengono sincronizzata con l'interfaccia:
+-100 serve a fare l'Handshaking(dove le line C*1 e C*2 vengono usati per fare Ready/Ack).
+-101 serve a fare il modo impulsivo, cioè abilitare il segnale CA2 per seguire il profilo impulsivo del clock
+-11x mi dice cosa fare con le linee indirizzi o dati: dipende dal bit CA3 e da quindi molta liberà al programmatore. Cioè il progammatore decide come settare il bit CR2, quindi se mandare o meno l'interruzione
+ per decidere come settare CA2
+
+Vediamo come funziona l'handshaking.
+Supponiamo che la periferica vule mandare alla PIA un dato: il dato viene messo proprio sul bus dati vesto il registro di dati della PIA: alza poi il segnale CA1 per dire che il dato è pronto per la lettura e,
+automaticamente sul fronte di salita di CA1 si alza anche il segnale CA2, e se la PIA ha abilitato l'interruzione e se è sensibile sul fronte di salita, allora tale interruzione è mandata alla CPU che poi servirà 
+con una ISR; in particolare con una move il dato che la periferica ha messo nella PIA viene messo poi nella CPU(nel registro che ho grazie alla mappatura) e viene letto.
+Quando poi è stata gestita l'interuzione, la PIA abbassa il segnale CA2 per dire alla periferica che la CPU ha letto il dato, e che quindi gliene può inviare un altro.

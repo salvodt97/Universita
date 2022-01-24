@@ -1,0 +1,78 @@
+Vediamo ora la comunicazione seriale e quindi una periferica seriale che mi mette in collegamento diversi nodi di 2 sistemi diversi. Tale comunicazione, a differenza della parallela, ci permette di
+raggiungere distanze maggiori con però un numero minori di fili rispetto alla parallela. Solitamente sono utili i convertitori parallelo-serie, che mi fanno comunicare il pc(parallelo) con una rete di
+comunicazione, come i cavi di internet(seriale): sono quindi delle interfacce seriali. Le porte seriale per tale comuniazioni ci sono su qualsiasi dispositivo, dalle auto ai sistemi industriali.
+Noi ci riferiamo alla USART 8251 della Intel, che può essere congigurato in 2 diverse modalità: sincrona e asincrona, che si riferiscono a come i bit vengono mandati, cioè come vengono configurate
+le modalità di comunicazione per non perdere dati.
+Tale trasmettitore converte dati che arrivano in parallelo dal processore in uno stream seriale di dati attraverso uno shift register; in ricezione ricev un flusso di dati seriale con lo shft register, e quando
+questo è pieno, il contenuto viene copiato in un buffer interno che avrà lo stesso numero di bit dello shift register e li invia al processore.
+La USART può dare alla CPU 2 diverse interruzioni:
+-Trasmission Ready, cioè che è ronta ad inviare
+-Ready accept, cioè che ha rievuto un dato d mandare alla CPU
+La CPU può leggere sempre lo stato della USARt, che è utile se ci sono degli errori. Le modalità di trasmissioni tra 2 interfacce seriale avvenfono in:
+-Simplex, dov ho una linea monodirezionale dove un'oggetto invia sempre, e l'altro può solo ricevere
+-HALF DUPLEX: ho una linea bidirezionale dove le 2 periferiche le posso programmare per scambiarsi i ruoli, ovveo una periferica si può comportare sia come trasmettiore che come ricevitore, ma facendo
+ una sola cosa per volta
+-FULL DUPLEX: ho una linea bidirezionale, e entrambe le periferiche possono comunicare contemporaneamente, ovvero una periferica riceve e invia allo stesso modo.
+Conettualmente le 2 periferiche dovrebbero condividere, usare, lo stesso clock per tempificare e sincronizzare opportunamente gli shift register, ma ovviamete non posso iniare il clock sulla linea di 
+di comunicazione e quindi ho un problema. Il dato che mando è detto CARATTERE, e il massimo di bit che posso inviare ne sono 8(byte).
+Di questi 8 bit, me ne servono ua parte per lo start(dico che sto inviando), una parte che dice che quello che sto inviando è finito, un pò di bit che fanno parte del messaggio, ma anche dei bit di controllo
+per eventuali errori. Vediamo le 2 diverse comunicazioni:
+-ASINCRONA: il problema principale è quello di non perdermi lo start bit altrimenti non riesco a sincroizzare. Supponiamo di mandare un messaggio con un periodo Tr(di trasmissione) che è indivoduato
+ dalla parte alta del clock, e se il clock in ricezione ha una diversa frequenza(più larga) non riesco a ricevere tutto. Bisogna capire inanzitutto quando comincia il segnale di interesse: uso un bit detto
+ START BIT. Quando non sto inviando la linea si trova in uno stato di IDLE, e quando invio alzo un bit che è o start bit per dire che sta iniziando il messaggio.In ricezione devo qindi fare in modo che la
+ frequenza di campionamento del ricevitore sia molto più alta a requenza di trasmissione(ovvero la distanza da quando vedo e prendo il dato è molto piccola). Facendo così riesco sicuramnte a vedere
+ lo start bit, in partcolare la transizione basso-alto. Inoltre, se il il fronte di salita dello start bit non è perfettamente quadrato, ma sale più lentamente, allora il ricevitore si mette a ricevere(vedere) lo
+ start bit al suo cento, quando ha raggiunto sicuramente 1. Dopo ciò abbasso la frequenza(alzo il periodo) da 16 volte pyù veloce alla setssa frequenza del ricevitore così da avere tutti i bit del messaggio,
+ e in particolare però avrò la setssa frequenza ma shiftata di qualche colpo di clock così che il ricevitore vede il messaggio sempre al cento bit, ovvero in mezzo del fronte di salita, così che è sicuro
+ di vedere un 1, vist che si alza non istantaeamente.
+ Lo stato di idle della linea di defaut è sempre alto, perchè se fosse basso io potrei non capire se il trasmettitore è a riposo(non sto trasmettendo niento) o si è rotta la linea.
+ Alla fine c'è un bit di stop. Io posso èrogrammare i bit per il carattere(da 5 a 8), il num. di bit di controllo, il num. di sto bit, e quanto è grande la frequenza del ricevitore rispetto a quella del trasmettitore
+ (solitamente 8 o 16 volte più veloce). Con questa modalità la sincronizzazione di un messaggio avviene all'inizio e alla fine di ogni carattere(con start bit e stop bit). Quindi spreco per il carattere dei bit
+ come anche i bit di controllo, che vanndo dal bit di parità(sia per il singolo carattere che per tutto il messagio)
+ -SINCRONA: elimino i bit di start, parità da ogni messaggio. In tale modalità, la sincronizzazione viene fatto in maniera separata dall'invio di carattere con dei byte speciali, e il controllo degli errori viene
+ fatto attraverso la ridondanza. In questo caso quindi, per il singolo messaggio(carattere) uso tutti gli bit che ho a disposizione, mentre per la sincronizzazione uso due byte di SYNC all'inizio di tutto il
+ messaggio. Quindi mando 2 byte i sync, tanti byte quanti sono i caratteri; ogni tanto potrei pensare di mandare altri byte di sync mentre invio i caratteri per risincronizzare trasmettitore e ricevitore.
+ Alla fine di tutti i caratteri, prima della risincronizzazione con altri byte di dync, potrei mettere dei byte di controllo degli errori. IL vantaggio quindi è che solo all'inizio e ogi tanto risincronizzo, e uso
+ tutti i bit per un carattere, ma se avessi degli errori dovrei rimandare tutto il frame(fatto d tutti i caratteri) da capo visto che gli errori qui li controllo solo alla fine.
+
+Ovviamente tra le 2 trasmessioni scelgo quella che mi cnviene a seconda del canale: per esempio in un canale motlto rumoroso, che mi da mlto errori, mi conviene usare la modalità asincrona.
+Ci sono diversi errori che possono accadere:
+-OVERRUN: si verifica all'interno dal dispositivo. Un dato viene copiato dallo shit register(seriale) al buffer(parallelo) che usera la CPU per leggere il dato: ma se la CPU legge più lentamente di quanto 
+ rivece i dati, potrebbe succedere che lo shift register scrive sul buffer prima che la CPU abbia letto i dato precedente, e quindi tale dato si perderebbe.
+-FRAMING: si verifica sula trasmissione: si èpersa la sincronizzazione, cioè mi aspettavo un bit ma ne ricevo un altro. Avviene per lo più nella modalità asincrona
+-PARITA': fallisce il controllo sul bit di parità, per esempio il messaggio è arivato corrotto
+
+Vediamo com'è fatta l'architettura della USART, che ha sempre un modello memory mapped(registri mappati in memoria)
+-C'è una parte che permette lo scambio di dati e comandi con la CPU: mi permette di programare la periferica. Si inializza la periferica con 2 registri differenti: MODE e COMMAND. Questi registri si 
+ trovano allo stesso indirizzo, ma la prima volta che srivo sul dispositivo per inizializzare scrivo nel registro di mode, menter tutte le altre volte che accedo suppongo di avere parole che rivano o vanno al 
+ registro command. Quind dopo il reset, per la prima volta accedo al registro di modo per farla funzionare in un certo modo, ma se ho indicato la modalità sincrona, devo anche dirgli qual'è il carattere
+ di sync, che è predeterminato; dopo ogni olta che accedo a quell'indirizzo accedo sempre al registro di modo
+-Parte del ricevitore
+-Parte del trasmettitre
+-Generatore di frequenza
+
+La periferica seriale può comunicare sia con un'interfaccia seriale(come quella per la CPU), ma anche con un'altra periferica seriale o parallela. Ci sono diversi segnali:
+-TD e RD che servono a ricevere e inviare i dati
+-4 segnali per stabilire il protocollo di comunicazione tra chi e chi: RTS indica la richiesta di invare, CTS che sono pronto a ricevere, DSR per legare le linee di trasmissione e ricezione, DTR per dire che 
+ sono pronto a comunicare. DSR e DTR crea il vero e prorpio handshaking.
+Nell'interfaccia ho diversi registri: un registro di mode con i relativi 2 bit di sync per la la modalità sincrona, uno di commando, un registro di stato, 2 shift register e i due elativi biffer temporanei, a
+cui accede il provessore, una coppia per la trasmissione e una coppia per la ricezione.
+Rx e Tx sono le linee di trasmissione e ricezione, e poi ci soo i 4 segnali di prima per l'handhaking pr la comunicazione con un'altra periferica. Dal lato della CPU ho un solo bit(A0) per indirizzare 7 
+registri(non gli shift register); 2 linee di interruzione che indicano la disponibiltà dell'interfaccia di trasmettere e ricevere, u bs parallelo a 8 bit che mi permette di leggere e scrivere sul buffer temporaneo.
+Inizialmente alzo i segnali DTR e DSR per dire chi invia e chi ricevere, alzo poi i bit DSR e DTR per dire che sto per inviare e l'altro dice che sono pronto a ricevere,e poi invio i dati. Questi fili vengono 
+incrociati. Noi usiamo ua modlità diretta, dove i bit di protocollo vegono già dati di defaulu quindi non vegono scambiati, e scambio solo i dati
+Vediamo i registri nello specifico:
+-MODE, dove decido in che modo comunicare: sincrona, dove devo indicare quali e quani caratteri di sync mi servono, o asincrona, dove devo specicare il num di stop bit, il tipo di parità, il fattore 
+ moltiplicativo del clock in ricezione per aumentare la frequenza e numero di bit iniziali.
+ Il carattere di mode ha 8 bit: i bit 0 dice sincrono o asincrona, 2 e 3 mi dicono quanto è lungo il carattere(da 5 a 8 bit), il bit 4 mi dice se c'è il bit di parità, il  it 5 il tipo di parità, il bit 6 mi dice quanti stop 
+ bit ho nella modalità asincrona, il bit 7 mi dice quani caratteri di sync ho nella comunicazione sincrona. Tale registro è disponibile in sola srittura.
+-INBUFFER: viene scritto dal processore per inviare un byte alla volta: il contenuto viene copiato nello shift register per inviare, e quindi è acessibile in sola lettura. Wuando lego, abbassoil bit 1 di stato 
+ per dire che ho letto
+-OUTBUFFER: è accessibile in sola scrittura, e ci scrive lo shift register quando ricevo. Abbassa poi il bit 0 del registro di stato
+-REGISTRO DI STATO: abbiamo già visto i bit 0 e 1; il bit 2 dice che non o niente da ricevere in trasmissione asincrona; i bit 3-4-5 seoni per gli errori, il bit 6 mi dice se sono stati rilevati i segnali
+ di sicronismo, il bit 7 mi dice se è stato il segnale di handshaking DSR. Si accede in sola lattura
+
+Per abilitare la ricezione, scrivo in commad che sto ricevendo, la periferica quindi cerca il bit di start, eseguo poi controlli di errori su quello che ricevo, e quando ricevo alzo l'interruzione di RxRDY verso 
+al processore, chepoi lui abbasserà quando ho letto: se al momento della scrittura era già alto, significa che c'è errore di overrun poichè la CPU non ha ancora abbassato il bit, ovvero non ha ancora letto.
+C'è anche una modalità di esecuzione detta HUNT MODE in cui si controlla il carattere di scincronizzazione: una volta riconosciuto il pattern di sicnronizzazione, avvio il clock e non viene più arrestato
+fino al prossimo sync.

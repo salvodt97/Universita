@@ -1,0 +1,99 @@
+******************AREA DATI*********************************************************************
+		ORG	$8000
+MSG			DS.B	8						;Spazio per i caratteri ricevuti
+N			DC.B	8						;Dimensione del messaggio
+COUNT	DC.B	0						;Contatore caratteri ricevuti
+
+
+*******************AREA MAIN************************************************************************
+		ORG	$8200
+*Della PIA il sistema S2 usa il porto B per inviare l'eco del carattere che ha ricevuto
+PIAPDRB		EQU		$2006						
+PIACRB		EQU		$2007
+
+*Registri della USART: S2 usa la USART per ricevere
+USARTD		EQU		$2002
+USARTCTR	EQU		$2003
+
+
+MAIN		JSR		INITUSART
+			JSR		INITBOUT
+			
+*Configurazione registro di stato		
+			MOVE.W	SR,D0						;Lettura registro di stato
+			ANDI.W	#$D8FF,D0					;Configuro il registro di stato impostando la modalità utente, e ponendo la maschera delle interruzioni a 000 per accettarle tutte (su qualsiasi linea)
+			MOVE.W	D0,SR
+			
+			MOVEA.L #USARTCTR,A1
+			MOVEA.L #PIAPDRB,A2
+			
+			
+CHECKDSR	MOVE.B	(A1),D0						 
+			ANDI.B	#%10000000,D0				;Controlla se il segnale DSR è attivo: se si trasmette, atrimenti attende. La configurazione in ogni caso prevede DTR=1, e visto che
+			BEQ		CHECKDSR					;DTR è legato a DSR dell'altra USART, la connessione è stabilita
+			
+LETFIT		MOVE.B 	(A2),D1						;Lettura fittizia del PDR per azzerare la linea CB2, quindi CRB(7), perchè la macchina potrebbe essere in reset
+			
+			
+LOOP		JMP		LOOP
+
+*******************INIZIALIZZAZIONI****************************************
+INITUSART	MOVE.B	#%01011101,USARTCTR			;Inizializzazione Mode register: modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+			MOVE.B	#%00110110,USARTCTR			;Inizializzazione Cntrol register: abilito ricezione, handshaking e cancello flag di errore 
+			RTS	
+			
+			
+INITBOUT 	MOVE.B	#$00,PIACRB					;E' importante sottolineare che con questa istruzione metto a 0 CRB(2), così poi quando accedo al PIAPDRB in realtà accedo al DDRB
+			MOVE.B	#$FF,PIAPDRB					;Mettendo tutti 1 nel DDRB setto come OUTPUT le linee PB
+			MOVE.B	#%00100101,PIACRB			;Seconda scrittura in CRB: abilito l'handshaking, abilito le interruzioni (per inviare) e metto a 1 il CRB(2) così da accedere al PDRB ogni volta che accedo a PIAPDRB
+			RTS			
+	
+
+******************INTERRUZIONE PER LA RICEZIONE***********************************************************************
+		ORG 	$8700
+INTERRUPT	MOVE.L 	A0,-(A7)					;Salvataggio contesto software
+			MOVE.L 	A1,-(A7)
+			MOVE.L 	A2,-(A7)
+			MOVE.L 	D0,-(A7)
+			MOVE.L 	D1,-(A7)
+
+
+			
+			MOVEA.L #MSG,A0
+			MOVEA.L #USARTD,A1
+			MOVEA.L #PIAPDRB,A2
+			MOVE.B 	COUNT,D0
+
+			MOVE.B 	(A2),D1						;Lettura fittizia
+			
+RICEZCAR	MOVE.B	(A1),(A0,D0)				;Ricezione del carattere ricevuto, che lo prendo da USARTD e lo salvo in A0 spiazzato di D0
+INVIOECO	MOVE.B 	(A0,D0),(A2)				;Invio come eco il carattere appena ricevuto: questo lo posso fare perchè ho scelto di fare il punto 2, in cui S2 può inviare l'eco appena ricevuto il carattere
+
+			
+			ADD.B	#1,D0						;Il contatore dei caratteri ricevuti lo incremento dopo l'invio dell'eco, poichè utilizzo lo stesso contatore sia per spiazzare la posizione in cui salvo, sia per 
+			MOVE.B	D0,COUNT					;spiazzare la posizione da cui prendo il carattere da inviare, che è sempre la stessa
+
+
+	
+RIPRISTINO	MOVE.L	(A7)+,D1					;Ripristino del contesto software
+			MOVE.L	(A7)+,D0
+			MOVE.L	(A7)+,A2
+			MOVE.L	(A7)+,A1
+			MOVE.L	(A7)+,A0
+
+			RTE
+*****************************************************************************************************************************
+
+
+
+			END MAIN
+
+
+
+
+
+
+
+
+
+

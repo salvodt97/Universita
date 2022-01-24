@@ -1,0 +1,57 @@
+00000000                                     1  * Realizza il trasferimento MEM-DEV di un blocco di memoria su un terminale attraverso un DMA che  
+00000000                                     2  * effettua una richiesta per ogni byte. Alla fine del trasferimento, segnalata tramite ISR, 
+00000000                                     3  * viene cancellato il video.
+00000000                                     4  *
+00008200                                     5  	ORG	$8200
+00008200                                     6  *
+00008200  =00002000                          7  ter	EQU	$2000
+00008200  =00002010                          8  dma	EQU	$2010
+00008200  =00000000                          9  caddr0	EQU	0
+00008200  =00000001                         10  ccount0	EQU	1
+00008200  =00000008                         11  cntrl	EQU	8
+00008200  =00000009                         12  request	EQU	9
+00008200  =0000000B                         13  mode0	EQU	11
+00008200  =00000056                         14  nbyte	EQU	$56
+00008200                                    15  *
+00008200                                    16  
+00008200                                    17  
+00008200  307C 2000                         18  start	MOVE.W	#ter,A0		
+00008204  117C 000C 0001                    19  	MOVE.B	#$0C,1(A0)	 	Disabilita tastiera ,eco e interruzioni; cancella
+0000820A                                    20  *							video e buffer tastiera
+0000820A                                    21  							
+0000820A  327C 2010                         22  	MOVE.W	#dma,A1			
+0000820E  137C 0056 0001                    23  	MOVE.B	#nbyte,ccount0(A1)	Carica il numero di byte da spostare nel registro conteggio
+00008214  337C 8500 0000                    24  	MOVE.W	#message,caddr0(A1) 	Carica l'indirizzo di partenza nel registro indirizzo
+0000821A                                    25  	
+0000821A  137C 0000 000B                    26  	MOVE.B	#$00,mode0(A1)		Setta il trasferimento da memoria ad interfaccia,
+00008220                                    27  *								no autoinizializzazione dei registri address e count dopo 
+00008220                                    28  *							    trasferimento, incremento del registro indirizzo,
+00008220                                    29  *							    trasferimento in modalità SINGLE
+00008220                                    30  	
+00008220  137C 0080 0008                    31  	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+00008226                                    32  	
+00008226  137C 0008 0009                    33  	MOVE.B	#$08,request(A1)	Accede al flag RF0 e lo setta a 1, per avviare il DMA via SW
+0000822C                                    34  *					
+0000822C  4EF9 0000822C                     35  loop	JMP	loop
+00008232                                    36  *
+00008232                                    37  *
+00008232                                    38  ******* Interruzione che si attiva alla fine del trasferimento *****
+00008700                                    39  	ORG	$8700
+00008700                                    40  
+00008700  2F08                              41  int7	MOVE.L	A0,-(A7)	Salva nel SSP i registri utilizzati. 
+00008702  307C 2000                         42  	MOVE.W	#ter,A0			
+00008706  117C 000C 0001                    43  	MOVE.B	#$0C,1(A0)		Reinizializza il terminale.
+0000870C  205F                              44  	MOVE.L	(A7)+,A0		Ripristina i registri utilizzati.
+0000870E  4E73                              45  	RTE	
+00008710                                    46  *
+00008710                                    47  
+00008710                                    48  ****** Area Dati ***************
+00008500                                    49  	ORG	$8500
+00008500  55 6E 69 76 65 72 73 69 74 ...    50  message	DC.B	'Universita',$60,' degli Studi di Napoli',$0D,$0D
+00008523  46 65 64 65 72 69 63 6F 20 ...    51    	DC.B	'Federico II',$0D,$0D	
+00008530  43 6F 72 73 6F 20 64 69 20 ...    52  	DC.B	'Corso di Calcolatori Elettronici 2!!',$0D,$0D   86   	
+00008556                                    53  		
+00008556                                    54  	END	start
+
+No errors detected
+No warnings generated

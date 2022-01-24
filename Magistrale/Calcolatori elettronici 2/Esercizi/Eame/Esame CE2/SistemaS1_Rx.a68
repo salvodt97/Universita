@@ -1,0 +1,201 @@
+*Definizioni costanti per il DMA
+dma			EQU 		$2010
+caddr0			EQU		0
+caddr1			EQU		2
+ccount1		EQU		3
+cntrl			EQU		8
+mode			EQU		11
+reset			EQU		13	
+nbyte			EQU		5
+
+
+******************AREA DATI**************************************************************************************************************************************************************************************************************
+			ORG	$8000
+MSGRIC		DS.B		5						;Area di memoria riservata per il messaggio ricevuto dalla PIA
+DIM			DC.W		5
+COUNT			DC.B		0
+VAL			DC.W		100						;Valore per confrontare la somma dei numeri ricevuti
+RIT			DS.W		1						;Valore di ritorno della funzione verifica
+FLAGVER		DC.B		0						;FLAGVER che mi dice se ho ricevuto 5 caratteri: se si allora faccio la verifica
+FLAGFINEINT		DC.B		0						;Metto questo flag a 1 per dire che la trasmissione è finita e disabilitare le interruzioni
+
+			ORG	$8200
+MSGDMA		DS.B		5						;Indirizzo della destinazione in cui il DMA deve salvare il messaggio che sta in MSGRIC
+
+
+*******************AREA MAIN***************************************************************************************************************************************************************************************************************************************
+	ORG	$8500
+*Della PIA il sistema S1 usa il porto A per ricevere, il porto B quindi non verrÃ  proprio utilizzato
+PIAPDRA		EQU		$2004						;Il PDRA si trova allo stesso indirizzo di DDRA, l'accesso viene disciplinato da CRA(2)
+PIACRA		EQU		$2005
+
+
+MAIN			JSR		INITAIN
+
+*Configurazione registro di stato		
+			MOVE.W	SR,D0						;Lettura registro di stato
+			ANDI.W	#$D8FF,D0					;Configuro il registro di stato impostando la modalitÃ  utente, e ponendo la maschera delle interruzioni a 000 per accettarle tutte (su qualsiasi linea)
+			MOVE.W	D0,SR	
+
+			CLR 		D0						
+			CLR 		D1						;Registro di appoggio per guardare il valore di RIT
+			CLR 		D2						;Registro di appoggio per disabilitare le interruzioni alla fine
+			
+CHECK			MOVE.B	FLAGVER,D0
+			CMP		#1,D0						;Controllo se FLAGVER=1: se Ã¨ cosÃ¬, allora posso chiamare la funzione verifica
+			BNE 		CHECK
+
+*Da questo momento, visto che sono stati ricevuti tutti i numeri, posso avviare la funzione VERIFICA		
+																				
+*Caricamento sullo stack dei parametri da passare alla funzione
+			SUBQ.L	#2,-(SP)				;Spazio sullo stack per il valore di ritorno
+			MOVE.W	VAL,-(SP)
+			MOVE.W	DIM,-(SP)
+			MOVE.L	#MSGRIC,-(SP)
+			
+*Definizione degli offset per le varibili sullo stack
+OFFMSG		EQU		8
+OFFDIM		EQU		12
+OFFVAL		EQU		14
+OFFRIT		EQU		16
+
+			JSR		VERIFICA
+			MOVE.W	8(SP),D5					;Valore di ritorno di VERIFICA, che mette in D5
+			ADD.L		#7,SP						;Dealloco lo spazio sullo stack: utilizzo 2 istruzioni perchè come parametro dovrei dare 10 (devo deallocare 10 byte), ma con ADD il massimo immediato che posso dare è 7(su 3 bit)
+			ADD.L		#3,SP	
+
+			MOVE.W	D5,RIT						;Copio in memoria (RIS) il valore di ritorno
+			
+			CMP 		#0,D5
+			BEQ 		DISINT						;Se RIT=0, significa che la VERIFICA ha falito il controllo, ovvero il DMA non deve fare niente: visto che il vettore da trasmettere era uno solo, si passa direttamente a disabilitare le interruzioni
+
+*Se invece RIT=1, significa che la somma dei numeri del vettore Ã¨ maggiore di 100, quindi il DMA deve copiare il dato in un'altra locazione di memoria
+*Inizializzazione DMA
+			MOVE.W	#dma,A0					;Carico in A0 l'indirizzo base del DMA
+			MOVE.W	#MSGRIC,caddr0(A0)				;Carico l'indirizzo base del blocco sorgente nel registro indirizzo del canale 0
+			MOVE.W	#MSGDMA,caddr1(A0)				;Carico l'indirizzo base del blocco destinazione nel registro indirizzo del canale 1
+			MOVE.B	#nbyte,ccount1(A0)				;Carico nel registro conteggio il numero di byte da spostare (5)
+			MOVE.B	#$90,mode(A0)				;Canale 0: setta il trasferimento memoria-interfaccia, autoinizializzazione dei registri addr e count dopo il trasferimento, incremento del registro indirizzo, trasferimento in modalitÃ  block
+			MOVE.B	#$91,mode(A0)				;Canale 1: setta il trasferimento memoria-interfaccia, autoinizializzazione dei registri addr e count dopo il trasferimento, incremento del registro indirizzo, trasferimento in modalitÃ  block
+			
+			MOVE.B 	#%10100000,cntrl(A0)				;Abilito la trasmissione memoria-memoria e abilita il DMA controller (la richiesta di bus al processore viene spedita automaticamente)
+			
+*Visto che il vettore da trasmettere Ã¨ 1, quando il DMA ha finito, si passa direttamente alla disabilitazione delle interruzioni, che faccio fare alla ISR INT7 del DMA		
+			CLR		D1
+			CLR		D2
+			MOVE.B	#1,D1
+ATTESA		MOVE.B	FLAGFINEINT,D2
+			CMP		D2,D1						;Se il DMA ha trasmesso, aspetto che finisca di trasmettere e che quindi ponga il flag a 1
+			BNE		ATTESA
+
+DISINT			MOVE.B	#%00100100,PIACRA				;Disanilito le interruzioni della PIA mettendo 0 in CRA(0)
+			MOVE.B	#0,reset(A0)					;Resetta il DMA
+
+
+LOOP		JMP			LOOP						;Attesa attiva per eventuali interruzioni
+
+*******************INIZIALIZZAZIONE PIA****************************************************************************************************************************************************************************************************************************
+INITAIN		MOVE.B	#$00,PIACRA					;E' importante sottolineare che con questa istruzione metto a 0 CRA(2), cosÃ¬ poi quando accedo al PIAPDRA in realtÃ  accedo al DDRA
+			MOVE.B	#$00,PIAPDRA					;Mettendo tutti 0 nel DDRA setto come input le linee PA
+			MOVE.B	#%00100101,PIACRA				;Seconda scrittura in CRA: abilito l'handshaking, abilito le interruzioni (per rivecevere) e metto a 1 il CRA(2) cosÃ¬ da accedere al PDRA ogni volta che accedo a PIAPDRA
+			RTS
+******************INTERRUZIONE IN RICEZIONE************************************************************************************************************************************************************************************************************************
+		ORG	$9000
+INT3			MOVE.L 	A1,-(A7)					;Salvataggio contesto software
+			MOVE.L 	A0,-(A7)
+			MOVE.L 	D1,-(A7)
+			MOVE.L 	D0,-(A7)
+			
+			MOVEA.L	#PIAPDRA,A1
+			MOVEA.L	#MSGRIC,A0
+			MOVE.B 	COUNT,D1
+			MOVE.B 	FLAGVER,D0
+			
+			MOVE.B	(A1),(A0,D1)					;Acquisizione del numero ricevuto e salvataggio in memoria
+			
+			ADD.B 	#1,D1
+			MOVE.B 	D1,COUNT
+			MOVE.B 	COUNT,D1
+			
+			CMP		#5,D1						;Controllo se sono stati ricevuti tutti i numeri: se si, allora vado alla funzione VERIFICA
+			BNE 	RIPRISTINO
+			
+			MOVE.B	#1,D0						;Metto a 1 il FLAGVER che mi fa attivare la funzione verifica
+			MOVE.B 	D0,FLAGVER
+
+			
+RIPRISTINO		MOVE.L	(A7)+,D0					;Ripristino del contesto software	
+			MOVE.L	(A7)+,D1	
+			MOVE.L	(A7)+,A0	
+			MOVE.L	(A7)+,A1	
+			
+			RTE
+
+			
+******************INTERRUZIONE ASSOCIATA A EOP DEL DMA*************************************************************************************************************************************************************************************************************
+	ORG	$9200
+*Visto che trasmetto un solo vettore, una volta trasferito, le interruzioni possono essere disabilitate, e quindi pongo FLAGFINEINT pari a 1
+INT7			MOVE.L 	D6,-(A7)
+
+			MOVE.B	#1,D6
+			MOVE.B	D6,FLAGFINEINT
+						
+			MOVE.L	(A7)+,D6
+		
+			RTE		
+
+******************FUNZIONE VERIFICA********************************************************************************************************************************************************************************************************************************
+	ORG	$9500
+VERIFICA		LINK		A6,#0
+
+			MOVE.L	A0,-(SP)
+			MOVE.L	D0,-(SP)					;Salvataggio dei registri che andrò a sporcare
+			MOVE.L	D1,-(SP)
+			MOVE.L	D2,-(SP)
+			MOVE.L	D3,-(SP)
+			MOVE.L	D4,-(SP)
+			MOVE.L	D5,-(SP)
+
+			MOVE.W	#0,D2						;Ne incemento il valore ogni volta che sommo un termine e lo confronto con DIM
+			MOVE.L	OFFMSG(A6),A0
+			MOVE.W	OFFDIM(A6),D0
+			MOVE.W	OFFVAL(A6),D1
+
+CONF			CMP		D2,D0
+			BEQ		CHECKVAL
+			MOVE.B	(A0)+,D3					;Inserisco il primo numero del messaggio in D3	
+			ADD.B		D3,D4						;Faccio la somma
+			ADD.B	 	#1,D2						;Incremento il contatore di elementi sommati
+			JMP		CONF						;Ritorno sopra a prelevare il secondo numero
+
+CHECKVAL		MOVE.W	#0,D5						;SarÃ  il valore di ritorno da inserire in RIT
+			CMP		D1,D4						;D4 contiene la somma degli elementi del vettore
+			BLE		ESCI
+			MOVE.W	#1,D5						;Se D4>D1, ovvero la somma vettoriale Ã¨ maggiore di VAL, allora la funzione ritorna 1
+	
+ESCI			MOVE.W	D5,OFFRIT(A6)
+
+			MOVE.L	(SP)+,D5					;Ripristino dei valori precdenti
+			MOVE.L	(SP)+,D4
+			MOVE.L	(SP)+,D3
+			MOVE.L	(SP)+,D2
+			MOVE.L	(SP)+,D1
+			MOVE.L	(SP)+,D0
+			MOVE.L	(SP)+,A0
+			
+			UNLK		A6
+			RTS
+
+*******************************************************************************************************************************************************************************************************************************************************************
+
+
+			END		MAIN
+
+
+
+
+
+
+
+
+

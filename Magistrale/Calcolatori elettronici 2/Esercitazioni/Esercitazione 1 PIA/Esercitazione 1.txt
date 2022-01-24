@@ -1,0 +1,131 @@
+Vediamo ora come progammare il driver PIA usando le interruzioni per lo scambio di vettori di carateri. Ricordiamo ovviamente che ci sono 2 porti uguali (A e B) con i 6 registri dentro a cui
+accediamo consoli 2 bit mediante indirizzamento interno.
+Noi vediamo 2 sistemi S1 e S2 che si scambiano delle info: S1 invia N caratteri a S2 con una periferica parallela: entrambi i sistemi hanno al loro interno una periferica parallela legate tra loro
+in modo handshaking incrociando i fili CA1, CA2, CB1, CB2. Noi useremo Asim per simulare tali periferiche. 
+La prima cosa da fare è caricare una simulazione che specifica i componenti da usare, e quindi quali erano i parametri di tali dispositivi: per il processore dicevamo dove si trovavano RAM e ROM.
+Noi dobbiamo generare la configurazione con:
+il tipo (CPU) un indentificativo numerico e il bus a cui è connesso; sotto poi metto gli ndirizzi di stack ponter utente(address 1) e supervisore(address 2), e sotto i parametri. Devo poi indicare la memoria(il chip) di tipo MMU/BUS
+I due sistemi s1 e s2 avranno sia CPu che memoria, ma anche la pia: con Address1 e adrress2 si mettono il primo e l'ultimo indirizzo usato dalla pia(che distano di 4 tra loro); il type è Device; i 
+parametri li identifico sempre con Com, e in particolare ci metto le interruzioni: in Com1 ci metto l'identificativo della CPU pochè gestisce le interrupt per il processore; invece Com2 e Com3
+gestiscono IRQA(com2) e IRQB(com 3) usando le tecniche di autovettori; se per esempio Com2 vale 0003, significa che per gestire l'interruzione di A la ISR nel vettore delle interruzioni si trova
+nel terzo indirizzo(locazione 27, poichè le ISR dell'autovettore partono dalla locazione 25 inclusa del vettre delle interruzioni, e ricordo cho ho 7 autovettori 25-31). Ecco perchè se dico che 
+com3=0003 mi risferisco alla locazione 27. In particolare, per ottenere la locazione 27 faccio 27x4(ogni vettore ha 4 byte) e trasformo il numero che mi esce in esadecimale. Quindi stando
+all'esempio trovo la ISR di A in 6C.
+
+VEDERE IL DISEGNO
+
+Abbiamo quind visto come sono legati i dspositivi sul quaderno: della pia COM1 dice chi gestisce le interruzioni (la CPU identificato con i dispositivi), com2 e com3 dove si trovano le ISR di IRQA e IRQ3
+e com4 dice come sono legate le PIA: le 2 cifre meno significative sono l'id del'altra pia(0204 e 0208 , 04 mi dice che la prima pia è legata alla pia il cui id è 04, 08 mi dice che la seconda pia è legata 
+a quella a cui l'id è 08), mentre le prime 2 cifre mi dice come sono legati i fili di C*1 e C*2. Nell'esempio ho scritto 02, che indica la configurazione dell'handshaking(usiamo sempre questa).
+
+
+--------------------------------------------------------------------------ESERCIZIO 1------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+S1 invierà in un ciclo di clock N caratteri su 8 bit scrivendo ogni volta il dato che devo mettere nel registro dati della pia: ho quindi IRQB disabilitato, poichè scrivo nel registro(invio) direttamente con
+un for. Invece S2 riceve con interruzione per evitare di fare il polling, e quindi abilita la linea di interruzione IRQA. S2 ha un interruzione ogni volta che arriva un nuovo carattere: il pezzo di codice della
+ISR di A, che stava alla linea 3(locazione 27) vine chiamato. L'interruzione però una volta ricevuto il carattere(byte) termina, l'unica cosa che fa l'eccezione è ricevere il carattere e salvarlo da qualche parte
+e poi esco dall'interruzione. Entrerò di  nuovo in quella interruzione quando ricevo e devo gestire il nuovo carattere
+
+Per inviare con il for mi basta solo un main, invece per rivecere con s2 mi serve il main e il codice relativo alla isr. Vediamo 2 file diversi, uno per s1 e uno per s2.
+Il codica ha all'inizio l'area dati, e dico:
+	ORG $8000
+MSG   DC.B  1,2,3,4,5,6	Ho allocato 6 byte a partire dalla ocazione 8000
+DIM    DC.B  6		Questa variabile invece mi dice quanto spazio occupa l'area dati
+
+AREA MAIN
+	ORG $8200	
+La prima cosa da fare è definire dove stanno mappati i dispositivi, che stanno nella configurazione, e ricordiamo che sto usando le locazioni da 2004 a 2007: in 2004 stanno PDRA e DDRA, in 2005 stanno CRA,
+in 2005 stanno PSRB e DDRB e in 2007 stanno CRB. Uso solo però il porto B:
+
+PIADB	EQU	$2006		Dico dove sta il registro dati di B
+PIACB	EQU	$2007		Dico dove sta il registro di controllo
+
+Devo po configurare il porto B come putput: accedere al registro direzione e congìfigurare il bus di B(si mette tutti 1 per dire che è in uscita) e poi configur per dire le porte abilitate, disabilitate, la modalità di handshaking eccc.
+Uso una subroutine chiamata DVBOUT, e ricordo che vosto che devo configurare il registro DDR, che sta allo stesso indirizzo di PDRB, vado a vedere il bi CRB2 del bit di controllo: lo metto a 0 il bit per accedere al bit direzione,
+e poi lo metto a 1
+Vedere prima il DVBOUT
+
+MAIN
+.
+.
+.
+INVIO	MOVE.B 	(A2), D1		In A2, D1, A0 ho salvato alcuni registri della PIA; A2 è PIADA, ovvero il registro dati di A
+	MOVE.B 	(A0)+, (A2)	Così con il post incremento invio
+
+	ADD.B	#1,D2		Incremento contatore dei bit inviati
+
+Se CB2 si abbassa, dopo un po' si abbassa anche CA1 visto che sono collegati, ma quando si abbassa CA1 si scatena l'interruzione IRQA, e inoltre si alza il bit CRA7, quindi il sistema S2 capisce grazie a 2 cose che ha ricevuto il dato
+(interruzione e CRA7). Quindi poi S2 gestisce l'interruzione leggendo il dato: quado leggo(Vedere sul quaderno), si abbassa il bit CA2, ma si abbassa anche il CRA7. Ora Ca2 è connesso a CB1(che è ingresso), quindi dopo un po' che si
+è abbassato CA2 si abbassa anche CB1(e in questo caso si scatenrebbe l'interruzione IRQB, che però ho disabiliato), ma in ogni caso si alza lo stesso il bit CRB7. Quindi il sistema S1 si accorge che il dato è stato letto solo quando si alza
+il bit CRB7(che nella configurazione del sistema S1 avevo messo a 0 all'inizio nel DVBOUT). Io però poi CRB7 lo devo abbassare prima di inviare un'altro carattere, perché se rimane alto non capisco poi quando S2 legge un nuovo carattere.
+Io ho vist(sul quaderno) che per abbassare il bit CRA7 devo fare una prima letura, quindi ogni volta che invio un carattere all'inizio leggo per abbassare il bit CRA7. La lettura la faccio con l'istruzione	 MOVE.B (A2),D1	, cioè mettendo
+in un registro il contenuto di PIADB(regsitro dati di B).
+
+Poi mi serve un ciclo.
+ciclo2	MOVE.B	(A1), D1			Continuo a leggere il registro di controllo per vedere se il registro CRB7 è stato messo a 1, quindi per vedere se S2 ha letto
+	ANDI.B	#$80,D1			Lo controllo facendo la and bit a bit tra l'esadecimale 80 (che è una stringa che ha un 1 iniziale) e il regstro di controllo PIAC che sta in D1, così controllo se nel bit 7 c'è un 1
+	BEQ ciclo2
+
+
+
+
+Questa è la subroutine che mi gestisce la configurazione
+DVBOUT	MOVE.B 	#0,PIACB			Metto tutti 0 nel registro di controllo così che poi sono sicuro di accedere al registro di controllo
+	MOVE.B	#1,PIADB			Metto poi tutti 1 nel registro dati
+	MOVE.B	#%00100100,PIACB		Configuro la periferica: i primi 2 bit(meno significativi) mi disabilitano l'interruzione su B8PRIMO BIT) perchè non la uso e metto il fronte di discesa; il bit 3 pari a 1 mi dice che accedere sempre al PIADB(il registro dato) i bit 5, 4, 3=100 mi dicono che sto usano handhaking
+
+	RTS				Ritorno al main
+
+
+
+LATO RICEZIONE
+In questo caso ho sia il main sia il codice della ISR che legge il dato che gli è arrivato e se lo salva da qualche parte.
+Ho sempre l'area dati dove lascio spazio con dei caratteri con Ds.b e poi uso una variabile glogale per un contatore dei caratteri ricevuti con 	COUNT DC.B
+
+MAIN
+Salvo ancora nelle locaziioni PIADA e PIACA in 2004 e 2005
+Poi configuro il dispositivo con una subroutine DVAIN allo stesso modo di B, l'unica cosa che cabio è che in CRA0 metto 1 per dire che l'interruzione è ablitata. In ogn caso io ho sempre un codice
+che uso per settare i bit delle interruzioni del registro di stato della CPU che di defaukt sono tutti 1, e poi passo allo stato utente. Di defaulti bit sono 111, che mi dice
+che accetto interruzionni solo di livello 7(nella linea 7), e quindi non vedrei le interruzioni di A e B (che nell'esepio stanno nelle linee 3 e 4), allora ci metto tutti 0 così vedo tutto e poi passo dllo stato utente a quello supervisore.
+Passo poi dallo stato utente a supervisore.
+Poi vedo il codice della ISR, che metto a particre da 8700(ORG  $8700), questo significa che la ISR parte dall'indirizzo della ISR, e quindi devo ricordare di mettere nel vettore della ISR di A, che nell
+esempio era 27, ci metto l'inidirzzo 8700 per dire da dove parto.
+
+La ISR fa cose semplici, ovvero acquisisce il dato e lo trasferisce in memoria: abbiamo usato l'sitruzione 	MOVE.B (A1), (A0,D0) 	, modalità based index, che prende la base A0 dove ci ho messo MSG, ovvero la variabile
+che contiene il messaggio, ci sommo D0(il contatore) e il risultato lo salvo in A1(il cui indirizzo punta al registo dati di A). Quindi, la prima volta che ricevo un dato, il contatore che sta in D0 vale 0 e quindi il dato lo salvo all'indirizzo che sta
+in A0; incremento poi il contatore D0, e il prossimo dato che sta pntato da A1 lo inserisco all'indirizzo puntato da A0+D0(ovvero all'indirizzo successio), quindi salvo i vari caratteri a indirizzi successivi. Facio così per tutti.
+La Isr quindi legge un singolo carattere, lo salva, e incrementa il contatore.
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------ESERCIZIO 2------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+In questo caso anche il sistema S1 che invia lavora con interruzione, quindi ha IRQB abilitato. S1 si interrompe quando il sistema S2 ha letto il carattere precedente. Quindi quando S2 legge il caraterre,
+Riespetto all'esercizio di prima cambiano solo 2 cose: per il sistema S1, nellinizializzazione della PIA, metto il bit CRB0 a 1 per dire che sono abilitato le interruzioni. poi mettero un'altra funzione, oltre al main,
+che getsisce l'interruzione di S1(IRQB). L'interruzione fa si che posso inviare, ovvero aspetto che S2 legge il rpimo carattere e mi dice che l'ha letto. Oviamente per far partire il programma il primo carattere o invio io nel main, non
+nell'interruzione, così poi nell'interruzone aspetto di riecevere il segnale di lettura completata i einziio a inviare l'altro carattere. Invio un carettere per vlta nella ISR(ogni ISR invia un carattere). inoltre uso anche
+qui un contatore globale per incrementare il numero di caratter inviato. 
+Nell'interruzione poi, che metto all'indirizzo 8800, mi devo ricordare di mettere nell'autovettore di IRQB(che sarebbe il 28 per l'esempio) lindirizoo 8800, ovvero 70 in esadecimale. 
+L'interruzione si occupa di di inviare un solo carattere e incrementare il contatore, però prma all'inizo fa quella lettura fittizia per abbassare il bit CRB7
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------USO ASIM------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IN ASIm, dopo aver dato la configurazione, l'occhio mi "crea" i chip e con Window->Title(?) le ordino.
+Carico poi nei processore i codicei assembler che ho creato. Poi devo configurare, mettere nella rom, il vettore delle interruzioni: in particolare mi serve per il sistema S2(che riceve con interuzioni), quindi con Load memory
+carico la memoria che la prof ci ha dato, e con show register quindi vado a vedere che nella locazione 6C( vettore 27 dei vettori delle interruzioni) ci troverò 8700, ovvero l'indirizzo a partire dal quale ho scritto l ISR.
+
+Inizio poi ad eseguire, dove all'inizio configuro le 2 periferiche
+invia un seglame a S1 per interromperlo e dirgli che ha letto.
+
+
+Scaricare ASIM dala cartella della prof, la versione migliore. Io ho 3 cartelle, il caso tutto ISR(esercizio 2), il caso solo ricevitore trasmettitore(esercizio 1) e devo caricare i file.
+Sul sito poi vedo la documentazione bozza per capire come usare ASIM.

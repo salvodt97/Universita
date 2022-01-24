@@ -1,0 +1,64 @@
+Vedremo ora quali sono le diverse modalità di indirizzamento delle istruzioni viste nella lezione 2, ovvero come deve essere complessa la UC dopo aver fatto il fetch.
+Per esempio, nel 68000 ,l'istruzione ADD D0,D1 richiede di leggere i 2 operando in D0 e D1, sommarle e salvare il risultato in D1, invece nella IJVM l'istruzione della somma
+è solo ADD, poichè gli operandi da sommare li prende precedenteente con in struzione PUSH e le carica sulla testa dello stack(l'architettura è a stack). La ADD somma direttamente i dati
+che trova sullo stack.
+Indicheremo con m la lunghezza delle parole che si trovano in memoria centrale, e abbiamo già distinto i vari parallelismi; gli m bit della parola possono essere accedute con una sola istruzione,
+e ogni parola è identificata da un indirizzo. Abbiamo poi distito le modalità BIG-ENDIAN e LITTLE-ENDIAN nella lezione 1, con una partticolare osservazione però: come minimo
+posso accedere al byte, quindi ogni indirizzo si riferisce a un bye: questo significa che se l'indirizzo della parola 1 è 0 e contiene 4 byte, l'indirizzo della parola 2 è 4 e non 1.
+Inoltre, un registro è caratterizzato da una dimensione e un indirizzo, che solitamente non sono uguali; inoltre i bit del registro potrebbero non essere fisicamente collegati al
+processore: ciò dipende che magari il bus ha meno fili, meno bit, e quindi non posso collegarli tutti. Ciò potrebbe causarmi un ALIASING, ovvero diversi indirizzi virtuali
+(generati dal processore) potrebbero riferirsi allo stesso indirizzo fisico(della memoria centrale).
+Le modalità di indirizzamento indicano come la UC deve prelevare gli operandi dalla memoria: forniscono quindi l'indirizzo effettivo dell'operando. Il 68000 ha un'architettura ortogonale,
+ovvero supporta diverse modalità di indirizzamento; esse impattano sulla fase di prelievo degli operandi: io vorrei poter fare tutto velocemente, quindi tenere i dati vicino al procesore,
+ma vorrei anche spazio. Vediamole:
+ -REGISTRO DIRETTO: la sorgente o destinazione dell'operando può essere un registro dati(D) o un registro indirizzo(A); se è sorgente, allora fornirà il suo contenuto, se è destinazione,
+  ne carico dentro il valore specificato dall'istruzione. In particolare in memoria avrò il codice dell'istruzione; la prelevo dalla memoria, la decodifico e la eseguo. Per esempio
+  MOVE.B D0,D1 carica sul bus interno i bit di D0, attiva D1 in scrittura, e scrive dentro quello che sta sul bus. I registri sono collegati al bus con delle porte TRISTATE(che sono degli
+  interruttori con abiliotazione). Il vantaggio di questo indirizzamento è che tutto sta in memoria interna(vicino al processore) e quindi non devo accedere in memoria esterna per
+  calcolare l'indirizzo effettivo; inoltre il formato dell'istruzione è SHORT, ovvero la posso codificare in solo 8 bit(mi bastano 3 bit per dire quale registro sto usano, ovvero 0 o 7, un
+  quarto bit, di MODE, per dire se il registro è di dato o di indirizzo, e con gli alri 4 bit codifico l'altro operando). Questa tecnica mi conviene usarla nel caso in cui ci sono delle
+  variabili a cui accedo molto, per esempio la variabile di conteggio di un cclo for.
+ -OPERANDI IMMEDIATI: l'operando effettivo costituisce già parte dell'istruzione. Per esempio se nel for ogni volta incremento la variabile di conteggio di 1, posso codificare
+  nell'istruzione stessa il valore, senza salvarla nel registro. Davanti all'operando, il valore, ci metto #, e con $ indico che quel valore vale esadecimale, con % vale binario.
+  L'operando immediato è chiamato anche LITERAL. Un' istruzione di questo tipo potrebbe anche essere più lunga di 16 bit: ciò dipende da quanti bit ci vogliono per
+  codificare il literal. In questo caso mi servirebbero una o più parole aggiuntive che seguono la parola codice di 16 bit.
+ -INDIRIZZAMENTO ASSOLUTO è il modo più emplice per specificare un indirizzo di memoria completo. All'interno dell'istruzione inserisco come operando direttamente l'indirizzo,
+  e lo metto come esadecimale, oppure come label. Quindi in questo caso servono 2 accessi in meoria: uno per prelevare l'istruzione, uno per prelevare l'operando effettivo che si
+  trova nel registro di memoria specificato dall'indirizzo. Stavolta la UC per accedere in memoria deve usare in maniera esplicita il memory buffer e memory address: ciò non è visibile
+  al programmatore, ma al livello di microprogrammazione si. Ciò infatti richiede l'attivazione di un intero protocollo di comunicazione della memoria, non basta solo l'attivazione 
+  di un bus  delle porte tristate. La modalità è quindi più lenta, perchè prima decoifico l'istruzione nell IR, poi la UC mette l'indirizzo che ho specificato nell'MAR, e poi il MAR va
+  in memoria(però prima la UC ha attivato un segnale di read verso la memoria) e poi il contenuto del registro di cui ho specificato l'indirizzo viene memorizzato nell MDR. In seguito
+  viene eseguito il resto dell'istruzione, che può essere la copia di quel valore in un regsìitro D(una move) o altro.
+
+  ESEMPIO---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  Alto livello
+  char z,y=27;		
+   z=y+24;
+	
+  Basso liello								Programma assemblato8SIGNIFICATO ESADECIMALE)
+        ORG $400								00000400
+        MOVE.B    Y,D0	Inidirazzemnto assoluto				00000400  103900000600		Istruzione lunga 6 byte, infatti per l'istruzione uso tutti i 32 bit(i primi 2 byte sono l'indirizzo)
+        ADD           #24,D0	Operando immediato				00000406  0600018		il 18 sarebbe 24 in seadecimale, quindi è direttamente specificato. L'istruzione è lunga 4 byte(2 per l'indirizzo e due per l'istruzione)
+        MOVE.B     D0,Z	Inidirzzamento assoluto				0000040A  13C000000601   		...infatti questa istruzione inizia all'indirizzo 40A, ovvero 4 byte dopo 406
+
+        ORG    $600		Area dai
+  Y    DC.B   27		Ho definito una costamte inizializzata
+  Z    DS.B    1		Ho riservato solo uno byte per Z
+
+  Questa traduzione da alto livello a basso lvello è fatta dal compilatore
+  FINE ESEMPIO---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+  -INDIRIZZAMENTO INDIRETTO CON REGISTRI INDIRIZZI: si specifica il registro indirizzo tra parentesi tonde (A0) per esempio: viene usato per esempio per i vettori, che non posso mettere in un registro
+  interno, e con (A0) indico che in realtà in A0 c'è l'indirizzo dell'operando che devo usare. Quindi (A0) punta a un registro. Ho quindi un passo in più, poichè prima prendo l'indirizzo, poi il dato. Ciò è utile
+  per i vettori, anche se in realtà mi servurebbe uno spiazzamento, e quindi con la tecnica successiva che fa una piccola modifica di questa.
+  -INDIRIZZAMENTO INDIRETTO CON AUTO-INCREMENTO: si incica con (A0)+, per esempio(MOVE.W (A0)+, D0), si fa l'incremento di una quantità pari a quanto specificato(in questo caso .W) dopo che ho
+  usato l'operando. Quindi quell'istruzione dice che vado in A0, leggo l'inidirizzo dell'operando e poi vado in memoria a prendere l'operando; fatto ciò si incrementa A0 con il + così che conterrà l'indirizo
+  della word che sta dopo. Ciò sere a gestire in maniera utile i vettori con uno spiazzamento. Quest'istruzione fa praticamente una POP dello stack. Ovvero per fare la pop dovrei prendere l'indirizzo dello stack
+  pointer SP, salvarlo in un registro D0, a poi sommare 2 byte a SP per farlo pntare all'indirizzo successivo. Dovrei fare
+    MOVE  (SP),D0
+    ADD     #2, SP
+    Invece posso fare direttamente:
+    MOVE  (SP)+,D0		con questa istruzione posso fare quelle 2 precedenti
+ -INDIRIZZAMENTO INDIRETTO CON AUTO-DECREMENTO: in questo caso il registro viene prima decrementato della quantità che specifico, e poi lo utilizzo. Ciò serve per fare per esempio il push dello stack:
+    MOVE   D0,-(SP)		in questo caso prima decremento lo stack pointer, ovvero lo sposto verso l'alto di una word in questo caso, e poi salvo il contenuto di D0 nella nuova locazione puntata dallo
+                                                stack pointer.

@@ -1,0 +1,220 @@
+********************************************************************************************
+*Programma di prova del dispositivo PIC
+*Viene presentata una configurazione composta da un dispositivo M68000, un bus/memoria,
+*un PIC e un generatore di interruzione/timer 1TO4INTGEN.
+*L'indirizzo della ISR viene calcolato sommando lo spiazzamento di valore 0-7 a seconda delle linee di interruzione interrompenti 
+*all'indirizzo base $40 che corrisponde al vettore 64 della tabella
+*Questo esempio prevede che il bit AEOI sia posto a 0: ciò significa che il bit del registro ISR alto per il servizio dell'interruzione
+*debba essere abbassato manualmente appena prima del ritorno dall'interruzione.
+*
+*
+********************************************************************************************	
+*
+ter	EQU	$2000	indirizzo base associato al dispositivo TERMINAL ter
+intg1	EQU	$2004	indirizzo base associato al primo dispositivo 1TO4INTGEN
+pic	EQU	$202C	indirizzo base associato al dispositivo PIC
+
+
+*
+*Area Programmi
+*	
+	ORG 	$A000	
+begin
+
+*codice di inizializzazione degli indirizzi base dei 4 device utilizzati
+	
+	MOVEA.W	#pic,A0			memorizza la base degli indirizzi dei device utilizzati 
+	MOVEA.W	#intg1,A1		nei registri A0, A1, A3
+	MOVEA.W #ter,A3
+
+*scrittura nel registro TR: viene settato il valore $40 = 01000|000 che corrisponde al valore 64 ($40 in decimale), che indica
+*il vettore di base (primo vettore utile per le ISR definite da utente). Tale vettore è memorizzato alla locazione 64*4=256=$100;
+*i successivi accessi all' indirizzo dispari interesseranno il registro IMR 
+	
+	MOVE.B	#$40,1(A0)		
+
+*inizializza il terminale: abilitazione eco e tastiera, pulisci buffer,canc video e disab. interrupt							
+							 
+	MOVE.B 	#%00111100,1(A3)	
+
+*primo accesso in scrittura all'indirizzo pari: viene settato il registro CTRL ponendo AEOI=0 
+*quindi appena prima di ritornare dalla ISR è necessario settare manualmente il bit EOI
+*i prossimi accessi in lettura saranno al 
+	*CTRL: se bit7=0, (è questo il caso)
+	*IRR: se bit7=1 e bit6=0
+	*ISR: se bit7=1 e bit6=1
+    
+	MOVE.B	#$00,(A0)	
+
+*accesso al registro IMR: abilitazione di tutte le interruzioni							
+	
+	MOVE.B	#$00,1(A0)		
+
+	
+	
+*Inizializzazione sistema: modifica dello SR in modo che nessuna interruzione sia mascherata
+	MOVE.W	SR,D0			legge il registro di stato
+	ANDI.W	#$D8FF,D0 		maschera per reg stato (stato utente, int abilitati): 1101 1000 1111 1111
+	MOVE.W	D0,SR			pone liv int a 000
+		
+*INIZIALIZZAZIONE TIMER:
+*I timer sono inizializzati in modo da far verificare le interruzioni nell'ordine seguente:
+*linea 7 - linea 1 - linea 0 - linea 2 - linea 3
+*poichè la linea 0 è la più prioritaria, l'esecuzione della ISR associata alla linea 1 verrà interrotta dall'arrivo dell'interrupt sulla linea 0
+*e si passerà all'esecuzione della ISR ad essa associata.
+
+*Inizializzazione registri timer 1	
+
+	MOVE.B	#$10,4(A1)		inizializza pr=1; linea=0
+	MOVE.B	#$01,5(A1)		inizializza vect#=1
+	MOVE.B	#$20,6(A1)		inizializza CountH
+	MOVE.B	#$00,7(A1)		inizializza CountL
+
+*Inizializzazione registri timer 2	
+
+	MOVE.B	#$11,8(A1)		inizializza pr=1; linea=1		
+	MOVE.B	#$02,9(A1)		inizializza vect#=2
+	MOVE.B	#$1b,$a(A1)		inizializza CountH
+	MOVE.B	#$00,$b(A1)		inizializza CountL
+
+*Inizializzazione registri timer 3	
+
+	MOVE.B	#$12,$c(A1)		inizializza pr=1; linea=2	
+	MOVE.B	#$03,$d(A1)		inizializza vect#=3
+	MOVE.B	#$1b,$e(A1)		inizializza CountH
+	MOVE.B	#$00,$f(A1)		inizializza CountL
+
+*Inizializzazione registri timer 4	
+
+	MOVE.B	#$13,$10(A1)		inizializza pr=1; linea=3	
+	MOVE.B	#$04,$11(A1)		inizializza vect#=4
+	MOVE.B	#$1b,$12(A1)		inizializza CountH
+	MOVE.B	#$00,$13(A1)		inizializza CountL
+
+*Inizializzazione device 1to4intgen
+	MOVE.B	#$17,(A1)		Intgen inizializza registro I con pr=1 e linea=7	
+	MOVE.B	#$02,2(A1)		Intgen registro C lancia int sulla linea fisica indicata
+
+loop	JMP	loop		<<<loop di attesa di int
+
+
+*
+*Area ISR per la gestione delle interruzioni generate da 1to4intgen
+*Vengono definite 8 ISR che sono mappate in memoria a partire dall'indirizzo $100 e corrispondono
+*alle ISR relative alle 8 linee di interruzione del PIC
+*
+* ISR associata alla linea 0
+	ORG	$8000
+int0	MOVE.B	#48,(A3)			stampa 0 a terminale
+	MOVE.B	#$08,(A0)		setta EOI=1 per resettare il bit 0 di ISR (1000)
+	RTE
+
+* ISR associata alla linea 1
+	ORG	$8100
+int1	MOVE.B	#49,(A3)			stampa 1 a terminale
+	MOVE.B	#$09,(A0)		setta EOI=1 per resettare il bit 1 di ISR (1001)
+	RTE
+
+* ISR associata alla linea 2
+	ORG	$8200
+int2	MOVE.B	#50,(A3)			stampa 2 a terminale
+	MOVE.B	#$0A,(A0)		setta EOI=1 per resettare il bit 2 di ISR (1010)	
+	RTE
+
+ * ISR associata alla linea 3
+	ORG	$8300
+int3	MOVE.B	#51,(A3)			stampa 3 a terminal
+	MOVE.B	#$0B,(A0)		setta EOI=1 per resettare il bit 3 di ISR (1011)	
+	RTE
+
+ * ISR associata alla linea 4
+	ORG	$8400
+int4	MOVE.B	#52,(A3)			stampa 4 a terminale
+	MOVE.B	#$0C,(A0)		setta EOI=1 per resettare il bit 4 di ISR (1100)	
+	RTE
+ 
+ * ISR associata alla linea 5
+	ORG	$8500
+int5	MOVE.B	#53,(A3)			stampa 5 a terminale
+	MOVE.B	#$0D,(A0)		setta EOI=1 per resettare il bit 5 di ISR (1101)	
+	RTE
+
+
+ * ISR associata alla linea 6
+	ORG	$8600
+int6	MOVE.B	#54,(A3)			stampa 6 a terminale
+	MOVE.B	#$0E,(A0)		setta EOI=1 per resettare il bit 6 di ISR (1110)
+	RTE
+
+
+ * ISR associata alla linea 7
+	ORG	$8700
+int7	MOVE.B	#55,(A3)			stampa 7 a terminale
+	MOVE.B	#$0F,(A0)		setta EOI=1 per resettare il bit 7 di ISR (1111)	
+	RTE
+*
+
+	end	begin
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

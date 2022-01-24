@@ -1,0 +1,143 @@
+*************************************************************************************************
+*Questo è il driver di un sistema che riceve un messaggio di 30 caratteri su una 
+*PIA e lo copia in memoria tramite un DMA (trasferimento DEVICE-TO-MEM)
+*Si assuma che la PIA è collegata al canale 0 del DMA e che la linea di 
+*interruzione del DMA sia collegata sulla linea 7 del processore (autovettore 31)
+
+*costanti relative alla PIA
+PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in input
+PIACA	EQU    $2005	;indirizzo di PIA-A stato/controllo
+
+*costanti relative al DMA
+dma	EQU 	$2010	;indirizzo DMA
+caddr0	EQU	0
+ccount0	EQU	1
+cntrl	EQU	8
+request	EQU	9
+mode0	EQU	11
+nbyte	EQU	30	;numero di byte ricevuti sulla PIA da copiare in memoria
+
+
+*  AREA DATI *
+************************
+	ORG	$8000
+messaggio	DS.B	nbyte	
+	
+
+*  AREA CODICE *
+************************	
+	ORG    $8200
+
+BEGIN
+
+*inizializzazione PIA
+	JSR    DVAIN	;inizializza PIA porto A
+
+*inizializzazione DMA
+
+	MOVE.W	SR,D0	;legge il registro di stato
+	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+	MOVE.W	D0,SR	;pone liv int a 000
+
+
+	MOVE.W	#dma,A1			
+	MOVE.B	#nbyte,ccount0(A1)	; Carica il numero di byte da spostare nel registro conteggio
+	MOVE.W	#messaggio,caddr0(A1)		;Carica l'indirizzo base del blocco di memoria nel
+*										registro indirizzo del canale 0
+
+	MOVE.B	#$08,mode0(A1)	; 0000|1000:  single mode, - , incremento del registro caddr0, no auto-iniz. | 
+*						                      trasf. dev-mem,- , - , canale0
+
+	
+	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+	MOVE.B	#$08,request(A1)	;attiva la richiesta: necessario per il funzionamento con le periferiche simulate da asim (tipo PIA)!
+*						appena si attiva la richiesta, il DMA comincia a trasferire il contenuto del registro dato associato alla
+*						periferica e memorizza in memoria un byte ad ogni colpo di clock. Poichè dal lato trasmittente ci vuole
+*						più di una istruzione per scrivere un nuovo dato, lo stesso byte verrà copiato in memoria più volte
+
+	
+	
+
+LOOP  	JMP LOOP	;ciclo caldo		
+	
+
+*********************************************************************************************************
+*********************************************************************************************************
+*INIZIALIZZAZIONE DELLA PIA: PORTO A	        	
+*   CRA |0 |0 |1 0 0 |1 |0 1|
+*	           |	  |   |____Controllo CA1: interruzioni abilitate su IRQA, CA1 sensibile a fronte 1->0
+*			   |	  |	
+*		       |	  |________Accesso a DRA: il prossimo accesso ad indirizzo pari è per PRA
+*		       |_______________Controllo CA2: 1=>linea di uscita, con gli altri due bit a 00 diventa alto sul fronte
+*												attivo di CA1 e si riabbassa a seguito di una lettura su PRA
+*											  0=>linea di ingresso, si comporta come CA1 (CRA3 come CRA0,
+*											    CRA4 come CRA1, IRQA2 come IRQA1)
+*
+*	DRA=0 => PORTO A PORTO DI INGRESSO
+*
+***********************************************************************************************************
+DVAIN	MOVE.B	#0,PIACA		;mette 0 nel registro controllo così al prossimo accesso a PIADA (indirizzo pari)
+*								;selezionerà il registro direzione del porto A
+
+	MOVE.B	#$00,PIADA		    ;accede a DRA e pone DRA=0 : le linee di A sono linee di input	
+	
+	MOVE.B	#%00100101,PIACA  	;imposta il registro di controllo come indicato sopra, ponendo IRQA1=1 e IRQA2=1
+*								;i bit CRA7 e CRA6 sono a sola lettura	
+    RTS
+
+
+
+*ISR FINE TRASFERIMENTO DMA
+*associata all' interrupt di liv. 7  #vect 31  mappato a $7C della ROM
+********************************************************************************************************
+	ORG $8700
+int7	NOP
+	RTE	
+
+		
+
+	END	BEGIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

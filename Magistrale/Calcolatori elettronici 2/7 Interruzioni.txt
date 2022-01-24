@@ -1,0 +1,66 @@
+Vedremo adesso però prima come si gestiscono le interuzioni in generale, e poi nel 68000 per vedere come comunicare sulle periferiche. Partiamo dal ciclo del processore semplificato, che dopo una
+fase iniziale di bootstrap in cui carico il programma, ci sono le 3 fasi di fetch, operand asembly and execute. Il problema di tale ciclo è che poi il processore non può comunicare più con l'esterno, e se
+c'è un'applicazione per esempio che per un errore va in un ciclo infinito, non può uscire più e devo resettare la macchina.
+Modifico quindi il ciclo per rpevedere eventi asincroni speciali che servono per riportare il controllo al sistema operativo: questo dovrebbe cambiare stato da utente(in cui gestisce i programmi utente)
+a supervisore per gestire eventi asincroni all'esecuzione del programma in corso. Il ciclo viene cambiato facendo sì che il processore sia interrumpibile: dove interromperlo è una scelta architetturale,
+ma devo comunque fare si che riesco a ritornare allo stato precedente. Quindi non si prvede un'interruzione per esempio dopo la fase di operando assembly, poichè in questo caso io scrivo nei registr, e 
+quindi è troppo complesso conservare lo stato corrente per poi ritornarci: quindi prevedo un interruzione alla fine di u'istruzione(alla fine dei execute). Quindi è qui che controllo se ci sono interruzioni
+dall'interno o esterno.
+La fase di interrupt inzizia quando si alza un segnale hardware, che indica che cìè qualcuno che ha richiesto l'attenzione del processore; l'interruzione è chiamata ISR(Interrup service routine), che è la fase
+in cui servo quell'oggetto che mi ha alzato il segnale di interruzione. Il processore però prima di gestire l'interruzione deve essere preparato, ovvero deve fare in modo per riprendere il programma corrente 
+dal punto in cui lo interrompo: si usano quindi i cincetti di stato e ripristino dello stato.
+La ISR è una procedura di servizio, e quindi può essere vista anche come un sottoprogramma, ma a differenza di quest'ultma un'interrupt può avenire inn qualunque momento, senza essere chiamata da 
+nessuna procedura del programma corrente, e quindi in maniera asincrona.
+Le interruzioni sono di diversa natura, possono essere causate da diverse sorgente:
+ -interruzioni periodiche
+ -interruzione per errori, come overflow ecc..Si parla di trap o eccezioni
+ -interruzioni per guasto, come reset del sistema, guasti del bus eccc...
+ -interruzioni programmabili, che posso prevedere
+ -interruzioni da parte di periferiche di I/O.
+La causa di un interruzione non fa partire direttamente la service routine, ma in realtà alza un segnale per ricgiedere di essere servito: il processore deve aver abilitato quella periferica però a parlare. 
+quindi devo vedere se quell'interruzione è abilitatata e se può essere gestita.
+Useremo un REGISTRO DI RICHIESTA DI INTERRUZIONI  RI che memorizza la richiesta di interruzioni; un registro MASCHERA DELLE ISTRUZIONI M che abilita una alla volta le interruzioni richieste, e un FLIP 
+FLOP DI ABILITAZIONE GENERALE AG che abilita il sistema complessivo. Praticamente, per vedere quale interruzione viene servita, si fa (RI(0) and M(0) and AG) or (RI(1) and M(1) and AG) or.....or (RI(i) 
+and M(i) and AG). Vediamo il processo di gestione delle interruzioni:
+ 1) Salvo il contesto(lo stato) che conviene fare con un approccio ibrido tra software e hardware: in hardware si intende salvare sullo stack, come minimo, il PC e registro di stato. Salvare lo stato 
+     implicherebbe in teoria il salvataggio di tutti i registri interni del processore(tutti gli A(i) e D(i)), ma è poco efficiente: salvo allora solo i registri che prevedo di usare. Tale salvataggio non avviene in 
+     maniera hardware prima di chiamare la ISR(poichè non so il dispositivo quali registri userà prima di servire la ISR), ma li salva la ISR via software appena la eseguo nella fase 3).
+ 2) Devo capire quale device mi ha interrotto, ma non basta; devo anche trovare l'indirizzo, lentry point, dell'interruzione, poichè ogni dispositivo può avere interruzioni, quindi diverse ISR
+ 3) Salto poi all'indirizzo ISR ovvero nel Program Counter inserirò l'indirizzo della ISR
+ 4) La ISR salveràil contesto via software ovvero, utilizzando lo stack, i registro che userà
+ 5)Servo l'interruzione, ovvero eseguo tutta la ISR che verrà esegita sempre nel ciclo fondamentale con le fasi di fetc, decodisica e execute(La ISR contiene diverse istruzioni da eseguie)
+ 6)Ripristino il contesto software, facendo il pop dello stack, ovvero rimuovendo dalla cima dello stack i valori che ho salvato nei registri solo per la ISR e rimmendo dentro i valori di prima(del programma 
+    che stava eseguendo prima della ISR). Ciò non dipende dallo stato, ma solo dalla ISR
+ 7)Ripristino il contesto hardware, ovvero il PC mettendoci dentro il program counter di prima della ISR che avevo salvato nello stack nella fase 1), e ripristino il registro di stato. Ovviamente l'indirizzo di
+    ritorno, quello da mettere nel PC per uscire dala ISR, dipende da quale istruzione stavo eseguendo al momento dell'interruzione: sarà l'idirizzo di quest'ultima.
+Tutte queste fasi mi pèermettono di fare il salto alla sottoprocedura della ISR e il ritorno. Chiamata e ritorno sembrano quindi la stessa cosa
+IL programma che viene interrotto non si deve assoltamente accorgere che ci è stata un'interruzione, per lui deve essere solo un ritardo, ecco perchè si salva lo stato. In ogni caso si vuole salvare il numero
+minimo di info per ripristinare lo stato, così da non avere troppa latenza, ed ecco perchè non salvo tutti i registri interni de processore. Si parla quindi di LATENZA DI INTERRUZIONE.
+Quando devo saltare alla ISR, otre a salvare il vecchio PC e a mettere nel PC l'indirzzo della ISR, viene messo il registro AG=0, ovvero disabilito la gestione delle istruzioni: ciò accade quando uso un hardware
+ apposito per gestire le interruzioni, e quindi non prevedo che una nuova interruzione, magari a maggiore priorità, interrompa l'interruzione che sto gestendo al momento; se posso fare ciò non metto AG=0.
+La latenza del processore è fatta da diversi tempi:
+ 1)finire l'istruzione di cui ho fatto il fetch, poichè solo dopo che l'ho finita posso vedere la ISR
+ 2)controllo chi ha generato l'interruzione e vedo l'indirizzo della ISR
+ 3)abilito l'interruzione
+ 4)salto alla ISR da eseguire.
+Devo ora capire meglio come fare la fase 2), ovvero identificare il dispositivo che fa l'interrupt e l'indirizzo della ISR. Per identificare i dispositivi ci sono diveri modi hardware e software, e se ho dispositivi 
+diversi devo trovare il giusto dispositivo che mi ha generato quell'interrupt: posso avere che più dispositivi hanno la stessa ISR, oppureogni dispositivo ha la prorpia ISR.
+Vediamo diversi scenari:
+1)La CPU ha una soloa linea di interruzione collegata a diversi dispositivi mediante un interruttore che si chiude quando quel dispositivo genera l'interruzione. Se un solo dispositivo chiede un interruziioe, il 
+   processore ha una sola linea, detta INTACK, per vedere il dispositivo, e tale linea è legata mediante DAISY CHAIN a tuti i dispositivi. Questa daisy chain è legata in ordine a tutti i dispositivi con un interruzione: 
+   il processore guarda la linea e va sul primo dispositivo: se l'ha interrotto lui allora apre l'interruttore che lo collega così il processore non vede gli altri dispositivi, non li vede,e si ferm lì; se non ha creato 
+   lui l'interruzione, chiude l'interruttore così si passa a controllare il dispositivo di dopo. Quindi il dispositivo vicino al processore è il più prioritario.
+ 2)Modalità POLLING: on c'è la daisy chain, ma ogni dispositivo ha un registro di stato: il dispositivo che interrompe salva nel proprio registro di stato un bit alto per dire cha ha interrotto, e quando il 
+    processore vede un  interruzione, va a controllae tutti questi registri di stato con un apposito protocollo per vedere chi l'ha interrotto. E' poco efficiente però.
+ 3)Il caso del motorola 68000: esso ha 3 linee di interruzione che entrano in un decder così da darmi 8 reali linee di interruzioni a cui sono legati un dispositivo. Questa è la tecnica AUTOVETTORIZZATA: 
+    capisco chi mi ha interrotto guardando il codice che dentifica la linea di interruzione: tale codice identifia l'indirizzo della ISR.
+ 4)Tecnica VETTORIZZATA del 68000: ho sempre 8 linee di interruzioni a cui però è legato il databus: quando il dispositivo genera l'interruzione, la linea di interruzione si usa per identificare il dispositivo, sul 
+    databus invece viene messo un vettore di 8 bit che contiene l'indirizzo della ISR. Ciò accade grazie al fatto che nella ROM ho 256 locazioni consecutivi di vettori di interrupt, che contengono indirizzi della 
+    ISR: il dispositivo che interrompe  mette sul databus l'indirzzo di uno di questi vettori, che conterrà l'indirizzo della ISR.In realtà di questi 256 i primi 64 si usano per le iccezioni, 7 le uso per il caso degli 
+   autovettori, le ltre invece sono normali. 
+Per gestire più interruzione dovrei gestire le priorità: dovrei capire la priorità dell'interruzione, per esempio se sto gestendo un interruzione a priorità 4, la blocco se ne arriva una di livello 7, non la blocco 
+se ne arriva una di livello 3. Le 3 linee con cui il 68000 è legato ai dispositivi si chiamano IPL, il cui codice mi dice la priorità del dispositivo; invece i 3 bit nel registro di stato di ciascu dispositivo si chiamano 
+PPL, e mi dice la priorità di quella ISR, e quindi va confrontat con IPL. Le 3 linee delle interruzioni o entrano in un decoder, o in un PIC, ma in ogni caso ne escono 8 linee.
+Il processore traduce quindi il numero del vettore sul databus di 8 bit in un indirizzo del vettore dellle interruzione della ROM aggiungendo 2 bit pari a 0 nella parte meno significativa. Da sottolineare che 
+questa tecnica del databus è usato solo nel caso vettorizzato; nel caso autovettorizzato non gli devo dire l'indirizzo della ISR percè è direttamente il codice della linea ISL. Il problema dell'autovettorizzazione 
+è che ho solo 7 ISR(salvate nel vettore delle ISR), ma con il PIC riesco a connettere fino a 64 dispositivi.

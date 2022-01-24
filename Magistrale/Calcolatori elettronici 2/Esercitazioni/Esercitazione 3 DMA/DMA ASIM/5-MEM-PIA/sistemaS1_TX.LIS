@@ -1,0 +1,90 @@
+00000000                                     1  *************************************************************************************************
+00000000                                     2  *Il sistema S1 trasferisce un messaggio da un'area di memoria verso una PIA usando il DMA.
+00000000                                     3  *La PIA comunica col sistema S2, che non fa niente.
+00000000                                     4  *
+00000000                                     5  *Il driver si limita ad inizializzare la PIA in trasmissione e ad attivare il trasferimento col DMA
+00000000                                     6  *
+00000000                                     7  
+00000000                                     8  
+00000000                                     9  ************************************************************
+00000000                                    10  *costanti relative alla PIA in trasmissione
+00000000                                    11  
+00000000  =00002004                         12  PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in input dal DMA 
+00000000  =00002005                         13  PIACA	EQU    $2005	;indirizzo di PIA-A controllo
+00000000  =00002006                         14  PIADB	EQU    $2006	;indirizzo di PIA-B dato, usato in output 
+00000000  =00002007                         15  PIACB	EQU    $2007	;indirizzo di PIA-B controllo
+00000000                                    16  
+00000000                                    17  *costanti relative al DMA
+00000000  =00002010                         18  dma	EQU 	$2010	;indirizzo DMA
+00000000  =00000000                         19  caddr0	EQU	0
+00000000  =00000001                         20  ccount0	EQU	1
+00000000  =00000008                         21  cntrl	EQU	8
+00000000  =00000009                         22  request	EQU	9
+00000000  =0000000B                         23  mode0	EQU	11
+00000000  =00000006                         24  nbyte	EQU	6	;numero di byte da trasmettere alla PIA
+00000000                                    25  
+00000000                                    26  
+00000000                                    27  
+00000000                                    28  **********AREA DATI**************************************
+00008000                                    29  	ORG	$8000
+00008000  01 02 03 04 05 06                 30  MSG	DC.B	1,2,3,4,5,6
+00008006  06                                31  DIM	DC.B	6
+00008007                                    32  
+00008007                                    33  
+00008007                                    34  ***********************************************************
+00008007                                    35  ***********AREA MAIN*********************************	
+00008200                                    36  	ORG    $8200
+00008200                                    37  
+00008200  4EB9 00008236                     38  MAIN	JSR    PIAINIT	;inizializza PIA porto B in output e porto A in input
+00008206                                    39  
+00008206                                    40  
+00008206  40C0                              41  	MOVE.W	SR,D0	;legge il registro di stato
+00008208  0240 D8FF                         42  	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+0000820C  46C0                              43  	MOVE.W	D0,SR	;pone liv int a 000
+0000820E                                    44  
+0000820E                                    45  
+0000820E  327C 2010                         46  	MOVE.W	#dma,A1			
+00008212  137C 0006 0001                    47  	MOVE.B	#nbyte,ccount0(A1)	; Carica il numero di byte da spostare nel registro conteggio
+00008218  337C 8000 0000                    48  	MOVE.W	#MSG,caddr0(A1)		;Carica l'indirizzo base del blocco di memoria nel
+0000821E                                    49  *										registro indirizzo del canale 0
+0000821E                                    50  
+0000821E  137C 0000 000B                    51  	MOVE.B	#$00,mode0(A1)	; 0000|0000:  single mode, - , incremento del registro caddr0, no auto-iniz. | 
+00008224                                    52  *						                      trasf.mem-dev,- , - , canale0
+00008224                                    53  
+00008224                                    54  	
+00008224  137C 0080 0008                    55  	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+0000822A  137C 0008 0009                    56  	MOVE.B	#$08,request(A1)	;attiva la richiesta: necessario per il funzionamento con le periferiche simulate da asim (tipo PIA)!
+00008230                                    57  *						appena si attiva la richiesta, il DMA comincia a trasferire il contenuto della memoria nel registro dato associato alla
+00008230                                    58  *						periferica, un byte ad ogni colpo di clock. 
+00008230                                    59  
+00008230  4EF9 00008230                     60  LOOP  	JMP	LOOP	;ciclo caldo dove il processore attende interrupt		
+00008236                                    61  
+00008236                                    62  
+00008236                                    63  
+00008236                                    64  
+00008236                                    65  *********************************************************************************************************
+00008236  11FC 0000 2005                    66  PIAINIT	MOVE.B	#0,PIACA		;seleziona il registro direzione di PIA porto A 
+0000823C  11FC 0000 2004                    67  	MOVE.B	#$00,PIADA	  		;accede a DRB e inserisce tutti 1: le linee di B sono linee di output	
+00008242  11FC 0024 2005                    68  	MOVE.B	#%00100100,PIACA   	;disabilita le interruzioni. Il prossimo accesso sarà a PRB	
+00008248                                    69  
+00008248  11FC 0000 2007                    70  	MOVE.B	#0,PIACB		;seleziona il registro direzione di PIA porto B 
+0000824E  11FC 00FF 2006                    71  	MOVE.B	#$FF,PIADB	  		;accede a DRB e inserisce tutti 1: le linee di B sono linee di output	
+00008254  11FC 0024 2007                    72  	MOVE.B	#%00100100,PIACB   	;disabilita le interruzioni. Il prossimo accesso sarà a PRB	
+0000825A  4E75                              73  	RTS
+0000825C                                    74  
+0000825C                                    75  	
+0000825C                                    76  
+0000825C                                    77  
+0000825C                                    78  
+0000825C                                    79  *ISR FINE TRASFERIMENTO DMA
+0000825C                                    80  *associata all' interrupt di liv. 7  #vect 31  mappato a $7C della ROM
+0000825C                                    81  ********************************************************************************************************
+00008700                                    82  	ORG $8700
+00008700  4E71                              83  int7	NOP
+00008702  4E73                              84  	RTE	
+00008704                                    85  
+00008704                                    86  	
+00008704                                    87  	END	MAIN
+
+No errors detected
+No warnings generated

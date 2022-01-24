@@ -1,0 +1,102 @@
+00000000                                     1  *************************************************************************************************
+00000000                                     2  *Questo è il driver di un sistema che riceve un messaggio di 30 caratteri su una 
+00000000                                     3  *PIA e lo copia in memoria tramite un DMA (trasferimento DEVICE-TO-MEM)
+00000000                                     4  *Si assuma che la PIA è collegata al canale 0 del DMA e che la linea di 
+00000000                                     5  *interruzione del DMA sia collegata sulla linea 7 del processore (autovettore 31)
+00000000                                     6  
+00000000                                     7  *costanti relative alla PIA
+00000000  =00002004                          8  PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in input
+00000000  =00002005                          9  PIACA	EQU    $2005	;indirizzo di PIA-A stato/controllo
+00000000                                    10  
+00000000                                    11  *costanti relative al DMA
+00000000  =00002010                         12  dma	EQU 	$2010	;indirizzo DMA
+00000000  =00000000                         13  caddr0	EQU	0
+00000000  =00000001                         14  ccount0	EQU	1
+00000000  =00000008                         15  cntrl	EQU	8
+00000000  =00000009                         16  request	EQU	9
+00000000  =0000000B                         17  mode0	EQU	11
+00000000  =0000001E                         18  nbyte	EQU	30	;numero di byte ricevuti sulla PIA da copiare in memoria
+00000000                                    19  
+00000000                                    20  
+00000000                                    21  *  AREA DATI *
+00000000                                    22  ************************
+00008000                                    23  	ORG	$8000
+00008000                                    24  messaggio	DS.B	nbyte	
+0000801E                                    25  	
+0000801E                                    26  
+0000801E                                    27  *  AREA CODICE *
+0000801E                                    28  ************************	
+00008200                                    29  	ORG    $8200
+00008200                                    30  
+00008200                                    31  BEGIN
+00008200                                    32  
+00008200                                    33  *inizializzazione PIA
+00008200  4EB9 00008236                     34  	JSR    DVAIN	;inizializza PIA porto A
+00008206                                    35  
+00008206                                    36  *inizializzazione DMA
+00008206                                    37  
+00008206  40C0                              38  	MOVE.W	SR,D0	;legge il registro di stato
+00008208  0240 D8FF                         39  	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+0000820C  46C0                              40  	MOVE.W	D0,SR	;pone liv int a 000
+0000820E                                    41  
+0000820E                                    42  
+0000820E  327C 2010                         43  	MOVE.W	#dma,A1			
+00008212  137C 001E 0001                    44  	MOVE.B	#nbyte,ccount0(A1)	; Carica il numero di byte da spostare nel registro conteggio
+00008218  337C 8000 0000                    45  	MOVE.W	#messaggio,caddr0(A1)		;Carica l'indirizzo base del blocco di memoria nel
+0000821E                                    46  *										registro indirizzo del canale 0
+0000821E                                    47  
+0000821E  137C 0008 000B                    48  	MOVE.B	#$08,mode0(A1)	; 0000|1000:  single mode, - , incremento del registro caddr0, no auto-iniz. | 
+00008224                                    49  *						                      trasf. dev-mem,- , - , canale0
+00008224                                    50  
+00008224                                    51  	
+00008224  137C 0080 0008                    52  	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+0000822A  137C 0008 0009                    53  	MOVE.B	#$08,request(A1)	;attiva la richiesta: necessario per il funzionamento con le periferiche simulate da asim (tipo PIA)!
+00008230                                    54  *						appena si attiva la richiesta, il DMA comincia a trasferire il contenuto del registro dato associato alla
+00008230                                    55  *						periferica e memorizza in memoria un byte ad ogni colpo di clock. Poichè dal lato trasmittente ci vuole
+00008230                                    56  *						più di una istruzione per scrivere un nuovo dato, lo stesso byte verrà copiato in memoria più volte
+00008230                                    57  
+00008230                                    58  	
+00008230                                    59  	
+00008230                                    60  
+00008230  4EF9 00008230                     61  LOOP  	JMP LOOP	;ciclo caldo		
+00008236                                    62  	
+00008236                                    63  
+00008236                                    64  *********************************************************************************************************
+00008236                                    65  *********************************************************************************************************
+00008236                                    66  *INIZIALIZZAZIONE DELLA PIA: PORTO A	        	
+00008236                                    67  *   CRA |0 |0 |1 0 0 |1 |0 1|
+00008236                                    68  *	           |	  |   |____Controllo CA1: interruzioni abilitate su IRQA, CA1 sensibile a fronte 1->0
+00008236                                    69  *			   |	  |	
+00008236                                    70  *		       |	  |________Accesso a DRA: il prossimo accesso ad indirizzo pari è per PRA
+00008236                                    71  *		       |_______________Controllo CA2: 1=>linea di uscita, con gli altri due bit a 00 diventa alto sul fronte
+00008236                                    72  *												attivo di CA1 e si riabbassa a seguito di una lettura su PRA
+00008236                                    73  *											  0=>linea di ingresso, si comporta come CA1 (CRA3 come CRA0,
+00008236                                    74  *											    CRA4 come CRA1, IRQA2 come IRQA1)
+00008236                                    75  *
+00008236                                    76  *	DRA=0 => PORTO A PORTO DI INGRESSO
+00008236                                    77  *
+00008236                                    78  ***********************************************************************************************************
+00008236  11FC 0000 2005                    79  DVAIN	MOVE.B	#0,PIACA		;mette 0 nel registro controllo così al prossimo accesso a PIADA (indirizzo pari)
+0000823C                                    80  *								;selezionerà il registro direzione del porto A
+0000823C                                    81  
+0000823C  11FC 0000 2004                    82  	MOVE.B	#$00,PIADA		    ;accede a DRA e pone DRA=0 : le linee di A sono linee di input	
+00008242                                    83  	
+00008242  11FC 0025 2005                    84  	MOVE.B	#%00100101,PIACA  	;imposta il registro di controllo come indicato sopra, ponendo IRQA1=1 e IRQA2=1
+00008248                                    85  *								;i bit CRA7 e CRA6 sono a sola lettura	
+00008248  4E75                              86      RTS
+0000824A                                    87  
+0000824A                                    88  
+0000824A                                    89  
+0000824A                                    90  *ISR FINE TRASFERIMENTO DMA
+0000824A                                    91  *associata all' interrupt di liv. 7  #vect 31  mappato a $7C della ROM
+0000824A                                    92  ********************************************************************************************************
+00008700                                    93  	ORG $8700
+00008700  4E71                              94  int7	NOP
+00008702  4E73                              95  	RTE	
+00008704                                    96  
+00008704                                    97  		
+00008704                                    98  
+00008704                                    99  	END	BEGIN
+
+No errors detected
+No warnings generated

@@ -1,0 +1,44 @@
+Vdiamo adesso le gerarchie di meoria: io ho 2 requisiti in conflitto tra loro:
+ -da un lato vorrei memorie molto veloci, vistco che grazie alle pipeline il processore è diventato internamente molto veloce, ma se ad ogni colopo di clock non riesco a prelevare una nuova istruzione
+  è inutile;  sarebbe inoltre utile avere memorie dual port per accedere contemporanemanete in lettura e scrutura
+ -dall'altra parte vorrei memorie molto grandi, poichè io ho molti processi che eseguo in contemporanea, ma in realtà non eseguono in contemporanea, bensì è il processore che passa molto velocemente,
+  tramite il sistema operativo, da un processo all'altro.
+Avere però tutto ciò in contemporanea è impossibile.
+Una gerarchia di memoria permette non solo di avere in un solo ciclo di clock l'istruzione o il dato, ovvero il tempo di accesso alla memoria fisica, e quindi il tempo di risposta della memora, è paragonabile a
+quella del processore; inoltre al proessore la memoria appare estremamente grande. Si usano quindi proprio nel processore diverse tecnologie per realizzare le celle elementare di memoria(come per 
+esempio le meorie statiche fatte con un Cmos, quindi con 2 not retroazionate); il problema è che meorie veloci consumano molto, e quindi non ne posso mettere molte sul processore, ho scarsa integrabilità;
+memorie più lente invece consumano meno.
+Vediamo ora com'è strutturata l'intera memoria: il processore si interfaccia con la meoria con un  bus fatto da 3 linee(linea dati, linea indirizzi, e linea controllo), e ho almeno una coppia di registri MAR e 
+che mi permettono di leggere dalla memoria un dato(tramite MAR->MDR) e di scrivercelo(tramite MDR) tarmite le linee dato e indirizzi. le linee di controllo invece implementano un protocollo di 
+comunicazione, sincronizzazione, che mi dice quando dare significato ai dati sulle linee.
+Definiamo poi: 
+-tempo di acesso il tempo per leggere o scrivere un dato in mmoria;
+-il tempo di cilco è il tempo che passa tra 2 operazioni consecutive in memoria;
+-capacità, ovvero la dimensione della meoria.
+-il costo per byte, legato allo spazio della memoria e alla tecnoloia per memorizzare il singolo bit
+-banda di trasferimento, che mi dice la grandezza del dat che la meoria può trasferire(è legato alla word che ho in memoria): è utile poichè non trasferisco solo una parola
+-parallelismo, espreso come multiplo di bite
+Le celle sono di 2 tipo:
+ -Statica, fatta con 2 not retroazionate in tecnologia CMOS(e parliamo di SRAM, ovvero RAM statica), e ho tempi di risposta elevati; ho poi 2 linee aggiuntive che mi fanno identificare la specifica cella di un 
+  array(bit line e word line), che vengono abilitate da 2 transistor
+-Dinamica, come le memorie centrali, dove il bit viene memorizzato tramite 2 capacità, e quindi uso un solo transistor. Oviamente ho problematiche di efresh, pochè se le capacità non sono alimentate
+  periodicamente si scaricano, e quindi ci devo riscrivere il dtao. Sono molto integrabili, ma lente poichè il condensatore si carica/scarica lentamente.
+Entrabbe le celle sono comunque volatili, ciò che le distingue sono le diverse tecnologie.
+Le memorie statiche vengono fatte per costruire le cache, che sono molto piccole e le riesco a integrare vicino al processore, in particolare dentro la stessa biard del processore.
+Vediamo ora come si costruiscono le RAM: esse si costruiscono in array di celle, dove ogni array di celle è una word, più array fanno sarebbero più word. Le singole celle di un array sono legate mediante la
+word line, che quindi in parallelo mi abilita tutte le celle di una word. Quindi leggere una word significa leggere contemporanemante tutte le celle di quell'array. Le varie word line escono da un decode, in
+cui poi entrano le linee di indirizzo. Il decode è abilitato mediante un segnale di CHIP-SELECT, e un segnale read/write mi dice seleggo o scrivo.
+Se invece avrei una memoria di 1Kb(1024 word di un bite), sarebbe troppo complesso fare con il decoder, e inoltre la memoria sarebbe verticale(rettangolare); invece si usa ua memoria 32x32(così e sempre
+quadrata), e metto poi 2 decoder; le linee di indirizzo sono 10(mi servono 10 bit), e quindi 5 bit li mando in un decoder e mi seleziona la linea(il particolare array di 32 bit), e gli altri 5 bit, i meno significativi,
+li mando in un decoder per le colonne( la linea di colonna mi seleziona una particolare cellla di un array). Il decoder di colonne è fatto da un mux e demux. Riesco inoltre a diminuire le linee di controllo:
+Uso un segnale RAS che mi abilita il decoder delle linee, e un segnale CAS che mi abilita il decoder di colonne. Io abilito prima le righe, e dopo le colonne. Quindi l'intera meoria non prende più in ingresso
+10 linee di indirizzo, ma 5(poichè considero solo 5 bit alla volta), e in più i segnali RAS e CAS al posto del chip select. Oviamente il processore produce lo stesso indirizzi su 10 bit, quindi prima di questo circuito
+di memoria(fatto da celle e decoder) ci metto un MEMORY MANAGEMENT che mi seleziona 5 bit alla volta.
+Così il ciclo di lettura però cambia, pochè io leggo prima la riga e poi la memoria: mando il segnale di read e poi abilito RAS; aspetto unn po' di tempo e poi abilito CAS, e solo alla fine troverò tutto sul bus dati.
+In realtà io così posso leggere anche i dati per colonna, ma se voglio leggere byte consecutivi ciò è molto veloce, poichè così decodifico una sola volta l'indirizzo delle righe, mentre decodifico più volte le 
+linee di colonne, in particolare tante volte quante sono le word a cui oglio accedere. Quindi è molto più veloce accedre a word consecutive(sulla stessa linea) piàùttosto che a word casuali.
+Supponiamo di vler relizzare una memoria da 2Mx32: per avere 2M mi servono 21 linee di indirizzo, e 32 bit sul bus dati per prendere il dato. Posso usare un approccio per decomposizione: uso picoli blocchi 
+512kx8; sulla singola linea orizzontale metto 4 pezzi di 8 bit, e da ciascun pezzo sulle colonne mi escono 8 bit, così che in totale ho 32 bit sul bus dati. Ogni blocco è di 512k(ovvero ho 512 array di 8 bit): per
+selezionare un'array tra quest 512 mi servono 19 bit, e quindi li seleziono con i 19 bit più significativi dei 21 totali che uso per indirizzare l'itera memoria di 2Mx32; invece gli ultimi 2 bit meno significativi li
+mando in un decoder 2-4 così da selezionarmi il singolo bit di ciascun array. Questo perchè in totale in uscita dalle meorie ho 32 bit( perche sulla linea ho 4 moduli 512x8, così in totale ho 512 word da 32 bit
+su una linea: seleziono il singolo array di 32 bit con 19 bit, poi di quei 32 bit totali li seleziono con gli ultimi 2 bit con il decoder 2-4)

@@ -1,0 +1,10 @@
+v 4
+file . "testbench.vhd" "424b643af59160817643e550c6acd18a0d194c0b" "20200701145937.370":
+  entity testbench at 1( 0) + 0 on 15;
+  architecture behavioural of testbench at 8( 88) + 0 on 16;
+file . "PIA.vhd" "818a9a97f4e338da9aeaf94e73b2d8d227a2a191" "20200701145937.354":
+  entity pia at 1( 0) + 0 on 13;
+  architecture behavioural of pia at 28( 1660) + 0 on 14;
+file . "Bidirezionali.vhd" "e0c062ed895b484363c01653ae319bd9d32bda1d" "20200701145937.333":
+  entity bidirezionali at 1( 0) + 0 on 11;
+  architecture behavioural of bidirezionali at 13( 277) + 0 on 12;

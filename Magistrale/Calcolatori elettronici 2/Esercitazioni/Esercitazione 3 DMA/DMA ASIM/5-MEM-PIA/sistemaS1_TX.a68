@@ -1,0 +1,124 @@
+*************************************************************************************************
+*Il sistema S1 trasferisce un messaggio da un'area di memoria verso una PIA usando il DMA.
+*La PIA deve essere programmata per ricevere dati, quindi è necessario inizializzare il porto
+*in INPUT. 
+*ATTENZIONE: L'invio dei dati acquisiti sul porto A verso un sistema esterno attraverso il porto B 
+*non è automatico, quindi il driver non funziona ed è stato fornito solo a scopo esemplificativo
+*per dimostrare che il trasferimento memoria-device viene effettuato correttamente
+
+************************************************************
+*costanti relative alla PIA
+
+PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in input dal DMA 
+PIACA	EQU    $2005	;indirizzo di PIA-A controllo
+
+*costanti relative al DMA
+dma	EQU 	$2010	;indirizzo DMA
+caddr0	EQU	0
+ccount0	EQU	1
+cntrl	EQU	8
+request	EQU	9
+mode0	EQU	11
+nbyte	EQU	6	;numero di byte da trasmettere alla PIA
+
+
+
+**********AREA DATI**************************************
+	ORG	$8000
+MSG	DC.B	1,2,3,4,5,6
+DIM	DC.B	6
+
+
+***********************************************************
+***********AREA MAIN*********************************	
+	ORG    $8200
+
+MAIN	JSR    PIAINIT	;inizializza PIA porto A in input
+
+
+	MOVE.W	SR,D0	;legge il registro di stato
+	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+	MOVE.W	D0,SR	;pone liv int a 000
+
+
+	MOVE.W	#dma,A1			
+	MOVE.B	#nbyte,ccount0(A1)	; Carica il numero di byte da spostare nel registro conteggio
+	MOVE.W	#MSG,caddr0(A1)		;Carica l'indirizzo base del blocco di memoria nel
+*										registro indirizzo del canale 0
+
+	MOVE.B	#$00,mode0(A1)	; 0000|0000:  single mode, - , incremento del registro caddr0, no auto-iniz. | 
+*						                      trasf.mem-dev,- , - , canale0
+
+	
+	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+	MOVE.B	#$08,request(A1)	;attiva la richiesta: necessario per il funzionamento con le periferiche simulate da asim (tipo PIA)!
+*						appena si attiva la richiesta, il DMA comincia a trasferire il contenuto della memoria nel registro dato associato alla
+*						periferica, un byte ad ogni colpo di clock. 
+
+LOOP  	JMP	LOOP	;ciclo caldo dove il processore attende interrupt		
+
+
+
+
+*********************************************************************************************************
+PIAINIT	MOVE.B	#0,PIACA		;seleziona il registro direzione di PIA porto A 
+	MOVE.B	#$00,PIADA	  		;accede a DRB e inserisce tutti 1: le linee di B sono linee di output	
+	MOVE.B	#%00100100,PIACA   	;disabilita le interruzioni. Il prossimo accesso sarà a PRB	
+
+	RTS
+
+	
+
+
+
+*ISR FINE TRASFERIMENTO DMA
+*associata all' interrupt di liv. 7  #vect 31  mappato a $7C della ROM
+********************************************************************************************************
+	ORG $8700
+int7	NOP
+	RTE	
+
+	
+	END	MAIN
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

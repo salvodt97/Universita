@@ -1,0 +1,67 @@
+Vedremo il DMA di Intel: è il Direct Memory Access ed è un dispositivo, l'unico insieme alla CPU, in grado di generare indirizzi sul bus per accedere alla memoria o ai dispositivi mappati
+in memoria: ci permette di trasferire grandi blocchi di dati, ed è molto utile per trsaferire le pagine tra RAM e memoria di massa. Esso si "impadronisce" del bus, e si parla di BUS MASTER,
+per velocizzare gli accessi alla memoria, e gestisce sia gli indirizzi che i protocolli di comunicazione come l'handshaking. Il DMA quindi si mette allo stesso livello della CPU e con  bus dati,
+indirizzi e controllo comunica sia con la memoria che con i dispositivi di I/O.
+La CPU utilizza nuovi segnali:
+ -la parte del bus di controllo con i segnali classici di lettura e scrittura dalla memoria e, essendo un Intel, non gestisce i dispositivi di I/O in maniera memory mapped, ma in maniera 
+  MEMORY I/O, ovvero ci sono istruzioni e segnali dedicati per fare operazioni. Nell'Intel 8237 si usano 4 linee di read e write, 2 per la memoria e 2 per i dispositivi.
+ -3 linee per fare un protocollo di comunicazione con il DMA: servono al DMA per chiedere alla CPU il permesso di diventare bus master e quindi di scrivere indirizzi sul bus indirizzi
+Sul DMA ho:
+ -i soliti 4 segnali di controllo
+-i segnali di HOLD REQUEST e HOLD ADDRESSper chiedere al processore il permesso di diventare bus master, ricevere l'ack, e generare gli indirizzi. Esso può generare 16 bit di indirizzi
+ in maniera particolare, divisi in 3 blocchi differenti: i primi 4 bit per indirizzare i registri interni del DMA, altri bit che vengono montati dal data bus e un partcolare letch del DMA per 
+ staccare i segnali (linee di indirizzo) che vengono dalla CPU e guardare solo i segnali del DMA e così via.
+
+Vediamo ora nel dettaglio la DMA: per fare operazioni tra emoria e memoria (spostare i dati) richiede molti cicli di clock e quindi per il processore è molto lento, ma si può dimostrare che 
+fare tale operazioni con il DMA è più veloce, poichè riesco a spostare tutta la frequenza del clock disponibile. Ciò perchè il processore solo per spostare dati tra memoria e memoria deve
+fare fetch e prelevare gli operandi, e sopratutto se gli operandi sono di 32 but devo accedere ciascuno 2 volte.
+Il DMA ha diverse sezioni, dette CANALI: ad ogni canale può essere associato un device e viene programmato indipendente dagli altri; poi per ogni canale ho:
+-registro di stato e di controllo
+-registro indirizzi e un contatore che si usa a partire da un indirizzo base
+-registro per l'inizializzazione
+-registri temporanei per salvare dei dati in transito
+-segnali per istanziare il protocollo di comunicazione con un device
+-segnali per "rubare" il bus, ovvero diventa bus msater quando vede che il processore è inattivo, ciè non sta usando il bus per accedere alla memoria
+In generale, ho 4 canali di collegamneto con attrettanti disositivi; ovviamente potrei avere competizione tra i vari canali per prendere il bus: in questo caso devo gestire la priorità dei canali
+con un apposito blocco, e potrei avere una priorità statica oppure una dinamica(come round robin). Per accedere poi al canale dati lo si può fare con 4 modi:
+ -SINGLE: si trasferisce una parola per volta, e dopo aver trasferito la parola il DMA restituisce il controllo del bus al processore per almeno un ciclo di clock
+ -BLOCK: si trasferisce un intero blocco non appena il DMA controlla il bus, e solo alla fine di ciò il DMA invia alla CPU un segnale di interruzione per dirgli che ha finito tutto il trasferimeto, e 
+ quindi per dire alla CPU che può riusare il bus.
+ -ON DEMAND: non simulabile in Asim, ed è simile a quella blocco, ma il trasferimento del blocco continua fino a quando la linea di richiesta è attiva. Praticamente il trasferimento può essere
+  interrotto da parte del processore, e poi può riprendere da dovesi era fermato.
+ -CASCADE, legare in cascata più DMA tra loro (come il PIC), così da avere più di 4 dispositivi.
+
+Vediamo l'architettura semplificata di ASIM: per ogni caale ho
+-registr di modo
+-2 registri indirizzi per indirizzo base e corrente
+-2 contatori per contatori base e corrente
+-flag di richiesta per attivare le interruzioni e di mascheramento per le priorità
+-segnali per richiedere da parte di un dispositivo un bus, cioè le coppie request e ack
+-4 segnali per inteffacciarsi con le memoria
+-clock
+-linea di interruzione EOP per il processore bidirezionale per indicare la fine della trasmissione: è bidirezionale perchè non solo il DMA dice al processore che ha finito, ma la CPU può anche stoppare 
+ il DMA durante il trasferimento
+-le due linee per il protocollo per il bus
+
+Vediamo il protocollo difunzionamento.
+IL DMA deve richiedere quindi il bus al processore (o più in generale al bus master) con il segnale di bus request; appena ricevuto il bus grant(il premsesso), il DMA mette il l'indirizzo base sul bus e avvisa 
+il dispositivo con un ack, abilita quindi IORead e MemoryWrite così il device mette direttamente  propri dati sul bus per scrivere in memoria e disabilita la richiesta; quando poi la memoria scrive i
+dati, si incrementa l'indirizzo base per puntare all'indirizzo successivo e si decrementa il contatore di byte. IL processo continua fino a quando il contatore non diventa 0, e il DMA invia un'interruzione per
+dire che ha completato il rasferimento. Trasferire dalla memoria al devuce è uguale, solo che ora abilito i segnali MemoryRead e IOWrite.
+
+Il motorola 68000 essendo memory mapped non ha tutti questi segnali usa i segnali BUS REQUEST, BUS GRANT e BUS GRANT ACK, e il dispositivo può funzionare in 2 modi:
+-SLAVE quando accedo ai sui registri interni per inizializzarlo, e quindi può essere visto come unna periferica normale, quindi ci accedo con un indirizzo di 16 bit dove i primi 12 mi dicono l'indirizzo della 
+ periferica (DMA), gli altri 4 il registro
+-MASTER: devo diconnettere le linee di indirizzamento del processore per abilitare il DMA a scrivere le linee di indirizzo sul bus. Il DMA funziona quindi da generatori di indirizzi: ha un segnale AEN di 
+ abilitazione che usa per disaibilitare il latch di indirizzi proveniente dal processore  e costrusice i 16 bit di indirizzo in modo tale che: gli 8 bit meno significativi sono messi sulle linee di indirizzo del device 
+ A0-A7, gli 8 più significativi invece vengono mandati al registro dati, e mediante un segnale di ADDRESS STROBE viene abilitata la scrittura sull'adress register. I 4 bit di completamneto dell'indirizzo li devo
+ programmare a priori (non sono generati dal  DMA), e non possono essere modificati durate il trasferimento: essi genera i segnali di lettura e scrittura che verranno poi tradotti con un circuito di  
+ decodifica per avere compatibilità con il device o CPU.  Quidni i 16 bit per accedere alla memoria li costrusico con i bit delle linee indirizzo e lnee dati.
+ POsso fare un trasferimento tra memoria a memoria usando 2 cilci e 2 canali: nel primo canale inidico la memoria sorgente nell'altro la destinazione, e il dato lo prendo dalla meoria, lo metto in un 
+ registro temporaneo  del DMA, e poi lo trasferisco nell'altra memoria.
+
+Vediamo ora alcuni bit interessanti per determinati registri.
+-Nel registro di modo uso il bit 5 per dire se voglio fare conteggio con incremento e decremento dopo ogni trasferimento, il bit 4 per uatonizializzaione,e i bit 2 e 3 per dire se voglio fare read o write.
+-Nel control register i bit 0-1 si usano per fare il trasferimenro mem-mem, mem-device, il bit2 abilta il controller, il bit3 specifica la tempificazione, il bit4 il tipo di prorità tra i canali
+-Nel registro di sato i 4 bit più significativi servono per vedere se ci sono richieste dai 4 canali, i 4 meno significativi per verificare se i 4 contatori hanno terminato.
+-I flag di richiesta(richiesta dal DMA uguale alla richiesta del DMA da parte di un device) e un flag di maschera che disabilita i canali.

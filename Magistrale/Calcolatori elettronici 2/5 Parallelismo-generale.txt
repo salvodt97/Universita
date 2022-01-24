@@ -1,0 +1,49 @@
+Vdremo come sfruttare il parallelismo per migliorare le prestazioni di un sistema e ottimizzare l'uso delle risorse. Abbiamo visto in particolare che il processore, nelle varie fasi del suo lavoro, usa tutte 
+o una parte delle risorse che ha a disposizione: ciò impatta sia sulla tempificazione(e quindi ampiezza del clock), sia sull'alimentazione. In realtà una miglioria la abbiamo già introdotta nel Mic-2 andando
+a replicare delle unità funzionale(come la fetch unit). Per migliorare le prestazioni ci sono diversi modi:
+  -architetture che hanno un solo processore e replicano delle unità funzionali interne creando una o più pipeline, o che permettono di operare contemporaneamente su più dati e quindi parliamo
+   di PARALLELISMO INTERNO
+  -architetture che replicano proprio il processore, e si parla di multiprocessore e multicomputer, PARALLELISMO ESTERNO
+
+Vediamo ora i sistemi monoprocessore.
+In questo caso ho più unità funzionali che usano le stesse risorse del processore(ho una sola ALU, un solo IR ecc...), e quindi le unità che devo parallelizzare le devo tempificare opportunamente, gestire, così
+che non si danno fastidio. Si introduce un quindi il concetto di pipeline, dove però si suppone che ogni unità funzionale riesce a lavorare indipendentemente dalle altre e senza generare alcun conflitto. Quindi
+un unità arivato il suo tempo lavora, prendendo dei dati di input senza sapere effettivamente da chi arriva, ma tali di input devono stare in ingresso al momento giusto, e quindi devo sincronizzare le varie 
+unità cosicchè possano lavorare. Noi vedremo le architetture RISC  e SISC, che si differenziano per codici operativi, modalità dinindirizzamento e operandi del processore.
+Su un monoprocessore, per migliorare il tutto, potrei aumentare la frequenza di clock ma ho dei limiti; allora porìtrei replicare dell'hardware usando per esempio più registr TEMP oppure replicando i registri
+MAR e MDR.
+Ni vediamo la tecnica pipeline, che permette di realizzare del microparallelismo tra le fasi di esecuzione di un istruzione nel modello Von Neumann e Turing; ricordo che le fasi sono 5:
+ -Fetch(prelievo)
+ -Decodifica dell'istruzione
+ -Esecuzione
+ -Memorizzazione del risultato
+ -Write back
+Vorrei sequenzializzare e dividere le parti che fanno le diverse fasi, poichè per esempio nella fase di fetch lavora solo la parte che fa fetch, ma le altre parti non fanno niente, e se le unità eaborative che fanno
+tali fasi fossero idnipendente, le potrei far lavoarare contemporaneamente; per esempio se sto facendo la decodifica della prima istruzione, potrei fare nel frattempo il pre-fetching della prima istruzione e 
+quindi mandare in esecuzione tante istruzioni in parallelo quanto è la profondità della pipeline, i livelli, ovvero quante volte ho replicato le varie unità elaborative. Riesco a diminuire il tempo di esecuzione di un 
+intero programma, anche se il tempo di esecuzione di una sola istruzione è la stessa, cioè non cmbia il tempo di attraversaento delle varie unità elbaorative. Invece il tempo di esecuzione del programma viene 
+ridotto di N volte (con N profondità della pipe) e parlo quindi di SPEED-UP pari ad N, poichè la velocità aumenta di N.
+Ci sono dei limiti: se ho un istruzionde di salto, io capisco che sto saltando solo nella fase di decodifica, ma il fetch ha già prelevato l'istruzione che sta dopo, sbaglaindo, poichè dovevo prelevare in realtà l'istruzione
+corrispondente al salto. Ci sono anche problemi di conflitti sia sui dati che sulle risorse(ALU, registri...), e ci ono problemi anche nella gestione delle interruzioni.
+---------------ESEMPIO-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Supponiamo di fare queste 2 istruzioni:
+1)  R1=R2+R3
+2)  R4=R1+5
+Vediamo che succede se eseguo queste 2 istruzioni in una pipeline: nella prima istruzione, nella fase di esecuzione metto la somma in realtà in un registro temp; e nella fase di write back chescrivo il risultato 
+della somma  veramente in R1 conil bus.Ho 5 tempi:
+ -al tempo 1 faccio la fetch della prima istruzione
+-al tempo 2 decodifico la prima istruzione e faccio la fetch della seconda
+-al tempo 3 faccio la somma della prima istruzione che salvo in un temp, e decodifico la seconda sitruzione
+-al tempo 4, la prima istruzione scrive in R1 il risultato della somma, menter la seconda istruzione viene eseguta: il problema è che quando esegue utilizza come R1 il valore che aveva prelevato prima, che
+ la prima istruzione non aveva ancora cambiato, cosa che on volevo: si parla di DATA HAZARD del tipo READ AFTER WRITE, ovvero un istruzione legge un valore che l'istruzione di prima non ha avuto tempo
+ di scrivere, e quindi le 2 istruzioni hanno acceduto alla stessa risorsa in tepi troppo vicini.
+
+Un caso simile ce l'ho anche per l'istruzione di salto, per esempio salto condizionato:
+ADD D0,D1
+BNE Loop
+In qesto caso per vedere la condizione di BNE si vede come il flag Z settato nella somma di prima, ma la seconda pipe già sta prelevando l'istruzione successiva pochè il flag z viene settato solo nella fase di
+esecuzione e quindi sbaglio. Per risolvere potrei usare un approccio conservativo, ovvero blocco la pipe, la mando in stallo, cioè la seconda istruzione la eseguo solo dopo che il valore che devo usare è stato 
+realmente settato, ma ciò diminuisce lo speed-up. E' sempre meglio non fermare la pipe: per aspettare allora si inseriscono dei codici operativi, detti NOP, dove la pipe sta lavorando, cioè è in esecuzione, 
+ma in realtà non produce alcun risultato, e quindi praticamente non sta facendo niente, almeno non l'ho fermata.
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+

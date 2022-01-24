@@ -1,0 +1,37 @@
+Vedremo ora le architetture superscalari, con più pipeline, e come gestisono le collisioni. Ciò ha sempre lo scopo di aumentare il troughpouth di un processore; finora lo abbiamo fatto replicando
+le unità funzionali di un processore ottenendo una pipeline con una certa profondità, aumetando lo speed-up. In ogni caso potrei aumentare le prestazioni usando più pipelne che lavorano in 
+contemporanea, a patto di mantenere comunque la coerenzadi esecuzione delle istruzioni, di tenere lo stato corretto e di evitare collisioni.
+L'idea è avere 2 pipe che lavorano in maniera sequenziale e disgiunte tra loro, ma ovviamente cìè un problema: in realtà, in alcune ISA-level, non è necessario che le varie pipe siano sequenziali;
+inoltre non è detto che devono essere completamente disgiunte, poichè per operazioni complesse potrei avere molti sottostadi in comune che mi permttono ottimizzazione. Questo perchè avere
+pipe con risorse e registri tutte separati, e gestirle tutte, costa molto. Vediamo quindi se conviene avere delle unità funzionali, delle varie pipe, in comune.
+Ho comunque nuovi conflitti:
+ -La memoria a cui accedono le pipe è sempre la stessa, e ciò potrebbe essere un collo di bottiglia sia in fase di lettura e scrittura
+ -Se le pipe condividono delle fasi, delle risorse hardware, ci potrebbe essere conflitto tra le diverse pipe che devo gestire per evitare lo stallo. Un esempio accade nel Pentium con 2 pipe: una U
+  che non veniva usata molto, e una V che usavo spesso. In particolare la V veniva eseguita per operaioni complesse solo se non c'erano conflitti con la pipe U. E quindi in realtà usavo una sola
+  pipe alla volta.
+
+Abbiamo visto cosa deve fare un ALU, per esempio, per una moltiplicazione tra numeri in virgola mobile, che è molto più semplice in quanto non richiede normalizzazione degli operandi. La faccio 
+i 4 passi: 1) sommo gli esponenti; 2) moltiplico le mantisse; 3) normalizzo il risultato; 4) faccio un troncamento se serve. Quindi ho 4 passi che posso mandare in parallelo a 4 pipe diverse. La somma
+invece sarebbe molto più complessa: avrà 7 stadi differenti(7 diverse operazioni), e alcune di tale operazioni presentano dei loop, dei feedback: in particolare gli shift richiedono dei loop, perchè
+devo fare tanti shift quanta è la differenza tra gli esponenti.
+L'idea è quindi far si che io abbia una sola ALU, ma con delle sottofasi in comune. Comprendo quindi sia gli stadi della somma, sia quelli della moltiplicazione(solo 4), e a seconda di quale operazione
+eseguo vado in uno stadio o nell'altro.
+Avrei quindi 2 pipe: una U che fa operazioni tra interi, e una V che opera con floating point. In particolare nella pipe V, l'ALU lavora solo dopo fetch ed execute, a partire dal terzo stadio dove ho una
+diramazione, ovvero dopo la terza fase sopra ho, per esempio, gli stadi della moltiplicazione, sotto gli stadi della somma.
+IL problema è che se faccio una ADD e una MUL in ingresso alla V una dopo l'altra, anche se non ho collisioni tra gli operandi, potrei avere collisioni tra gli stadi hardware.
+Costruisco allora il VETTORE DELLE COLLISIONI che si costruisce a partire dalla MASCHERA DELLE COLLISIONI. Metto in una tabella, nelle le righe, i vari blocchi, stadi hardware, che uso, e nelle colonne
+degli istanti temporanei. Metto poi una x laddove uso un blocco, quindi una risorsa, in un certo istante temporanee. Queste tabelle sono le maschere, e per vedere se ci sono conflitti sui blocchi sovrappongo
+le tabelle. Se le 2 tabelle presentano qualche x nella stessa posizione, significa che c'è collisione e quindi shifto a detsra, si una posizione per volta, una maschera per vedere se ho collisioni. Shiftare a 
+sinistra significa ritardare di un microciclo, cioè di un'istante, tra l'esecuzio e della prima istruzione e della seconda. Dalla sovrapposizione costruisco poi il vettore delle coliisioni: in tale vettore, ad ogni
+shift, metto un 1 se ho collisione, uno 0 se non c'è: quindi nel vettore ho tanti bit quanti sono gli shift.
+Il proble aè che però avrei tante vettori delle collisioni quante sono le possibili combinazioni di esecuzione delle esecuzioni(se eseguo una MUL e una ADD, ho bisggno di un vettore per ADD->ADD, uno per 
+ADD->MUL e così via...)Quindi, non solo non vale la prorpietà commutatva, a seconda dell'ordine delle operazioni che eseguo cambio il ritardo, ma inoltre ad ogni operazione che eseguo io non dovrei 
+considerare solo il vettore delle collisioni corrente, ma dovri considerare anche il vettore precedente. In particolare si farà una or bit a bit tra i 2 vettori, e solo se tale or è 0, significa che non ho collisione 
+per quella operazione; quindi posso caricare l'istruzione da eseguire; altrimenti non la posso caricare perchè ho collisioni, quindi dovrei eseguire uno shift.
+Ciò viene fatto in hardware dall'unità di pre-fetching che si trova prima della pipe.
+D ciò capiamo se è meglio un' architettura RISC o CISC: avere una cisc significa avere istruzioni ISA più complesse, ma quindi anche maggiore possibilità di collisione e la necessità di fare più controlli: ciò
+rallenta molto l'esecuzione delle istruzioni. Ovviamente però una RISC ha pi istruzioni semplici, quindi devo eseguire più istruzioni, e ciò comporta un esecuzione della fase di fetch più volte; i risc migliorano
+ciò aumentando la dimensione dela cache.
+L'unità di pre-fetch quindi non alimenta proprio la pipe, ovvero non manda in ingresso un operazione, se nel vettore delle collisioni c'è un 1, Vere un 1 sigbifica shiftare a destra una maschera, ovvero ritardare
+di un'istante(ciclo di clock) l'istruzione: quindi in un colpo di clock non mando niente nella pipe, mando l'istruzione nel clock successivo(se non c'è un altro 1).
+

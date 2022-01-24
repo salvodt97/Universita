@@ -1,0 +1,59 @@
+00000000                                     1  *************************************************************************************************
+00000000                                     2  *Il sistema S2 riceve dei byte tramite una PIA
+00000000                                     3  *Questo driver serve solo a testare il funzionamento del trasferimento mem-dev del DMA 
+00000000                                     4  *e quindi si occupa solo dell'inizializzazione della PIA
+00000000                                     5  *************************************************************************************************
+00000000                                     6  
+00000000                                     7  
+00000000                                     8  ***********************************************************
+00000000                                     9  ***********AREA MAIN*********************************	
+00008200                                    10  	ORG    $8200
+00008200                                    11  
+00008200  =00002004                         12  PIADA	EQU    $2004	;indirizzo di PIA-A dato, usato in input
+00008200  =00002005                         13  PIACA	EQU    $2005	;indirizzo di PIA-A stato/controllo
+00008200                                    14  
+00008200  4EB9 00008214                     15  MAIN	JSR	DVAIN	;inizializza PIA porto A
+00008206                                    16  				
+00008206  40C0                              17  	MOVE.W	SR,D0	;legge il registro di stato
+00008208  0240 D8FF                         18  	ANDI.W	#$D8FF,D0 ;maschera per reg stato (stato utente, int abilitati)
+0000820C  46C0                              19  	MOVE.W	D0,SR	;pone liv int a 000
+0000820E                                    20  
+0000820E                                    21  	
+0000820E  4EF9 0000820E                     22  LOOP  	JMP LOOP	;ciclo caldo dove il processore attende interrupt		
+00008214                                    23  	
+00008214                                    24  
+00008214                                    25  *********************************************************************************************************
+00008214                                    26  *********************************************************************************************************
+00008214                                    27  *INIZIALIZZAZIONE DELLA PIA: PORTO A	        	
+00008214                                    28  *   CRA |0 |0 |1 0 0 |1 |0 1|
+00008214                                    29  *	            |        |   |____Controllo CA1: interruzioni abilitate su IRQA, CA1 sensibile a fronte 1->0
+00008214                                    30  *                      |         |	
+00008214                                    31  *		|        |________Accesso a DRA: il prossimo accesso ad indirizzo pari è per PRA
+00008214                                    32  *	            |_______________Controllo CA2: 1=>linea di uscita, con gli altri due bit a 00 diventa alto sul fronte
+00008214                                    33  *						             attivo di CA1 e si riabbassa a seguito di una lettura su PRA
+00008214                                    34  *							  0=>linea di ingresso, si comporta come CA1 (CRA3 come CRA0,
+00008214                                    35  *											    CRA4 come CRA1, IRQA2 come IRQA1)
+00008214                                    36  *
+00008214                                    37  *	DRA=0 => PORTO A PORTO DI INGRESSO
+00008214                                    38  *
+00008214                                    39  ***********************************************************************************************************
+00008214  11FC 0000 2005                    40  DVAIN	MOVE.B	#0,PIACA		;mette 0 nel registro controllo così al prossimo accesso a PIADA (indirizzo pari)
+0000821A                                    41  *								;selezionerà il registro direzione del porto A
+0000821A  11FC 0000 2004                    42  	MOVE.B	#$00,PIADA		    ;accede a DRA e pone DRA=0 : le linee di A sono linee di input	
+00008220  11FC 0025 2005                    43  	MOVE.B	#%00100101,PIACA  	;abilito le interruzioni	
+00008226  4E75                              44      RTS
+00008228                                    45  
+00008228                                    46  	
+00008228                                    47  ********************************************************************************************************
+00008500                                    48  	ORG $8500
+00008500                                    49  
+00008500  1A38 2004                         50  int3	MOVE.B	PIADA,D5
+00008504  4E73                              51  	RTE	
+00008506                                    52  
+00008506                                    53  		
+00008506                                    54  
+00008506                                    55  
+00008506                                    56  	END	MAIN
+
+No errors detected
+No warnings generated

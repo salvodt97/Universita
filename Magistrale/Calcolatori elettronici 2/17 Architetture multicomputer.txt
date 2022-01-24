@@ -1,0 +1,87 @@
+Vedremo ora come interconettiamo architetture multicomputer e le varie problematiche che ne derivano e che fanno diminuire lo spedd-up. Abbiamo già visto come questi sistemi sono
+autonomi, totalmente disaccoppiati, e si scambiano messagi attravesro un'infrastruttura dedicata, che possono essere sia bus specifici che vere e proprie reti. Chi comunicano sono i PE, 
+ovvero processori di elaborazioni che hanno ciascuna una propria architettura specifica con memoria locale.
+Da un lato ho poi il GRAFO DI SISTEMA, dall'altro il GRAFO DEL PROBLEMA DI ALLOCAZIONE OTTIMAMALE: nel grafo di sistema rappresento il mio sistema con dei nodi semplicemente, con allocazione
+ottimale vedo invece come i processori sono legati per poter ottimizzare tempi di elaborazione e interconnessione.. E' quindi su quest'ultimo grafo che vediamo come connettere i dispositivi, con una
+struttura ad anello, completamente connessi ecc... per avere in generale uno speed-up migliore.
+Innanzitutto non c'è simmetria per la comunicazione tra i vari i nodi, che possono essere eterogenee sia per prestazioni, sia per tipo di comunicazione o per parti diversi. Quindi non ho bus
+o memorie comuni: introduciamo il DIAMETRO che rappresenta la distanza massima tra 2 nodi di elaborazione (processori): praticamente esso è il numero di nodi intermedi massimo tra 2
+nodi agli estremi.
+In ogni caso l'obbiettivo è ridurre il costo di iterazione, che è difficile ridurlo in quanto non ho tutti i dispositivi completamente connessi, e c'è anche il problema di allocazione dei processi
+Le soluzioni che abbiamo sono legati a come riesco a costruire le interconnessioni e quante risorse ho a disposizione, e ci sono 2 soluzioni che hanno lo scopo di rendere i due grafi, quello
+dell'architettura e quello del problema, uguali:
+-RETI DIRETTE: definiscono una topologia fissa in cui si cerca di rendere i 2 grafi uguali con formule analitiche. Sono specifiche per ogni problema ma molto costose.
+-RETI INDIRETTE: sono meno costose, abbastanza generali, ma meno ottimizzate e introducono overead e latenze. Praticamente fanno connettere tutti i nodi a tutti
+
+Vediamo i parametri per caratterizzare la rete:
+-lunghezza media di un messaggio inviato da una rete: i messaggi occupano sia la banda che i nodi di elaborazione
+-tasso medio di spedizione(frequenza con cui scambio i messaggi)
+-Latenza, ovvero il tempo medio per consegnare un messaggio nella rete(lo voglio minimizzzare)
+-troughpouth, ovvero il massiomo tasso di messaggi che riesco a inviare. lo voglio massimizzare.
+
+La TOPOLOGIA è un grafo di interconnessione rappresentato da nodi(che nodi di elaborazioni, processori, ma anche nodi per la comunicazione, come i routher), e canali fisici che connettono
+tra loro i vari nodi: se ho N nodi e vpglio connetterli tutti tra loro, avrei NxN canali fisici, ma di solito ne ho meno. 
+Devo poi capire come regolare il traffico della rete, per esempio gestire quando 2 messaggi voglionopassare sullo steso canale contemporaneamente: si parla di FLOW CONTROL, dove si
+cercano di arbitrare i messaggi.
+Devo poi stabilire le tecniche di ROUTNIG, ovvero il percorso ottimale che un messaggio deve seguire dalla sua sorgente alla destinazione
+Questi 2 aspetti possono anche essere trattati via software e su architetture virtualizzate come il cloud.
+La rete può essere quindi:
+-DIRETTA, se tutti i nodi possono essere sia di elaborazione ce di comunicazione
+-INDIRETTA, se i nodi di processazione e nodi di comunicazione sono separati: i nodi di comunicazione si chiamano SWITCH che permettono di far passare messaggi tra 2 nodi di elaborazione.
+Inoltre:
+-STATICA: tutti i nodi sono connessi da link diretti stabiliti all'atto della costruzione della rete: ho quindi un routing e una topologia fissata a priori. Ovviamente lo posso calcolare quando ho una 
+ classe di problemi preassegnate. Esse sono per lo più dirette.
+-DINAMICHE: i nodi di processamento sono legati da switch e si occupano anche di stabilire dinamicamente il percorso dei messaggi, ovvero si occupano di fare routnig. Sono applicabili a diverse
+ classi di problemi e sono per lo più indirette.
+
+Vediamo ora diversi tipi di reti:
+-Le reti K-ARY N-CUBE: sono reti diretti e con K si indica il numero di nodi lungo una direzione, mentre con N il numero di dimensioni. Per esempio una rete a forma di matrice è un 2-cube, e k
+ mi indica il numero di nodi su cuascuno dei 2 vettori della matrice. Posso anche definire con tali parametri un indirizzamento di in unodo, come in uno spazio n-dimensionale (nella matrice potrei 
+ indirizzare il primo nodo con le coordinate (0,0)).
+-Reti K-ARY N-FLY: sono reti indirette, dove N è il numero di stadi della rete(nodi intermedi di comunicazione), K è il numero di nodi di elaborazione connessi ad unico nodo di comunicazione itermedio. 
+ Il valore K è anche detto RADICE.
+
+Le reti indirette vengono create da awitch che implementano un sistema dinamico di interconnessione e fa connettere tutti i nodi. Supponiamo di avere N nodi che vogliono mandare N messaggi
+su un unico canale, e dopo quell'unico canale ho N nodi: n questo caso potrei fare la rete indiretta con un MUX-DEMUX, ottenendo così una rete a uno stadio. POsso fare però anche reti a 
+N stadi con gli switch. Vediamo ora gli switch.
+
+SWITCH
+Io so che per far comunicare un nodo sorgente e un nodo destinazione, mi servono gli indirizzi sorgenti e comunicazione per far passar il messaggio sull'unico canale della rete mux-demux. Il problema
+è che posso fare sono N/2 interconnesioni, e dovrei implemntare N di questi mux-demux per far parlare tutti i nodi con tutti i nodi contemporanemate. Cioè il problema è che solo 2 nodi alla volta possono
+comunicare, e non ho una comunicazione parallela almenochè non replico questi mux-demux N volte. E' poco fattibile
+Più interessanti sono le reti a N stadi che usano gli swich: essi sono dispositivi con 2 ingressi e 2 uscite, e per far comuncare N nodi tra di loro bastano (log in base 2 di N) stadi intermedi. Quindi da un 
+lato implemnetano la logica di comunicazione. Un esempio è il PERFETCT SHUFFLE: se per esempio ho 8 nodi, ciascuno lo posso indirizzare con 3 bit, di cui il primo bit pilota l'indirizzo dello switch del
+primo stadio, il secondo bit pilota il secondo stadio e così via..Ho quindi una logica distribuita, non centralizzata.
+IL perfect shuffle fa un mischiamento perfetto, che fa si che preso per esemopio prendo un mazzo di carte e lo divido in 2 parti, dopo (log_2diN) mischiamenti perfetti ho il mazzo iniziale. Il mischiamento
+perfetto sarebbe: Supponiamo di avere 8 carte 1-2-3-4-5-6-7-8, e li divido in 2 parti:
+-Inizio:		1-2-3-4
+		5-6-7-8
+
+-primo passo	1-5-2-6
+		3-7-4-8
+
+-secondo passo	1-3-5-7
+		2-4-6-8
+
+-terzo passo	1-2-3-4
+		5-6-7-8
+
+Vedo quindi dall'esempio che date 8 carte, dopo 3 passi (log_2di8) riottengo il caso niziale
+Riportandolo al caso di 8 nodi, i 3 passi sarebbero stadi intermedi(3 stadi intermedi) in cui in ciascuni stadio ho 4 switch che mi colega 2 nodi(per esempio al primo passo, il primo switch mi connette 1-5,
+ 2-6, 3-7, 4-8) Inoltre cascuno switch ha 2 uscite, una sopora e una sotto: vado all'uuscita di sotto se il bit di indirizzo è 1, vado a quello di sopra se il bit è 0. Il bit che uso per pilotare è proprio un bit 
+dell'indirizzo  della destinazione.
+
+Ci sono comunque delle problematiche: io ho molti stadi intermedi che potrebbero andare in parallelo in teoria, ma potrei avere un conflitto se 2 flussi diversi(2 messaggi diversi) vpgliono passare sullo 
+steso switch. Le posso gestire con 2 tecniche, entrambe basate sul fatto che su uno switch posso avere un buffer i cui salvare un messaggio:
+-WORMHOLE: si negozia il percorso all'inizio, ovvero decido il percorso da fare da un mittente ad una destinazione lo decido dall'inizio, così che tale canale poi sia libero per la comunicazione. Come tecnica è più
+ veloce, in quanto si decide l'instradamento all'inizio e ogni nodo intermedio non deve instradare, ma per reti troppo connesse potrebbero darmi troppe connessioni.
+-STORE AND FORMARD: ciò che si negozia è la tratta, ovvero non si decide l'intero percorso, ma solo una tratta tra 2 nodi intermedi e si decide ogni volta per ogni percorso a seconda e lo switch di dopo è
+ libero o meno. Il tempo di trasferimento è più lento, poichè un pacchetto deve essere acquidito prima da un nodo, pi da un altro e così via..., ma praticamente sono costretto ad usarlo se le reti sono molto 
+ connesse tra loro
+
+Ci sono 4 tecnche per fare i conflitti:
+-BLOCCANTE: il nodo che genera conflitto blocca l'intero percorso fino alla risoluzione del problema
+-DISTRUGGENTE: il nodo che genera conflitto elimina tutti i messagi che gli arrivano
+-RE-INSTRADAMENTO: Si re-instradano i messaggio lungo un percorso alternativo
+-CUT-TROUGH: che prevede di usare store and forwall nel whormole in caso di conflitti, ovvero il nodo che genera conflitti memorizza tutti i messaggi che gl arrivano fino a quando il problema non è
+ risolto. Oviamente ci sono problemi in quanto non posso memorizzare dati infiniti.

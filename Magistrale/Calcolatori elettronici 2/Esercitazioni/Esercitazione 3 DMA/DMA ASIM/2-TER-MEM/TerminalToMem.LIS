@@ -1,0 +1,59 @@
+00000000                                     1  * Realizza il trasferimento DEV-MEM dal buffer di input di un terminale ad un blocco di memoria attraverso un DMA.
+00000000                                     2  * Per eseguire il driver, è necessario procedere all'esecuzione delle istruzioni che precedono quella di set del request flag,
+00000000                                     3  * scrivere una stringa al terminale ed inviare successivamente le richiesta via software.
+00000000                                     4  * Alla fine del trasferimento, segnalata tramite ISR, 
+00000000                                     5  * viene resettato il terminale.
+00000000                                     6  *
+00000000                                     7  
+00000000                                     8  * inizializzazione costanti
+00000000  =00002000                          9  ter	EQU	$2000
+00000000  =00002010                         10  dma	EQU	$2010
+00000000  =00000000                         11  caddr0	EQU	0
+00000000  =00000001                         12  ccount0	EQU	1
+00000000  =00000008                         13  cntrl	EQU	8
+00000000  =00000009                         14  request	EQU	9
+00000000  =0000000B                         15  mode0	EQU	11
+00000000  =00000005                         16  nbyte	EQU	5
+00000000                                    17  *
+00000000                                    18  
+00000000                                    19  * programma principale
+00000000                                    20  
+00008200                                    21  	ORG	$8200
+00008200                                    22  
+00008200  307C 2000                         23  start	MOVE.W	#ter,A0		
+00008204  117C 003C 0001                    24  	MOVE.B	#$3C,1(A0)	 	Abilita tastiera ,eco e interruzioni; cancella
+0000820A                                    25  *							video e buffer tastiera
+0000820A                                    26  							
+0000820A  327C 2010                         27  	MOVE.W	#dma,A1			
+0000820E  137C 0005 0001                    28  	MOVE.B	#nbyte,ccount0(A1)	Carica il numero di byte da spostare nel registro conteggio
+00008214  337C 8500 0000                    29  	MOVE.W	#message,caddr0(A1) 	Carica l'indirizzo di partenza nel registro indirizzo
+0000821A                                    30  	
+0000821A  137C 0008 000B                    31  	MOVE.B	#$08,mode0(A1)		Setta il trasferimento da device a memoria,
+00008220                                    32  *							no autoinizializzazione dei registri address e count dopo 
+00008220                                    33  *							    trasferimento, incremento del registro indirizzo,
+00008220                                    34  *							    trasferimento in modalità SINGLE
+00008220                                    35  	
+00008220  137C 0080 0008                    36  	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+00008226  137C 0008 0009                    37  	MOVE.B	#$08,request(A1)	Accede al flag RF0 e lo setta a 1, per avviare il DMA via SW
+0000822C                                    38  *					
+0000822C  4EF9 0000822C                     39  loop	JMP	loop
+00008232                                    40  *
+00008232                                    41  *
+00008232                                    42  ******* Interruzione che si attiva alla fine del trasferimento *****
+00008700                                    43  	ORG	$8700
+00008700                                    44  
+00008700  2F08                              45  int7	MOVE.L	A0,-(A7)	Salva nel SSP i registri utilizzati. 
+00008702  307C 2000                         46  	MOVE.W	#ter,A0			
+00008706  117C 000C 0001                    47  	MOVE.B	#$0C,1(A0)		Reinizializza il terminale.
+0000870C  205F                              48  	MOVE.L	(A7)+,A0		Ripristina i registri utilizzati.
+0000870E  4E73                              49  	RTE	
+00008710                                    50  *
+00008710                                    51  
+00008710                                    52  ****** Area Dati ***************
+00008500                                    53  	ORG	$8500
+00008500                                    54  message	DS.B	5
+00008505                                    55    			
+00008505                                    56  	END	start
+
+No errors detected
+No warnings generated

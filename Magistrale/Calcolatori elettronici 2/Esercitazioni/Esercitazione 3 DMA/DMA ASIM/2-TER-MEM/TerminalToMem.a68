@@ -1,0 +1,67 @@
+* Realizza il trasferimento DEV-MEM dal buffer di input di un terminale ad un blocco di memoria attraverso un DMA.
+* Per eseguire il driver, è necessario procedere all'esecuzione delle istruzioni che precedono quella di set del request flag,
+* scrivere una stringa al terminale ed inviare successivamente le richiesta via software.
+* Alla fine del trasferimento, segnalata tramite ISR, 
+* viene resettato il terminale.
+*
+
+* inizializzazione costanti
+ter	EQU	$2000
+dma	EQU	$2010
+caddr0	EQU	0
+ccount0	EQU	1
+cntrl	EQU	8
+request	EQU	9
+mode0	EQU	11
+nbyte	EQU	5
+*
+
+* programma principale
+
+	ORG	$8200
+
+start	MOVE.W	#ter,A0		
+	MOVE.B	#$3C,1(A0)	 	Abilita tastiera ,eco e interruzioni; cancella
+*							video e buffer tastiera
+							
+	MOVE.W	#dma,A1			
+	MOVE.B	#nbyte,ccount0(A1)	Carica il numero di byte da spostare nel registro conteggio
+	MOVE.W	#message,caddr0(A1) 	Carica l'indirizzo di partenza nel registro indirizzo
+	
+	MOVE.B	#$08,mode0(A1)		Setta il trasferimento da device a memoria,
+*							no autoinizializzazione dei registri address e count dopo 
+*							    trasferimento, incremento del registro indirizzo,
+*							    trasferimento in modalità SINGLE
+	
+	MOVE.B	#$80,cntrl(A1)		Abilita il DMA controller
+	MOVE.B	#$08,request(A1)	Accede al flag RF0 e lo setta a 1, per avviare il DMA via SW
+*					
+loop	JMP	loop
+*
+*
+******* Interruzione che si attiva alla fine del trasferimento *****
+	ORG	$8700
+
+int7	MOVE.L	A0,-(A7)	Salva nel SSP i registri utilizzati. 
+	MOVE.W	#ter,A0			
+	MOVE.B	#$0C,1(A0)		Reinizializza il terminale.
+	MOVE.L	(A7)+,A0		Ripristina i registri utilizzati.
+	RTE	
+*
+
+****** Area Dati ***************
+	ORG	$8500
+message	DS.B	5
+  			
+	END	start
+
+
+
+
+
+
+
+
+
+
+

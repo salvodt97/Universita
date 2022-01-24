@@ -1,0 +1,195 @@
+00000000                                     1  *Definizioni costanti per il DMA
+00000000  =00002010                          2  dma			EQU 		$2010
+00000000  =00000000                          3  caddr0			EQU		0
+00000000  =00000002                          4  caddr1			EQU		2
+00000000  =00000003                          5  ccount1		EQU		3
+00000000  =00000008                          6  cntrl			EQU		8
+00000000  =0000000B                          7  mode			EQU		11
+00000000  =0000000D                          8  reset			EQU		13	
+00000000  =00000005                          9  nbyte			EQU		5
+00000000                                    10  
+00000000                                    11  
+00000000                                    12  ******************AREA DATI**************************************************************************************************************************************************************************************************************
+00008000                                    13  			ORG	$8000
+00008000                                    14  MSGRIC		DS.B		5						;Area di memoria riservata per il messaggio ricevuto dalla PIA
+00008006  0005                              15  DIM			DC.W		5
+00008008  00                                16  COUNT			DC.B		0
+0000800A  0064                              17  VAL			DC.W		100						;Valore per confrontare la somma dei numeri ricevuti
+0000800C                                    18  RIT			DS.W		1						;Valore di ritorno della funzione verifica
+0000800E  00                                19  FLAGVER		DC.B		0						;FLAGVER che mi dice se ho ricevuto 5 caratteri: se si allora faccio la verifica
+0000800F  00                                20  FLAGFINEINT		DC.B		0						;Metto questo flag a 1 per dire che la trasmissione è finita e disabilitare le interruzioni
+00008010                                    21  
+00008200                                    22  			ORG	$8200
+00008200                                    23  MSGDMA		DS.B		5						;Indirizzo della destinazione in cui il DMA deve salvare il messaggio che sta in MSGRIC
+00008205                                    24  
+00008205                                    25  
+00008205                                    26  *******************AREA MAIN***********************************************************************************************************************************************************************************************************************************00008205                                    27  ****
+00008500                                    28  	ORG	$8500
+00008500                                    29  *Della PIA il sistema S1 usa il porto A per ricevere, il porto B quindi non verrÃ  proprio utilizzato
+00008500  =00002004                         30  PIAPDRA		EQU		$2004						;Il PDRA si trova allo stesso indirizzo di DDRA, l'accesso viene disciplinato da CRA(2)
+00008500  =00002005                         31  PIACRA		EQU		$2005
+00008500                                    32  
+00008500                                    33  
+00008500  4EB9 0000859C                     34  MAIN			JSR		INITAIN
+00008506                                    35  
+00008506                                    36  *Configurazione registro di stato		
+00008506  40C0                              37  			MOVE.W	SR,D0						;Lettura registro di stato
+00008508  0240 D8FF                         38  			ANDI.W	#$D8FF,D0					;Configuro il registro di stato impostando la modalitÃ  utente, e ponendo la maschera delle interruzioni a 000 per accettarle tutte (su qualsiasi linea)
+0000850C  46C0                              39  			MOVE.W	D0,SR	
+0000850E                                    40  
+0000850E  4240                              41  			CLR 		D0						
+00008510  4241                              42  			CLR 		D1						;Registro di appoggio per guardare il valore di RIT
+00008512  4242                              43  			CLR 		D2						;Registro di appoggio per disabilitare le interruzioni alla fine
+00008514                                    44  			
+00008514  1039 0000800E                     45  CHECK			MOVE.B	FLAGVER,D0
+0000851A  B07C 0001                         46  			CMP		#1,D0						;Controllo se FLAGVER=1: se Ã¨ cosÃ¬, allora posso chiamare la funzione verifica
+0000851E  66F4                              47  			BNE 		CHECK
+00008520                                    48  
+00008520                                    49  *Da questo momento, visto che sono stati ricevuti tutti i numeri, posso avviare la funzione VERIFICA		
+00008520                                    50  																				
+00008520                                    51  *Caricamento sullo stack dei parametri da passare alla funzione
+00008520  55A7                              52  			SUBQ.L	#2,-(SP)				;Spazio sullo stack per il valore di ritorno
+00008522  3F39 0000800A                     53  			MOVE.W	VAL,-(SP)
+00008528  3F39 00008006                     54  			MOVE.W	DIM,-(SP)
+0000852E  2F3C 00008000                     55  			MOVE.L	#MSGRIC,-(SP)
+00008534                                    56  			
+00008534                                    57  *Definizione degli offset per le varibili sullo stack
+00008534  =00000008                         58  OFFMSG		EQU		8
+00008534  =0000000C                         59  OFFDIM		EQU		12
+00008534  =0000000E                         60  OFFVAL		EQU		14
+00008534  =00000010                         61  OFFRIT		EQU		16
+00008534                                    62  
+00008534  4EB9 00009500                     63  			JSR		VERIFICA
+0000853A  3A2F 0008                         64  			MOVE.W	8(SP),D5					;Valore di ritorno di VERIFICA, che mette in D5
+0000853E  5E8F                              65  			ADD.L		#7,SP						;Dealloco lo spazio sullo stack: utilizzo 2 istruzioni perchè come parametro dovrei dare 10 (devo deallocare 10 byte), ma con ADD il massimo immediato che posso dare è 7(su 3 bit)
+00008540  568F                              66  			ADD.L		#3,SP	
+00008542                                    67  
+00008542  33C5 0000800C                     68  			MOVE.W	D5,RIT						;Copio in memoria (RIS) il valore di ritorno
+00008548                                    69  			
+00008548  BA7C 0000                         70  			CMP 		#0,D5
+0000854C  6700 003C                         71  			BEQ 		DISINT						;Se RIT=0, significa che la VERIFICA ha falito il controllo, ovvero il DMA non deve fare niente: visto che il vettore da trasmettere era uno solo, si passa direttamente a disabilitare le interruzioni
+00008550                                    72  
+00008550                                    73  *Se invece RIT=1, significa che la somma dei numeri del vettore Ã¨ maggiore di 100, quindi il DMA deve copiare il dato in un'altra locazione di memoria
+00008550                                    74  *Inizializzazione DMA
+00008550  307C 2010                         75  			MOVE.W	#dma,A0					;Carico in A0 l'indirizzo base del DMA
+00008554  317C 8000 0000                    76  			MOVE.W	#MSGRIC,caddr0(A0)				;Carico l'indirizzo base del blocco sorgente nel registro indirizzo del canale 0
+0000855A  317C 8200 0002                    77  			MOVE.W	#MSGDMA,caddr1(A0)				;Carico l'indirizzo base del blocco destinazione nel registro indirizzo del canale 1
+00008560  117C 0005 0003                    78  			MOVE.B	#nbyte,ccount1(A0)				;Carico nel registro conteggio il numero di byte da spostare (5)
+00008566  117C 0090 000B                    79  			MOVE.B	#$90,mode(A0)				;Canale 0: setta il trasferimento memoria-interfaccia, autoinizializzazione dei registri addr e count dopo il trasferimento, incremento del registro indirizzo, trasferimento in modalitÃ  block
+0000856C  117C 0091 000B                    80  			MOVE.B	#$91,mode(A0)				;Canale 1: setta il trasferimento memoria-interfaccia, autoinizializzazione dei registri addr e count dopo il trasferimento, incremento del registro indirizzo, trasferimento in modalitÃ  block
+00008572                                    81  			
+00008572  117C 00A0 0008                    82  			MOVE.B 	#%10100000,cntrl(A0)				;Abilito la trasmissione memoria-memoria e abilita il DMA controller (la richiesta di bus al processore viene spedita automaticamente)
+00008578                                    83  			
+00008578                                    84  *Visto che il vettore da trasmettere Ã¨ 1, quando il DMA ha finito, si passa direttamente alla disabilitazione delle interruzioni, che faccio fare alla ISR INT7 del DMA		
+00008578  4241                              85  			CLR		D1
+0000857A  4242                              86  			CLR		D2
+0000857C  123C 0001                         87  			MOVE.B	#1,D1
+00008580  1439 0000800F                     88  ATTESA		MOVE.B	FLAGFINEINT,D2
+00008586  B242                              89  			CMP		D2,D1						;Se il DMA ha trasmesso, aspetto che finisca di trasmettere e che quindi ponga il flag a 1
+00008588  66F6                              90  			BNE		ATTESA
+0000858A                                    91  
+0000858A  11FC 0024 2005                    92  DISINT			MOVE.B	#%00100100,PIACRA				;Disanilito le interruzioni della PIA mettendo 0 in CRA(0)
+00008590  117C 0000 000D                    93  			MOVE.B	#0,reset(A0)					;Resetta il DMA
+00008596                                    94  
+00008596                                    95  
+00008596  4EF9 00008596                     96  LOOP		JMP			LOOP						;Attesa attiva per eventuali interruzioni
+0000859C                                    97  
+0000859C                                    98  *******************INIZIALIZZAZIONE PIA************************************************************************************************************************************************************************************************************************0000859C                                    99  ****
+0000859C  11FC 0000 2005                   100  INITAIN		MOVE.B	#$00,PIACRA					;E' importante sottolineare che con questa istruzione metto a 0 CRA(2), cosÃ¬ poi quando accedo al PIAPDRA in realtÃ  accedo al DDRA
+000085A2  11FC 0000 2004                   101  			MOVE.B	#$00,PIAPDRA					;Mettendo tutti 0 nel DDRA setto come input le linee PA
+000085A8  11FC 0025 2005                   102  			MOVE.B	#%00100101,PIACRA				;Seconda scrittura in CRA: abilito l'handshaking, abilito le interruzioni (per rivecevere) e metto a 1 il CRA(2) cosÃ¬ da accedere al PDRA ogni volta che accedo a PIAPDRA
+000085AE  4E75                             103  			RTS
+000085B0                                   104  ******************INTERRUZIONE IN RICEZIONE********************************************************************************************************************************************************************************************************************000085B0                                   105  ****
+00009000                                   106  		ORG	$9000
+00009000  2F09                             107  INT3			MOVE.L 	A1,-(A7)					;Salvataggio contesto software
+00009002  2F08                             108  			MOVE.L 	A0,-(A7)
+00009004  2F01                             109  			MOVE.L 	D1,-(A7)
+00009006  2F00                             110  			MOVE.L 	D0,-(A7)
+00009008                                   111  			
+00009008  227C 00002004                    112  			MOVEA.L	#PIAPDRA,A1
+0000900E  207C 00008000                    113  			MOVEA.L	#MSGRIC,A0
+00009014  1239 00008008                    114  			MOVE.B 	COUNT,D1
+0000901A  1039 0000800E                    115  			MOVE.B 	FLAGVER,D0
+00009020                                   116  			
+00009020  1191 1000                        117  			MOVE.B	(A1),(A0,D1)					;Acquisizione del numero ricevuto e salvataggio in memoria
+00009024                                   118  			
+00009024  5201                             119  			ADD.B 	#1,D1
+00009026  13C1 00008008                    120  			MOVE.B 	D1,COUNT
+0000902C  1239 00008008                    121  			MOVE.B 	COUNT,D1
+00009032                                   122  			
+00009032  B27C 0005                        123  			CMP		#5,D1						;Controllo se sono stati ricevuti tutti i numeri: se si, allora vado alla funzione VERIFICA
+00009036  6600 000C                        124  			BNE 	RIPRISTINO
+0000903A                                   125  			
+0000903A  103C 0001                        126  			MOVE.B	#1,D0						;Metto a 1 il FLAGVER che mi fa attivare la funzione verifica
+0000903E  13C0 0000800E                    127  			MOVE.B 	D0,FLAGVER
+00009044                                   128  
+00009044                                   129  			
+00009044  201F                             130  RIPRISTINO		MOVE.L	(A7)+,D0					;Ripristino del contesto software	
+00009046  221F                             131  			MOVE.L	(A7)+,D1	
+00009048  205F                             132  			MOVE.L	(A7)+,A0	
+0000904A  225F                             133  			MOVE.L	(A7)+,A1	
+0000904C                                   134  			
+0000904C  4E73                             135  			RTE
+0000904E                                   136  
+0000904E                                   137  			
+0000904E                                   138  ******************INTERRUZIONE ASSOCIATA A EOP DEL DMA*********************************************************************************************************************************************************************************************************0000904E                                   139  ****
+00009200                                   140  	ORG	$9200
+00009200                                   141  *Visto che trasmetto un solo vettore, una volta trasferito, le interruzioni possono essere disabilitate, e quindi pongo FLAGFINEINT pari a 1
+00009200  2F06                             142  INT7			MOVE.L 	D6,-(A7)
+00009202                                   143  
+00009202  1C3C 0001                        144  			MOVE.B	#1,D6
+00009206  13C6 0000800F                    145  			MOVE.B	D6,FLAGFINEINT
+0000920C                                   146  						
+0000920C  2C1F                             147  			MOVE.L	(A7)+,D6
+0000920E                                   148  		
+0000920E  4E73                             149  			RTE		
+00009210                                   150  
+00009210                                   151  ******************FUNZIONE VERIFICA****************************************************************************************************************************************************************************************************************************00009210                                   152  ****
+00009500                                   153  	ORG	$9500
+00009500  4E56 0000                        154  VERIFICA		LINK		A6,#0
+00009504                                   155  
+00009504  2F08                             156  			MOVE.L	A0,-(SP)
+00009506  2F00                             157  			MOVE.L	D0,-(SP)					;Salvataggio dei registri che andrò a sporcare
+00009508  2F01                             158  			MOVE.L	D1,-(SP)
+0000950A  2F02                             159  			MOVE.L	D2,-(SP)
+0000950C  2F03                             160  			MOVE.L	D3,-(SP)
+0000950E  2F04                             161  			MOVE.L	D4,-(SP)
+00009510  2F05                             162  			MOVE.L	D5,-(SP)
+00009512                                   163  
+00009512  343C 0000                        164  			MOVE.W	#0,D2						;Ne incemento il valore ogni volta che sommo un termine e lo confronto con DIM
+00009516  206E 0008                        165  			MOVE.L	OFFMSG(A6),A0
+0000951A  302E 000C                        166  			MOVE.W	OFFDIM(A6),D0
+0000951E  322E 000E                        167  			MOVE.W	OFFVAL(A6),D1
+00009522                                   168  
+00009522  B042                             169  CONF			CMP		D2,D0
+00009524  6700 000E                        170  			BEQ		CHECKVAL
+00009528  1618                             171  			MOVE.B	(A0)+,D3					;Inserisco il primo numero del messaggio in D3	
+0000952A  D803                             172  			ADD.B		D3,D4						;Faccio la somma
+0000952C  5202                             173  			ADD.B	 	#1,D2						;Incremento il contatore di elementi sommati
+0000952E  4EF9 00009522                    174  			JMP		CONF						;Ritorno sopra a prelevare il secondo numero
+00009534                                   175  
+00009534  3A3C 0000                        176  CHECKVAL		MOVE.W	#0,D5						;SarÃ  il valore di ritorno da inserire in RIT
+00009538  B841                             177  			CMP		D1,D4						;D4 contiene la somma degli elementi del vettore
+0000953A  6F00 0006                        178  			BLE		ESCI
+0000953E  3A3C 0001                        179  			MOVE.W	#1,D5						;Se D4>D1, ovvero la somma vettoriale Ã¨ maggiore di VAL, allora la funzione ritorna 1
+00009542                                   180  	
+00009542  3D45 0010                        181  ESCI			MOVE.W	D5,OFFRIT(A6)
+00009546                                   182  
+00009546  2A1F                             183  			MOVE.L	(SP)+,D5					;Ripristino dei valori precdenti
+00009548  281F                             184  			MOVE.L	(SP)+,D4
+0000954A  261F                             185  			MOVE.L	(SP)+,D3
+0000954C  241F                             186  			MOVE.L	(SP)+,D2
+0000954E  221F                             187  			MOVE.L	(SP)+,D1
+00009550  201F                             188  			MOVE.L	(SP)+,D0
+00009552  205F                             189  			MOVE.L	(SP)+,A0
+00009554                                   190  			
+00009554  4E5E                             191  			UNLK		A6
+00009556  4E75                             192  			RTS
+00009558                                   193  
+00009558                                   194  ***************************************************************************************************************************************************************************************************************************************************************00009558                                   195  ****
+00009558                                   196  
+00009558                                   197  
+00009558                                   198  			END		MAIN
+
+No errors detected
+No warnings generated

@@ -1,0 +1,243 @@
+A noi interessa come progettare la UC a partire daall'Instruction Set, quindi voglio capire come fa l'UC a fare quelle operazioni. Tale UC è una macchina sequenziale
+che prende in ingresso un'istruzine e produce in uscita segnali di controllo per abilitare registri in lettura/scrittura e pilotare l'ALU. 
+Abbiamo visto com'è fatto il processore del 68000: avremo un unico bus di sistema(si parla di architettura a bus singolo); questo bus è una risorsa condivisa per il quale devo gestire
+l'accesso, e a tale bus sono collegate diverse cose.
+ -DECODIFICADORE ISTRUZIONI, questa sarebbe la UC che genera i segnali di controllo
+ -INSTRUCTION REGISTER (IR) dal quale la UC prende la corrente istruzione e lo decodifica
+ -REGISTRI INTRNI A0-A7 D0-D7
+ -REGISTRI TEMPORANEI, che sono usati dalla macchina, mai dal programmatore esplicitamente: questi servono dall'alu, che visto che prende 2 operandi ma c'è un solo bus; un dato viene
+  mandato in un temporaneo, e l'altro dato direttamente all'alu
+ -MEMORY ADDRESS E MEMORY DATA(Memory buffer)
+ -PROGRAM COUNTER
+Ogni registro deve avere 2 differebti porte, porte TRISTATE, che lo collegano al bus poichè ogni registro viene acceduto sia in lettura che in scrittura; le porte tristate sono pilotate da 2 segnali
+di controllo, uno che abilta la scrittura del registro(che chiameremo come NomeRegistri in) e uno che abilita la letttura(NomeRegitro out). Per esempio nel programm counter parleremo di 
+PCin e PCout.
+Supponiamo di voler fare l'istruzione ADD (R3),R1, dove R£ è per fforza un registro indirizzi(A): i passi saranno
+ 1. fetch, ovvero prelevo l'istruzione
+ 2. Prelevo il primo operando(il cobìntenuto della locazione puntata da R3)
+ 3. Eseguo l'addizione
+ 4. Salvo il risultato in R1
+Tutto ciò non lo riesco a fare in un solo ciclo d clock, ma alpiù riesco a fare un solo di questo passo nella migliori delle ipotesi, ma non qui. Vedimo la sequenza di controllo quale sarà:
+ 1. Leggo dal PC, ovvero PCout,  scrivociò che ho letto dal PC nel MAR, leggo poi quello che ho messo in MAR. Posso usare un solo ciclo di clock, sul fronte di discesa leggo dal PC con Pcout, sul fronte
+    di salita  scrivo nel MAR con il segnale MARin così poi leggo nella memoria. Mi fermo poi perchè aspetto che in MDR ci sia l'istruzione. Prima di aspettare però il bus resta occupato, poichè passo 
+    un dato dal PC al MAR; devo poi incrementare il valore dl PC per dire poi di passare alla prossima istruzione. Non so però come fare poichè il bus è già occupato e ci devo mettere, cioè per dire di andare 
+     alla prossima istruzione, 1 per incrementare:  quindi posso settare direttamente a 1 il flag di carry dell'alu(ovvero uno dei flag del registro di stato) e l'alu lo vede in ingresso come 
+     operando ed esegue l'incremento, così in parallelo ha il segnale di add, il carry, e il programm counter; il risultato viene salvato nel registro temporaneo Z
+ 2. Posso ora aspettare o meno un certo num di colpi di clock a seconda del protocollo. Supponendo che l'istruzione si trovi nella memoria cache, qui il bus non è utilizzato e quindi posso
+     salvare nel PC il valore successivo(ovviamente tutto ciò vale se non faccio dei salti)
+ 3. Ora nell'MDR trovo il dato, con MDRout metto l'istruzione sul bus e la scrivo nell'IR con IRin
+ 4. Ora devo prendere l'operando, quindi metto il contenuto di R3 in MAR, e poi leggo dalla memoria
+ 5. Posso prendere il contenuto di R1 e metterlo in Y(temporaneo) mentre aspetto la lettura della memoria; ovviamente ciò non è possibile se anche questo operando è (R1)
+ 6. Adesso nell'MDR ho letto l'operando, quindi faccio la ADD e salvo il risultato in Z
+ 7. abilito poi Zout, così metto il dato in R1(con R1in) e poi ho finito.
+Oguno di questi singoli punti può essere eseguito in un solo ciclo di clock. Ovviamente ci sono dgli ulteriori ritardi, dovuti per esempio all'accesso alla memoria e alle operazioni dell'alu.
+Quindi il passo 1 è il passo di fetch, e tra il passo 3 e il 4 viebe decodificata l'istruzione e vengono generati i segnali di controllo per eseguire l'istruzione.
+I segnali vengono generati durante la decodifica delle istruzioni, e ci sono 2 tecniche:
+ -Controllo cablato, dove genero i segnali con un circuito sequenziali
+ -Controllo microporgrammato: per ogni istruzione prelevata associo l'indirizzo della microprocedura associata all'isruzione, ed essa è salvata in memoria in termini di microistruzioni che
+  contengono tanti bit quanti sono i segnali di controllo che mi servono; si chiamano anche control word. La microprocedura può essere gestita come nu  programma, quindi la gestisco con 
+  un microPC che mi prende una microistruzione, salvate in una memoria ROM. Quindi ad ogni operazione associo una microprocedura fatta da microistruzioni(7 in questo caso).
+  Posso pensare di usare quindi un bit per ogni segnale(se per esempio ho 10 registri, mi servono 10 bit per la lettura e 10 per la scrittura): codificare l'istruzione sarà semploce, ma la control
+  word sarà molto lunga. Io però ricordo che posso leggere da un solo registro per volta, ma scrivere in tutti i registri contemporaenamente. Posso quindi raggruppare, codificare, i segnali
+  mutuamente esclusivi, come quelli di lettura, visto che avrò un solo un bit alto e gli altri bassi. In questo caso se ho 10 registri li raggruppo con 4 bit. Ora questo mi riduce la lunghezza
+  della control word, e quindi posso usare una memoria più piccola, ma servirà dell'hardware aggiuntivo e del tempo combinatorio in più per decoficare. Si parla quindi di ORGANIZZAZIONE
+  ORIZZONTALE quando non codifico i segnali mutuamente esclusivi, altrimenti parlo di ORGANIZZAZIONE VERTICALE. Ovviamenet le memorie di controllo devono essere grande, pochè
+  il microprogramma deve coprire tutto l'ISA: posso notare però che le microistruzioni hanno delle istruzioni in comune; quindi posso realizzare un microprogramma così da scrivere una sola
+  volta tutte le microistruzioni in comune, e gestire la chiamata alla microprocedura giusta. Ovviamente devo gestire dei salti nel microprogramma, così come li gestivo nel programma, e o
+  cerco di fare meno salti possibili, oppure ad ogni microistruzione qual'è la successiva da eseguire. Ci sono:
+    *la tecnica del bit-oring, ovvero faccio sì che le istruzioni che hanno parti in comuni distano tra di loro uno o pochi bit, così da cambiare abbastanza velocemente
+    *nella parola inserisco un campo che mi dice la prossima micrositruzione successiva
+
+	LIVELLO MICROARCHITETTURALE DELL'IJVM
+Lo scopo è sempe quello di realizzare l'ISA-level, e ci sono diversi approcci:
+-metologico, ovvero progettare UO e UC
+-operativo, ovvero usando delle architetture di riferimento, come quella della JVM
+Vediamo come proggettare il livello microarchitetturale:  una microarchitettura contiene un microporgramma in grado di prelevare, decodificare ed eseguire un istruzione IJVM
+La IJVM ha tutte istruzioni corte(0 operandi oppure codie operativo e un solo operando); il microprogramma ha un insieme di variabili che determinano lo stato del computer.
+Abbiamo visto il datapath dlla MIC1:
+-C'è un bus B in cui tutti i registri possono scrivere(così leggo dal registro), e tale bus è legato all'alu
+ -Un bus C, che mi permette di scrivere dentro i registri
+ -10 registri, di cui:
+    *4 sono di interfacciamento con la memoria: dove PC e MBR mi fanno accedere alle istruzioni, e MAR e MDR che fi fanno accedere ai dati; ciò 
+      perchè l'area dati è separata dal''area istruzione; c'è poi una porta tristate per scrivere e una per leggere. 
+    *SP(stack ponter) contiene il puntatore allo stack, e TOS(top of the stack) contiene il valore della testa dello stack
+    *LV(local variable) contiene le variabili locali, che uso per esempio per le label delle sottoprocedure
+    *CPP e OPC che permette di lavorare sui valori costanti
+    *H è un registro di holding, contiene uno dei 2 operandi che usa l'ALU
+I registri sono tutti interni a 32 bit non accessibili dalla memoria, e l'alu fa un operando che prende dal bus B, un altro che prende dal registro H
+ALU
+Ha 6 linee di controllo: 2 segnali che mi dicono l'operazioni, 2 segnali per gli operandi, un segnale per settare il flag Z lo zero, e un segnale per settare il flag N di negativo.,
+un segnale per incrementare , uno per invertire.In uscita c'è uno shift register controllati da 2 segnali per shiftare avdestra o sinistra. In unico ciclo di clock posso leggere e scrivere
+in un registro(su 2 fronti diversi).
+Il clock è asimmetrico, ovvero la parte bassa dura di più della parte alta. Nela parte bassa ho diverse fasi di controllo del datapath:
+-nella prima fase faccio il setup dei segnali dalla UC ai registri, ovvero garantisco che i segnali siano stabili
+-un tempo combinatorio per pilotare il registro H e il base B
+-un tempo per fare l'operazione dell'alu e un eventuale shift
+-un tempo per srcivere l'uscita dell'alu in un regstro, dando un tempo di stabilizzazione dei dati
+In questi 4 tempi attraverso tutto il datapath, mentre sul fronte di salita calcolo la prossima istruzione da eseguire, e lavora l'unità di controllo. Ovviamente in ogni fase è considerato
+il tempo di propagazione, eventuali ritardi e skew, ovvero faccio in modo che tutti i segnali siano stabili prima di leggere o scrivere.
+Vediamo in maniera dettagliata i 4 registri di interfacciamneto con la memoria:
+Il PC è legato direttamente con la memoria, è il registro che contiene l'istruzione è l'MBR che è di 8 bit poichè la maggior parte delle istruzioni, che sono senza operandi, sono di 8 bit.
+Invece MAR e MDR sono per le istruzioni; in particolare MBR non verrà letto perchè non ha senso. La memoria inoltre è organizzata in byte: per accedere ad una word di 32 bit(dall'indirizzo
+0 a 3 per esempio) contenuta nel MAR, collego al bus il MAR shiftato di 2 posizionia sinistra emmetndo i 2 bit meno significativi a 0(moltiplico per 4). Ciò è necessario in quanto la parola
+è organizzata a byte e quindi l'indirizzo di ogni word è specificato daal'indirizzo del suo primo byte e quindi i 32 bit del MAR li collego a partire dal terzo bitdella woerd in modo da
+generare indirizzi pari che sono multipli di 4. Ovvero gli ultimi 2 bit dell'indirizzo no vengono messi sul bus, ma metto 00.
+MBR è un byte, prima di leggerlo dal bus B lo estendo a 32 bit con o senza estensione di segno.
+Per controllare il dtapath servono molti segnali:
+ -9 segnali per il bus C, cioè per scrivere nei registri
+ -9 per il bus B, cioè per leggere dai registri e scrivere sul bus
+ -6 per l'alu e 2 per lo shift reguster
+ -2 per fare read/write per MAR e MDR
+ -1 segnale per indicare il fetsch per PC e MBR
+Vorrei codificare i bit mutuamente esclusivi. Una read verso la memoria può iniziare solo alla fine del ciclo, cioè dopo scritto in MAR; ovvero al ciclo k+1 dopo aver scritto nel ciclo k
+se suppongo che il dato sta nella cache, il dato saranno disponibili dopo un altro intero ciclo di clock, ovvero al fronte di discesa di k+2, ma al ciclo k+1 il datapath è libero e posso 
+anticipare delle microistruzioni solo se ovviamente non coinvolgono la memoria; inoltre PC e MAR li posso usare contemporaneamente. Quindi in parallelo, nel ciclo k+1, posso
+usare PC e MBR, ma se facessi un'altra read con MAR accadrebbe qualcosa di indefinito, poichè la lettura di prima della momeria non è finita.
+Il clock T sarà più latgo delle 4 fasi effettive, poichè si considera il che ogni operazione fatta sia la più lunga possibile: quindi se riduco il clock, ovvero aumento la frequenza, alcune 
+isruzioni, le più semplici, le riuscirò comunque a fare in quell'intervallo di tempo, mentre quelle più complesse non è detto che le riesco a fare. Inoltre posso ridurre la lunghezza della
+control word usando solo 4 bit per il bus B, ovvero codifico.Partendo da destra quindi:
+-4 bit per B
+-3 bit per la memoria(write, read di MAR e MDR e fetch per PC e MBR)
+-9 bit per C
+-8 per l'alu
+-12 segnali per gestire sia i salti sia il campo next address: questo perchè tutte le microistruzioni che sono comuni alle microprocedure le metto insieme e con un  microsalto posso andare
+  a quelle comuni. Tutte le microistruzioni le posso scrivere in sequenza, quindi nella UC avrei aun MPC(micro programm counter) che mi dice quale istruzione eseguire: ciò però è poco efficiente poichè
+  anche nelle microitruzioni potrebbero esserci dei salti, e ci sono delle microistruzioni i comune che vorrei condividere per tutti(come la ftech che è sempre uguali). Gestisco quindi i
+  microsalti usando esplicitamente nella microistruzione per dire la prossima microistruzione da eseguire. Avendo 512 parole, mi bastano 9 bit. Ci sono poi 3 bit JAM per il salto, che servono
+  a modificare il valore del campo next_address per vedere se voglio saltare o no: questi 3 bit sono calcolati con l'ALU.
+
+Ogni control_word controlla il datapath in un ciclo di clock, e la UC deve eseere un sequencer che mi dice lo stato di ogni segnale di controllo del sistema e calcola la prossima micrositruzione.
+
+Vediamo la UC:
+-c'è la CONTROL STORE di 512 word ciascuna di 36 bit: contiene le control word
+-MPC con un oarallelismo di 9 bit e contiene l'indirizzo della contro, woer: va in ingresso alla control store
+-MIR che contiene la microistruzione: è in uscita dalla control store. Viene caricato sul fronte di discedìsa del clock
+In particolare, della control word i bit di B li mando in un decodificatore 4-12, di cui l'uscita va nel datapath, e il campo address ha 8 bit.
+MPC ha 2 parti: la parte più significativa con un bit che arriva da un registro high bit, la parte meno significativa viene da next_address. devo capire come caricare sia la prossima istruzione che la prossima
+istruzione. Quando l'ALU termina le proprie operazioni, i flag N e Z vanno in 2 flip flop sul fronte di salita, e insieme ai campi JAMN e JAMZ si usano per calcolare il bit più signifactivo di MIR.
+Sul fronte di discesa inizio a caricare l'indirizzo della prossima istruzione e valuto il campo JAM:
+-se JAM=000, non faccio nulla e il valore presente in MPC viene salvato nel campo next_address;
+-se JAMN=1, significa che devo andare a vedere il flag N settato nell'operazione precedente, e ne faccio l'or con il bit più significativo di N
+-se JAMZ=1, significa che devo andare a vedere il flag Z settato nell'operazione precedente, e ne faccio l'or con il bit più significativo di Z
+-se JAMZ e JAMN sono alti, faccio la or con N e Z
+Quindi il campo next_address o resta invariato, o setto solo il prmo bit.
+Io sto agendo sempre sul bit piùsignificativo: quindi se il primo bit è 0 significa che sto accedendo alla prima metà della control store; se è 1 accedo alle micrositruzioni successive che si trovano nella 
+seconda metà.
+-se JAMC=1, significa che ho eseguito tutte le microistruzioni di quell'istruzione, e quindi mi serve la prima microistruzione della prossima istruzione da eseguire:
+ mi serve il registro MBR i cui bit vengono messi in or con gli 8 bit meno significativi del next_address; in particolare l'indirizzo della prima microistruzione da eseguire viene salvato proprio come il suo
+ codice operatvo. Ovvero quando devo eseguire un'istruzione fatta di diverse microistruzioni, il codice della prima microistruzione di quella sequenza è proprio l'indirizzo della stessa.
+
+
+IJVM è un'architettura le cui istruzioni hanno 0 o 1 operando, e quindi si tiene conto che gli operandi stano sulla testa dello stack. Per memorizzare le variabili lodcali, o dinamiche in generale, uso lo stack. 
+Si usa il registro LV che punta a quest'area. Delimito un frame che contiene tutte le variabili di un istruzione con i puntatori LV(in basso) e SP in alto. Quando pi eseguo una nuova istruzione, nello stack, in
+testa alloco tuti le variabili che mi servono per quella istruzione, il frame, e quindi vengono aggiornati SP e LV così che posso usare un altro frame di un altro programma. Le variabili della procedura 
+vengono quindi sempre inidirizzate specificando l'offstet rispetto al LV(come nel Motorola 68000 quando calcolavo lo spiazzamento rispetto a PC o A6). nello stack salvo anche i risultati delle operazioni che 
+sto eseguendo, in quanto non ho registri interni. Se volessi fare A1=A2+A3: sullo stack già ho A1, A2, A3, e carico prima A2 in cima allo stack, poi ci carico sopra A3, con 2 push. Questi poi dvono essere 
+portati nel datapath in ingresso all'ALU, e faccio la somma. Quindi faccio la pop di A2 e A3, faccio la somma nell'ALU, e poi facio il push della somma i cima allo stack. Sovrascrivo poi il risultato in A1, a 
+cui accedo mediante il puntatore LV e lo spiazzamento, e poi faccio la pop della somma.
+
+Ho 3 aree di memorie in generale:
+ -Un area per le variabili costanti, puntata da CPP, che sarebbe l'area dei dati del nostro programma
+ -area stack che contiene gli operandi di un frame(il pezzo di un programma) e le variabili locali, ed è puntato da SP e TOS alla cima, e da LV alla base del frame. Quest'area è indirizzata a word 
+  di 4 byte, e quindi se scrivo LV=LV+1 accedo a 4 byte successivi(La word sucessiva). LV è praticamente un registro dedicato al frame, mentre nel motorola 68000 io usavo link e unlink ogni volta per
+  dedicare dello spazio a un frame. In questa parte avrò tanti frame quante sono le proedure, e il frame della procedura corrente è fatta da una parte per le variabili e una parte per gli operandi
+ -area dei metodi, in cui salvo tutte le istruzioni che devo eseguire, puntata dal PC, ed è indirizzata a singoli byte. Quindi PC=PC+1 mi dice il byte successivo
+
+Vorrei ora capire come si esegue una istruzione ISA come una sequenza di microistruzioni, e come poi ottimizzare il datapath per farle meglio. Le variabili locali di una procedura possono essere 
+accedute con uno spiazzamento rispetto a LV; la parte tra LV e SP è detta LOCAL VARIABLE FRAME(LV punta sempre alla base).
+Vediamo un po' le istruzioni, che fanno tutti riferimento impicito ai registri interni e allo stack:
+-LDC mserve a caricare dei dati costanti
+-ILOAD serve invece a caricare una variabili dallo stack
+-ISTORE serve a salvare una variabile presa dallo stack nel frame
+-BPUSH mi fa caricare un istruzione
+-Istruzioi di operazioni come IADD, ISUB, IAND, IOR
+  *Abbiamo visto l'esempio di IADD: all'inizio sulla cima dello stack ho i due operandi x e y: faccio il pop di x(così sullo stack ho solo y); poi faccio il pop di y, faccio la somma nel processore(grazie all'ALU), 
+    e poi faccio la push del risultato in cima allo stack(Quindi faccio POP->POP->PUSH).
+-4 istruzioni di salto
+-POP per rimuvere una cosa dallo stack
+-SWAP per scambiare due operandi in cima allo sack
+-DUP duplico il valore della testa dello stack e ne faccio il push sullo stack
+-INVOKEVIRTUAL invoca il primo metodo di una sottoprocedura, IRETURN ritorna dalla sottoprocedura. In aprticolare, prima di chiamare la Invokevirtual e di passare alla nuova procedura, sullo stack 
+ viene fatto il push del puntatore OBJREF inizialmente non inizializzato, vengono poi messi nello stack i parametri, e poi viene chiamata la Invokevirtual, che ha come operando l'indirizzo di partenza della 
+ procedura. Per ogni metodo ho 4 byte speciali:
+  *2 byte indicano il numero di parametri
+  *2 byte indica la dimensino dell'area delle variabili locali
+  *il quinto byte ha il codice operativo dell'isruzione
+ Con tali info chiamo Invokevirtual: calcolo il nuovo LV e al posto di OBJREF metto un puntatore alla locazione dello stack dove verrà messo il vecchio PC(per ritornare indietro), e poi metto il vecchio LV. 
+ Aggiorno poi il vecchio OBJREF che adesso punta al vecchio programm counter(che contiene l'indirizzo di ritorno), e cambio il PC così che puna al quinto byte. Quindi sullo stack poi alloco l'area per le 
+ variabili locali, carico il vecchio LV e il vecchio PC che contiene l'indirizzo di ritorno, mentre il nuovo PC punta al nuovo metodo. Inoltre avrò un nuovo LV_new che punta al PC_old, mentre il LV_old punta 
+ all'indirizzo del chiamante. Con Ireturn poi pulisco tutto, e ritorno all'inizio grazie a LV_old
+ -------------------------------ESEMPIO-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Programma normale     Programma microassemler
+ i=j+k			ILOAD j		Codice per fare la somma
+ if(i==3)			ILOAD k		.
+   k=0  			IADD		.
+ else			ISTORE i		.	
+   j=j-1			ILOAD i		Codice per controllare se i==3
+   			BIPUSH 3		.	Devo confrontare con 3, quindi lo devo caricare sullo stack
+ 			IF_ICMPEQ L1	.	Li confronto, e se sono uguali vado a L1 che sarebbe il codice da fare se l'if è corretto
+   			ILOAD j		Codice dell'else, ovvero j=j-1
+ 			BIPUSH 1		.
+ 			ISUB		.
+			ISTORE j		.
+ 	       	          L1: BIPUSH 0		Codice del then, ovvero k=0
+			ISTORE K		.
+		
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Vediamo ora come la singola istruzione del liello ISA viene fatta con la mimicroprgammazione, ovvero interpretata, decodificata ed eseguita. Vediamo prima alcune notazioni(diverse dal 68000):
+-MDR=SP viene eseguita in un unico ciclo di clock, e permette di leggere subito la testa dello stack con SP
+-MDR=H+SP, ovvero in un registro posso mettere la somma tra 2 registri, a patto che uno sia H
+-MDR=SP+MDR non lo posso fare perchè non posso mettere su un bus 2 operandi contemporanemante, ecco perchè uno deve essere per forza H
+-SP=MDR=SP+1 questo è un esempio che ci dice che posso contemporaneamente i 2 registri
+-Per le istruzione di salto abbiamo visto che usiamo i flag N e Z dell'ALU, usando dei finti registri N e Z facendo passare nell'ALU passare un valore(Posso are Z=TOS o TOS=TOS)
+-Posso usare JMPC con Goto(MBR OR value)
+Vediamo il microprogramma di alcune istruzioni nel dettaglio:
+  *IADD	
+      MAR=SP=SP-1; rd		 All'inizio comincio ad avviare la lettura del secondo operando(che avrò un ciclo di clock dopo nell'MDR) decrementando SP
+      H=TOS			 Sposto in H il TOS, questo perchè TOS contiene il valore che stava prima sulla testa dello stack: cioè carico il primo operando(In quanto non ho ancora aggiornato il TOS
+      .				 anche se ho aggiornato SP)
+      MDR=TOS=MDR+H; wr ;goto Main	 Nel terzo ciclo di clock ho letto il secondo operando(è stato messo in MDR), e quindi faccio la somma e la salvo il MDR e TOS(così la testa dello stack contiene la somma)
+  *ISWAP
+       MAR=SP-1; rd			Leggo la parola che sta sotto la testa mettendo in MAR SP-1; lo SP punta ancora a TOS
+       MAR=SP			Mentre aspetto di leggere la secondo word, inizializzo MAR pcosì che ritorna a puntare alla testa dello stack
+       H=MDR; wr			Metto in H il secondo operando, che ho iniziato a leggere prima(così nello stack ho 2 volte il secondo operando, ovvero ho sovrascritto la testa con il secondo operando)
+       MDR=TOS			TOS però contiene ancora il primo operando, che quindi metto in MDR
+       MAR=SP-1; wr			Devo quindi fare una write all'indirizzo puntato da MAR, ovvero SP-1: cioè devo scrivere quello che prima era il primo operando sotto il secondo, e quindi in posizione SP-1
+       TOS=H; goto Main		Aggiorno poi il TOS che contiene la nuova testa
+
+Ci sono poi dei codici operativi che necessitano di operandi, come ILOAD che richiede l'indirizzo su un byte del dato da caricare.
+Ci sono altre varianti a questa architettura, che superano alcuni limiti come per esempio il fatto che ogni volta per incrementare al PC devo fare il goto Maino il fatto che ho 2 bus. Vorrei ridurre il numero di clicli
+per ogni istruzione, aumentare l'istruzione di clock, e eseguire più istruzioni in parallelo.
+Potrei prevdere un contatore apposito, in parallelo, che ogni volta mi incrementa il PC senza fare il goto Main, così da risparmiare dei cilci, come per esempio la POP che usa 3 cicli ma solo 2 microistruzioni: un ciclo
+lo spreca per aspettare il dato dalla memoria.
+Potrei aumentare il numero di bus di sistema così da poter leggere contemporaneamente da 2 registri, così per esempio la ILOAD impiega 5 microistruzioni e non 6.
+Potrei prevedere hardware aggiuntivo per fare il fetch: potrei fare una minima variazione all'ALU e prevdere un path aggiuntivo che fa passare le istruzioni che vengono eseguite spesso, come l'incremento del PC: userei
+una FETCH UNIT che fa un fetch continuo della memoria, sempre, e uso uno shift registre che riceve 4 byte dalla memoria alla vlta(avrei 2 MBR).
+Il MIC-2 ha una fetch-unit e 2 bus B per leggere(non uno)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

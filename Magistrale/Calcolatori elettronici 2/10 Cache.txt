@@ -1,0 +1,143 @@
+Per aumentare le prestazioni potrei:
+ -aumentare il clock di meoria, ovvero la frequenza del bus per accedere alla memoria
+ -aumentare l larghezza della word, ovvero aumentare la capacità di trasferire bit per ogni ciclo di accesso alla memoria, e quindi posso trasferire èpiù bit con un bus più largo
+ -potrei mettere più moduli di memoria a cui posso accedere in paralleo ma che non sono collegati tutti insieme al bus. Ho quindi più moduli elemntare che collego per avere memorie più comlesse.
+E' stata introdotta una gerarchia di memoria:
+ -Una CAHHE PRIMARIA, che si trova sulla stessa board del processore ed è accessibile in un solo ciclo di clock
+ -CACHE SECONDARIA, di livello 2 a vicina al processore
+ -Memoria principale
+ -Memoria di massa
+Questa gerarchia si può usare grazie al PRINCIPIO DI LOCALITA', che si basa sulla regola empirica 90/10, ovvero: i programmi tendono a riusare sia i dati che le istruzioni che hanno usato precedentemente.
+Quindi in media trascorre il 90% del tempo in una porzione di codice che rappresenta solo 10% dell'intero programma; quindi potrei predirre con una ragionevole accuratezza quali dati e sitruzioni uso in un
+futuro vicino, poichè quelle parti stanno tutte vicine. Il principio di località si traduce in 2 parti:
+ -LOCALITA' TEMPORALE: ho una probabilità elevata che un istruzione eseguita di recente venga eseguita di nuovo tra poco
+ -LOCALITA' SPAZIALE: ho una grande probabilità ce istruzioni vicine ad un'istruzione eseguita di recente verranno eseguite tra poco
+Ciò è essenziale per la gerarchia di memoria: l'idea è quella di portare in memoria cahce un elemento usato per la prima volta in modo che sia disponibile nel caso i cui, per la località temporale, verrà 
+richiesto tra poco; per quella spaziale invece quando accedo in memoria non predno solo lo specifico dato o istruzione che mi serve al momento, ma prendo un blocco di elementi vicini, ovvero che hanno
+indirizzi adiacenti e li metto nella cache. 
+La cache ha diversi problemi, quindi devo capire diverse cose:
+ -Parametri caratteristici, ovvero dimensioni e tempi
+ -Il processore quando crea un indirizzo fa riferimento alla memoria , e quindi devo capire come mappare l'indirizo del processore della cache per capire sia dove mettere il dato, sia dove cercarlo;
+ -Sostituzione di un blocco: a un certo punto la cache si riempie man mano che metto i blocchi, quindi devo apire qale blocco eliminare
+ -Gestione della coerenza: il processore scrive anche in cache, e il blocco che scrivo sarà per qualche tempo modificato, aggiornato, solo in cache non in memoria.
+
+PARAMETRI CARATTERISTICI:
+ -BLOCK SIZE, ovvero prendo una serie di indirizzi contigui: ora tanto più è grande il blocco tanto più sono sicuro di trovare i cache la roba che miserve per quella porzione di codice; ma così la cache si riempie
+  subito e poi devo fare una sostituzione; è anche vero che se ho molte istruzioni di salto probabilmente prendo elementi inutile e devo fare molto scambi di blocchi
+ -HIT TIME: il tempo(cicli di clock) necessari per caricare un elemento dalla cache al processore quando l'elemento si trova in cache
+ -MISS PENALTY, ovvero quando un elemento non si trova in cache(Cache Miss) e devo spendere cicli di clock in più per caricare u elemento dalla memoria principale in cache
+-ACCESS TIME, tempo di accesso a memoria principale
+-TRANSFER TIME, tempo di trasferimento da memoria centrale a cache
+-MISS RATE, ovvero percentuale di cache miss relative a diverse scelte
+-CACHE SIZE, ovvero dimensione totale
+Di solito il tempo di accesso alla cache è Access_time=hit_time*hit_rate+(1-hit_rate)*miss_rate
+
+FUNZIONI DI MAPING
+Il mapping è la corrispondenza tra blocco in centrale è in chache.Suponiamo di avere una memoria principale di 64k word(l'indirizzo è espresso su 16 bit), organizzata in 4k blocchi di 16 word; ogni memoria 
+cache invece è di 2k, ovvero al massimo posso avere 128 blocchi e quindi 11 bit per indirizzarli. In particolare, dei 16 bit per l'indirizzo della word in memoria, i primi 12 bit mi indirizzano i blocchi, gli ultimi
+4 mi indirizzano la singola word del blocco(visto che ho 16 blocchi). La cahe però è di 2k(ovvero 128 blocchi) indirizzati da 11 bit, e devo capire dove mettere il blocco nella cache tramite il mapping. Il mapping
+influenza sia dove mettere il blocco, sia la posibilità di hit(successo) o miss. Ho 3 funzioni di mapping:
+  -MAPPING DIRETTO: un blocco presente in RAM sarà posizionato sempre nella stessa posizione in cache, e la posizione è data da una funzione, solitamete la funzione modulo. Ovvero prendo l'indirizzo 
+  intero del blocco in memoria, e ne facio il modulo 128(in generale rispetto al numero di blocchi della cache). Fare tale modulo significa prendere, dei primi 12 bit più significativi dell'indirizzo in memoria, 
+  ne prendo i 7 meno significativi: tali 7 mi dicono l'indirizzo del blocco nella chache. Quindi l'indirizzo di memoria di 16 bit viene in realtà diviso in 3 parti:
+   *gli ultimi 4 che mi indirizzano la word di un bloco
+   *altri 7 bit(verso sinistra) che mi dicono l'indirizzo del blocco nella cache
+   Quindi gli 11 bit di indirizzo nella cache sono fatti da questi 7+4 bit: 7 mi dicono il blocco, 4 la word nel blocco
+   *I primi 5 bit più significativi sarebbero la LABEL, che mi dividono i blocchi in gruppi ciascuno di 8 blocchi(per esempio il primo gruppo di 8 blocchi ha in ttale 128 word). La Label serve per identificare 
+     blocchi che hanno lo stesso indirizzo in cache(ovvero quei 7 bit sono uguali). Nela cache ad ogni blocco si aggiunge quindi un campo TAG che contiene i primi 5 bit dell'indirizzo di memoria, così che in 
+     cache capisco quale blocco in realtà ho messo, ovvero il TAG contiene la Label. In particolare, in un blocco della cache posso salvare solo i blocchi della memoria che hanno lo stesso TAG: ciò non è molto 
+     efficiente però, perchè se devo mettere un blocco in una cache che ha tutto libero tranne il blocco in cui lo dovrei salvare, devo fare per forza uno swap, ovvero mapperò i blocchi dello stesso gruppo(in 
+     memoria) con un solo blocco in cache.
+  -MEMORIE FULLY ASSOCIATIVE: un blocco della memoria centrale lo posso mettere in qualsiasi posizone della cache, in particolare lo metto nella prima posizione libera che trovo. Devo capire ora come 
+   trovare la prima posizione libera, e poi come cercare il blocco che creco: per la ricerca devo usare dell'hardware aggiuntivo, overo dei comparatorim che mi cofrontano tutte le etichette. Stavolta 
+   l'indirizzo del blocco in memoria è quindi diviso in sole 2 parti, overo i primi 12 bit(di etichetta) e i gli ultimi 4 di word. Quindi il campo TAG del blocco in cache contiene 12 bit. Per capire se il blocco sta 
+   in cache, prendo l'indirizo del processore(in particolare i primi 12 bit) e lo confronto con tutte le etichette dei blocchi in cache. In particolare mi serviranno 128 comparatori (uno per ogni blocco), perchè 
+   il confronto lo faccio in parallelo. Le uscite poi devono andare in or per vedere se ho miss o hit: il problema p che però ho un costo per singolo bit molto elevato e i tempi aumentano, ovvero il fatto che
+   il confronto lo faccio in hardware è un problema(è lento), ma comunque non lo posso fare in software perchè altrimenti il softwre lo dovrei comunque prendere in memoria. Se il blocco non c'è lo carico
+   nella cache nella prima posizione libera che trovo. Per la scrittura è molto vantaggiosa, perchè se ho una posizione libera inserisco il blocco senza fare swap: invece la lettura è peggiore poichè i TAG sono
+   più grandi e devo fare molti confronti.
+ -SET ASSOCIATIVE è un ibrido tra le tcniche precedenti: divido la cache in insieme, e in ogni insieme posso mettere uno più blocchi(possono avere un numero di blocchi diversi). L'insieme lo gestisco, lo mappo
+  con la tecnica di mapping diretto, mentre i blocchi all'interno dell'insieme li mappo in maniera fully associative)il blocco nell'insieme lo metto dove voglio). In totale ho 64 insieme con 2 blocchi mappati dai
+  secondi 6 bit dell'indrizizzo della word, mentre la Label(Tag) è formata dai primi 6 bit. L'indsieme dei blocchi di un isieme è detto VIE. Quindi ogni blocco ha sempre la prorpia etichetta. Quidi l'indirizzo è
+  diviso in 3 parti: i secondi 6 dei primi 12 mi individuano l'insieme(il set) che entrano in un decodificatore e mi selezonano i 64 insiemi, e i primi 6 bit mi indirizzano il processore. Quindi saranno i primi 6 bit
+  che andranno in un compaeatore per confrontarli con i tag. In questo esempio ogni insieme ha 2 blocchi. Arrivato poi nel blocco, uso gli ultimi 4 bit dell'indirizzo per andare in una delle 16 word del blocco. 
+  Quindi i per cercare un blocco(e poi una word) il confronto lo faccio solo con un sottinsime di tag(quello dell'insieme). 
+Ora io devo tener conto dello spazio che mi srve per le etichette, ma vorrei anche distingure se un blocco i cache lo leggo o lo modifico solo: allora introduco un bit, il DIRTY BIT, che mi dice se il blocco è stato
+modificato o no: ciò è utile poichè se io devo togliere un blocco dalla cache che è stato modificato, allora devo aggiornare il blocco anche nella memoria, altrimenti lo posso eliminare e basta.
+Potrebbe succedere un'altra cosa: il blocco in cache potrebbe non essere più valito, in quanto per esempio il blocco è stato spostato dalla memoria centrale alla memoria di massa: uso quindi un ulteriore bit,
+il VALIDITY BIT, che mi dice se la pagina è valida o no. Questo bit viene messo in AND poi con il blocco che cerco, nel caso di cache hit se trovo il blocco, per vedere se è coerente.
+Inoltre, nel caso Set Associative, ad ogni set viene associat un contatore per sapere quante volte è stato usto un blocco: questo perchè un nuovo blocco lo posso salvare ovunque nel set, ma se il set è pieno devo
+capire quale blocco eliminare e ramite questo contatore capisco qual'è il blocco che non viene usato da più tempo ed elimino quello. Invece in Direct io già so qual'è il blocco che devo eliminare(per forza 
+quello che ha lo stesso tag).
+
+
+----------------LEZIONE  2-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+La MMU(Memory management unit) mi permette di tradurre l'indirizzo virtuale generato dal processore i un indirizzo fisico; l'idirizzo virtuale è quello scritto nel pogramma, è c'è bisogno di traduzione da 
+parte del sistema operativo in quanto il modulo di memoria è indirizzato dinamicamente. Ovviamente io non vado direttamente in memoria, ma ho comunque una gerarchia con le cache. Le memorie cache
+costano poichè oltre ai flip flop dei dati, devo includere spazio per etichette(una per ogni blocco), spazio per VALIDITY e DIRTY, comparatori e decodifiatori.
+Per esempio il modulo hardware di Brench Prediction (per il data hazard Read after write) è implementato com una cache fully associative.
+Il Dirty è molto importante, poichè quando devo sostituire il blocco, quel blocco lo devo ricopiare nella memoria centrale prima di "eliminarlo" poichè al suo posto ce ne metto un altro: riscriverlo in memoria
+non serve per forza, poichè se quel blocco non è stato modificato(lo vedo attraverso il Dirty), ovvero è stato solo letto, è inutile riscriverlo in memoria. Ciò mi permette di risparmiare molto tempo.
+Parliamo ora di sostuìituzione:
+ -se ho la cache diretta devo sostiture per forza quel blocco
+ -nella fully associative posso mettere il blocco dove voglio
+ -nella set associative devo fare sostituzione solo se l'insieme(il set) è pieno.
+Vediamo ora l'hardware aggiuntivo e gli algoritmi che servno per implementare le policy di sostituzione. Devo sostituire un blocco nel caso in cui ho cache miss, cioè cerco un dato e confrontando le etichette mi
+accorgo che non c'è.
+Nella cache diretta sostituisco direttamente, e se il DIRTY è pari a 0 non devo riscriverlo in memoria, e quindi l'algoritmo è molto semplice.
+Invece in Set e Fully devo cercare un blocco con Dirty pari a 0, così lo metto al posto di questo semplicemente, se invece tutti i blocchi hanno Dirty pari a 1, devo cappire quale blocco sostituire. Ci sono 2 approcci:
+ -Random, ovvero ne sostituisco uno a caso facendo si che la distribuzione negli insiemi(nel caso di Set) sia uniforme
+ -LRU(Least Recently Used), ovvero sostituisco quello utilizzato meno di recente, poichè se non accedo a quel dato da molto probabilmente non mi serve più. Per teere traccia degli accessi al blocco uso un contatore,
+  i cui bit dipendono dalla grandezza dell'insieme(se ho un insieme a 4 vie, mi  basano 2 bit). Vediamo i diversi casi:
+    *Ho un hit: in questo caso il contatore viene posto a 0, e incremento i contatori con valore minore di quello dell'hit, menre i contatori con valori più alti li lascio invariati
+    *Ho un miss e c'è un blocco libero: metto il blocco nel posto libero e incrementiìo tutti gli altri contatori 
+    *Ho un miss ma tutti i blocchi sono occupati: allora cerco il blocco con il contatre più alto, poichè è stato incrementato più volte, ovvero è stato usato di meno. Quindi il nuovo blocco lo metto lì con contatore
+     inizializzato a 0, e tutti gli altri li incremento
+Per il LRU mi serve hardware agiuntivo, ma si può dimostrare che per memorie cache grandi, circa superiori a 64k, il metodo Random ha le stesse prestazioni di LRU. Quindi per memorie grandi mi conviene LRU
+in quanto non aggiungo hardware aggiuntivo.
+Sostituire un blocco significa quindi riscriverlo in memoria(se è stato modificato) e caricare il nuovo blocco in cache. Può succedere però che un blocco in cache modificato è incoerente con la memoria, 
+e  questo non è sempre accettabile. Inoltre, sopratutto per le istruzioni, per le istruzioni leggo più che scrivere. Ora la prima volta che leggo un dato in memoria centrale, me lo porto in cache e porto tutto il 
+blocco. Se ho una scrittura invece, non posso iniziare la scrittura fino a wìquando non ho un hit, e quindi devo aspettare di confrontare tutte le etchette e avere un hit, quindi è più lenta la scrittura.
+Ci sono 2 modi per gestire la scrittura:
+  -WRITE TROUGH: scrivo un dato sia in ache che in memoria principale, e lo faccio ogi volta così garantisco la coerenza. Ovviamente scrivere in memoria centrale è lento, e se faccio piccole modifiche del 
+  dato, ogni volta lo devo scrivere in memoria e quindi occupo il bus. Il vantaggio quindi è che ho sempre allineamento tra cache e RAM (coerenza), ma la scrittura è lenta e occupa completamente la banda.
+  Questa tecnica si usa pe lo più tra cache di livello 1 e 2. In ogni caso ho un WRITE STALL, ovvero il processore va in stallo fino a quando la scrittura non è completata. Per diminuire questo stallo si usa 
+  dell'hardware aggiuntivo offerto dall' MMU mediante dei buffers
+ -WRITE BACK: riscrivo il blocco in memoria centrale solo quando lo devo sostiture, e solo se è stato modificato( se ci ho scritto sopra). Sembra molto conveniente, poichè la scrittura è volce(la velocità della
+ cache) e  occupo meno banda, ma ho memorie meno allineate e rischio incoerenza. Questo non è sempre permesso.
+Nel caso di Write miss, ovvero voglio scrivere in un blocco che non ho, ci diverse tecniche per caricarlo:
+  -WRITE ALLOCATE, usato con il WRITE BACK, dove carico il blocco prima in cache e poi faccio una write così ho un hit
+  -NO WRITE ALLOCATE, usato spesso con la WRITE TROUGH, dove il blocco viene scritto direttamente in memoria principale senza scriverlo in cache.
+  -INTERLIVING: si scrive in memoria centrale, o in cache, un dato non allinterno di un singolo blocco ma spalmato tra blocchi differebti a cui posso accedere in parallelo. Quindi indirizzi successivi di un blocco 
+   li posso mettere anche in moduli fisici separati, non per forza nello stesso. Quindi l'indirizzo del dato lo posso vedere come diviso in più parti: la prima parte(più significativa) mi dice l'indirizzo all'interno di 
+   un modulo, gli altri mi dicono invece l'indirizzo del modulo. Ciò mi permette di salvare indirizzi consecutivi in diversi moduli: con la prima parte accedo a tutti i moduli in parallelo, da cui mi prendo il byte
+   a cui corrisponde la prima parte dell'indirizzo, mentre la seconda parte mi dice il particolare byte (del particolare modulo). Ciò mi permette quindi di salvare indirizzi consecutivi in moduli diversi. E' utile 
+   quando posso allargare il bus di sistema
+Ci sono diverse tecniche per migliorare invece le prestazioni, tra cui l'Interliving:
+ -Ridurre la Miss-Penalty prevdendo un'altra cache di secondo livello: poso generalizzare il tempo di accesso medio, riducendolo poichè riesco ad avere delle capacità superiori
+ -Usare buffer di scrittura, così in una Write Trough la CPU non aspetta di scrivere, ma scrive direttamente nel buffer e sarà poi MMU a scrivere quello che sta nel buffer in memoria o in cache
+ -Prefetch,che evita lo stallo.
+ -cache senza blocco, che riescono a gestire più miss in contemporanea: da una parte carico nuovi blocchi, dall'altra servo la CPU per non farla andare in stallo
+
+
+---------------------LEZIONE 3--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Vorrei ora vedere come ridurre la penalty nel caso ci cache miss, e ci sono 2 tecniche per farlo:
+ -Cache multilivello, ovvero una seconsa cache che ha miss rate più basso e quindi il tempo medio migliora
+ -Capire cosa accade in caso di miss: io prendo dalla memoria per forza anche il blocco, non solo la word che mi serve. Ciò mi peggiora il primo accesso; allora si fanno 2 cose in parallelo: precarico la prima 
+  word che mi serve direttamente nella CPU, così non la devo prendere dalla cache, e poi carico il blocco in cache.
+Ci sono diverse tecniche per ridurre il miss rate poi:
+  -Fare una cache più grandi così può contenere più blocchi
+  -Utilizzare blocchi più grandi, ovviamente la dimensione del blocco può essere grande al massimo come la cache, anche se così in cache ho un solo blocco. Fare blocchi più grandi significa averne meno in 
+  cache Si osserva però che aumentando la dimensione del blocco il miss rate diminuisce, poichè riesco a caricare contemporaneamente più parti di un programma. Il miss rate però non diminuisce sempre
+  in maniera asintotica, poichè è vero che uso meglio la località, ma se ho molte sistruzioni di salto che mi saltano in altri blocchi, io quei blocchi potrei non averli. Sto quindi togliendo spazio ad altri pezzi di
+  quel processo o ad altri procesessi, e quindi ad un certo punto avrò che la curva del cache miss aumenta disegnando una parabola(poichè poi ho molti miss per salti ho altri processi). Il minimo di questa 
+  parabola, overo il punto in cui il miss rate aumenta di nuovo, è detto BOTTLENECK: più il blocco è grande, più il Bottleneck si sposta a destra(il miss rate diminuisce per più tempo). Inoltrè avere blocchi più 
+  grandi, e quindi meno blocchi, significa anche avere meno etichette da confrontare quando cerco un blocco.
+ -Aumentare il grado di associatività, così il miss rate diminuisce(ovvero la curva del mii rate si "abbassa") Quindi il miss rate diminuisce più radipademnte se aumento il grado di associatività, ma quello che 
+  diminuisce è il bottleneck(si sposta verso sinistra), ovvero viene richiesto un blocco più piccolo.
+
+Potrei migliorare sia miss penalty che miss rate modificando proprio l'architettura e migliorando il parallelismo:
+ -Usare cache non bloccanti per ridurre lo stallo della CPU su un cache miss, ovvero permetto letture successive anche se non ho finito di leggere il dato precedente
+ -Fare prefetching
+ -Fare prefetching controllato dal compilatore, ovvero se so che un blocco verrà usato (e lo saprà il compilatore): però devo modificare pesantemente l'architettura.
+ 

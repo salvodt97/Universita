@@ -1,0 +1,280 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1504\cocoasubrtf840
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue255;\red255\green0\blue0;\red0\green0\blue0;
+\red63\green105\blue30;\red63\green105\blue30;}
+{\*\expandedcolortbl;;\csgenericrgb\c0\c0\c100000;\csgenericrgb\c100000\c0\c0;\csgenericrgb\c0\c0\c0;
+\csgenericrgb\c24706\c41176\c11765;\csgenericrgb\c24706\c41176\c11765;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11400\viewh15500\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Abbiamo visto come funziona il dispositivo PIA per il trasferimento di dati paralleli di 1 byte dalla periferica al processore.\
+All\'92interno della PIA ci sono due porti uguali A e B che internamente presentano 3 registri ciascuno (DDR, PDR, CR).\
+Il device viene mappato in memoria con uno spazio di soli 4 registri consecutivi 
+\i \cf2 (nell\'92esempio successivo supponiamo da $2004 a $2007)
+\i0 \cf0 , cio\'e8 2 bit per l\'92indirizzamento e questo avviene grazie alla presenta del bit CRA2/CRB2.\
+Due dispositivi PIA possono essere connessi per far parlare due sistemi diversi.\
+Consideriamo due sistemi S1 e S2 (due computer) tale che s1 invia un messaggio(carattere) a s2, cio\'e8 s1 \'e8 trasmettitore e s2 \'e8 ricevitore.\
+Per fare ci\'f2 dobbiamo selezionare un porto da usare come uscita; consideriamo allora solo il porto B. Quindi il porto A possiamo anche \'93trascurarlo\'94 perch\'e8 in questo esempio la PIA viene usata come trasmettitore.\
+La seconda PIA \'e8 usata come ricevitore e quindi consideriamo solo il porto A in ingresso e quindi possiamo \'93trascurare\'94 il porto B.\
+Entrambi i sistemi hanno quindi una periferica al loro interno e le periferiche sono connesse mediante handshaking con i fili incrociati.\
+\
+\cf3 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\cf0 \
+
+\i Sappiamo che i segnali 
+\b CA2 e CB2 sono sempre in uscita
+\b0  mentre i segnali 
+\b CA1 e CB1 sono sempre in input
+\b0 , quindi per realizzare l\'92
+\b HANDSHAKING 
+\b0 \'e8 necessario connettere a fili incrociati: 
+\b CB2 viene connesso a CA1 e CA2 viene connesso a CB1
+\b0 . Questo ci assicura che ogni carattere venga sicuramente letto.\
+\
+
+\b CB2 1 \'97> 0 quando c\'92\'e8 una scrittura;\
+CA2 1 \'97> 0 quando c\'92\'e8 una lettura;\
+\
+
+\b0 Quando 
+\b CB1 1\'97> 0 
+\b0 si scatena 
+\b IRQB
+\b0 , cio\'e8 
+\b CRB7 \'97> 1.
+\b0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf0 Quando 
+\b CA1 1\'97> 0 
+\b0 si scatena 
+\b IRQA
+\b0 , cio\'e8 
+\b CRA7 \'97> 1.\
+\
+CRA7 
+\b0 e 
+\b CRB7 \'97> 0 
+\b0 solamente quando c\'92\'e8 una 
+\b lettura da PRA/PRB.\
+\
+\cf3 N.B: \cf4 L\'92HANDSHAKING TERMINA QUANDO SI ALZA CRB7! \
+
+\b0 Se CRB7 venisse lasciato alto sarebbe impossibile riconoscere un carattere successivo, per cui \'e8 necessario abbassare CRB7 prima di inviare un secondo carattere e quindi bisogna fare una 
+\b lettura fittizia
+\b0  da PRB.\cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf3 \'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97\'97
+\i0 \cf0 \
+\
+Per poter simulare un certo sistema bisogna caricare una configurazione all\'92interno di ASIM che specifica quali sono i componenti del sistema da simulare.\
+Per il processore bisogna specificare dove si trovano la RAM, la ROM e la loro dimensione.\
+La configurazione del processore prevede un TYPE CPU, un identificativo per ogni dispositivo connesso, un bus, l\'92indirizzo dello SP utente e supervisore.\
+Nel campo BUS del processore si specifica l\'92identificativo che \'e8 stato inserito per la memoria.\
+Il chip della memoria ha TYPE MMU/BUS e si definisce poi l\'92identificativo.\
+A processore e memoria bisogna aggiungere una periferica parallela sia per S1 che per S2.\
+Il TYPE \'e8 device, si assegna poi l\'92identificativo e il bus sul quale comunica e poi negli indirizzi si mette il primo e l\'92ultimo indirizzo assegnato al device (sono 4 indirizzi consecutivi per i 4 registri). Per collegare il device al bus si mette nel campo BUS l\'92identificativo della memoria associata.\
+Nelle COM troviamo:\
+
+\i\b 1)
+\i0  
+\b0 l\'92identificativo del gestore delle interruzioni (processore);\
+\
+
+\i\b 2) e 3)
+\i0\b0  gli identificativi dei canali IRQA e IRQB\cf2  
+\i (se utilizzo gli autovettori vuol dire che se una periferica \'e8 collegata alla linea 3 delle interruzioni la sua isr sar\'e0 presente nel 27esimo vettore della ROM, che \'e8 costituita da 256 vettori ciascuno di 32 bit. Questo perch\'e8 gli autovettori nella ROM vanno dal 25esimo vettore al 31esimo vettore e quindi il terzo vettore \'e8 il 27, e l\'92indirizzo si calcola come 27*4 = 108 = 6C in esadecimale)
+\i0 \cf0 ;\
+\
+
+\i\b 4) 
+\i0\b0 le ultime due cifre dicono l\'92identificativo del dispositivo col quale si parla mentre le prime due cifre indicano il tipo di connessione (02 per l\'92handshaking a fili incrociati che abbiamo visto in precedenza).\
+\
+A questo punto bisogna scrivere il codice: un driver per S1 e un driver per S2.\
+\
+
+\i\b\fs28 \cf5 \'97\'97ESERCIZIO 1
+\i0\b0\fs24 \cf0 \
+
+\i\b \cf3 Il sistema S1 invia in un ciclo N caratteri sul porto B scrivendo nel registro dato di volta in volta il carattere che si vuole inviare, senza usare la IRQB che \'e8 quindi disabilitata. \
+Il sistema S2 invece riceve con interruzione sul porto A e quindi la IRQA \'e8 abilitata.\
+
+\i0\b0 \cf4 Nel sistema S2 si ha un\'92interruzione ogni volta che arriva un nuovo carattere. Poich\'e8 l\'92interruzione \'e8 collegata a una linea fissa di priorit\'e0 viene direttamente invocata la ISR che si trova all\'92indirizzo che abbiamo specificato nella configurazione.\
+L\'92interruzione muore quando viene invocata la ISR.\
+Per il sistema S1 possiamo fare tutto nel 
+\b main
+\b0 , mentre poich\'e8 per S2 bisogna gestire l\'92interruzione \'e8 necessario non solo un main ma anche una 
+\b ISR
+\b0 .\
+Ogni programma presenta 
+\b area dati 
+\b0 e 
+\b area codice.\
+\
+
+\i SISTEMA S1
+\i0 \
+*******************AREA DATI************\
+
+\i\b0 ORG $8000\
+MSG		DC.B	1,2,3,4,5,6	;Define Constant Byte\
+DIM		DC.B	6\
+\
+
+\i0\b *************AREA MAIN*************
+\i \
+
+\b0 ORG $8200\
+PIADB	EQU		$2006	;la PIA dato del porto B sta all\'92indirizzo 2006\
+PIACB	EQU		$2007	;la PIA controllo del porto B sta all\'92indirizzo 2007\
+\
+MAIN	JSR		DVBOUT	;inizializza PIA porto B in output (JSR \'e8 jump a subroutine)\
+\
+	MOVEA.L		#PIACB, A1\
+	MOVEA.L		#PIADB, A2\
+	MOVEA.L		#MSG, A0\
+	MOVE.B		DIM, D0\
+\
+\
+	CLR		 D1\
+	CLR		D2\
+\
+INVIO	MOVE.B	(A2), D1		;lettura fittizia da PRB\
+		MOVE.B	(A0)+, (A2) 	;carattere corrente da trasferire su bus di PIA porto B\
+		ADD.B	#1, D2\
+\
+ciclo2	MOVE.B	(A1), D1\
+		ANDI.B	#$60, D1		;aspetta che CRB7 divenga 1 facendo una AND bit a bit\
+		BEQ		ciclo2\
+\
+		CMP		D2, D0		;controllo se ho finito di trasmettere\
+		BNE		INVIO\
+\
+LOOP	JMP		LOOP	;ciclo in cui si attende l\'92interrupt\
+\
+\
+\
+*********************************************************************************\
+DVBOUT		MOVE.B		#0, PIACB		;seleziona il registro direzione di PIA porto B\
+			MOVE.B		#$FF, PIADB	;accede a DRB e pone DRA = 1 : le linee di B sono output\
+			MOVE.B		#%00100100, PIACB	;imposta il registro di controllo\
+			\
+			RTS\
+\
+		END MAIN\
+\
+;i primi due bit sono 00 cio\'e8 IRQB e IRQA sono disabilitate. Gli ultimi due bit 00 dicono che le interruzioni sono disabilitate su IRQB e CB1 \'e8 sensibile. Il successivo bit 1 permette l\'92accesso ad indirizzo pari a PRB.\
+I successivi tre bit 100 sono per l\'92handshaking.\
+
+\i0 **********************************************************************************\
+\
+
+\i\b SISTEMA S2\
+***************
+\i0 AREA DATI***********
+\b0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\i \cf4 ORG $8000\
+MSG		DS.B		6\
+DIM		DC.B	6\
+COUNT	DC.B	0\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\i0\b \cf4 *************AREA MAIN*************
+\i \cf4 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\b0 \cf4 ORG $8200\
+PIADA	EQU		$2004	;la PIA dato del porto A sta all\'92indirizzo 2004\
+PIACA	EQU		$2005	;la PIA controllo del porto A sta all\'92indirizzo 2005\
+\
+MAIN	JSR		DVAIN		;inizializza PIA porto A in input (JSR \'e8 jump a subroutine)\
+\
+	MOVE.W		SR, D0		;legge il reg stato\
+	ANDI.W		#$D8FF, D0	;maschera per reg stato
+\i0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf4 	
+\i MOVE.W		D0, SR		\
+\
+LOOP	JMP		LOOP\
+
+\i0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\i \cf4 *********************************************************************************
+\i0 \
+
+\i DVAIN	MOVE.B	#0, PIACA		;mette 0 nel registro controllo cos\'ec al prossimo accesso a PIADA\
+							;selezioner\'e0 il registro DDRA\
+\
+		MOVE.B	#$00, PIADA			;accede a DRA e pone DRA=0\
+		MOVE.B	#%00100101, PIACA	;imposta il registro di controllo e pone IRQA1=1 e IRQA2=1\
+\
+		RTS
+\i0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+\cf4 \
+\
+\
+
+\b **************ISR*************\
+
+\i\b0 ORG $8700\
+\
+INT3		MOVE.L	A1, -(A7)\
+		MOVE.L	A0, -(A7)\
+		MOVE.L	D0, -(A7)\
+\
+		MOVEA.L	#PIADA, A1\
+		MOVEA.L #MSG, A0\
+		MOVE.B	COUNT, D0\
+\
+		MOVE.B	(A1), (A0,D0)	;
+\i0 BASED INDEXED prende la base, cio\'e8 indirizzo in A0, ci aggiunge (somma) il contenuto di D0, genera un nuovo indirizzo e poi lo mette in A1.\
+\
+		ADD.B	#1, D0\
+		MOVE.B	D0, COUNT\
+\
+		MOVE.L	(A7)+, D0\
+		MOVE.L	(A7)+, A0\
+		MOVE.L	(A7)+, A1\
+\
+		RTE\
+\
+	END MAIN
+\b \
+
+\b0 \
+\
+\
+\
+\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\i\b\fs28 \cf6 \'97\'97ESERCIZIO 2
+\i0\b0\fs24 \cf0 \
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\i\b \cf3 Il sistema S1 invia con interruzione N caratteri sul porto B, usando la IRQB che \'e8 quindi abilitata. \
+Il sistema S2 invece riceve con interruzione sul porto A e quindi la IRQA \'e8 abilitata.\
+
+\i0\b0 \cf4 Quando si invia un carattere, il sistema S2 lo legger\'e0 e in seguito alla lettura ci saranno una serie di segnali scambiati tra le due periferiche e quindi si genera un\'92interruzione nel trasmettitore che indica che il carattere inviato precedentemente \'e8 stato 
+\i consumato
+\i0 , cio\'e8 \'e8 stato letto.\
+Rispetto all\'92esercizio precedente cambia l\'92inizializzazione perch\'e8 bisogna abilitare la IRQ anche in trasmissione ed \'e8 quindi necessario definire l\'92evento che scatena l\'92interruzione.\
+Quindi almeno l\'92invio del primo carattere deve avvenire nel main.\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+}

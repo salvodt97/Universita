@@ -1,0 +1,164 @@
+00000000                                     1  
+00000000                                     2  
+00000000                                     3  
+00000000                                     4  
+00000000                                     5  
+00000000                                     6  
+00000000                                     7  
+00000000                                     8  
+00000000                                     9  *****************************************************************************************************************************************************************
+00000000                                    10  *I sistemi Z1 e Z2 comunicano mediante 2 periferiche, una parallela P e una seriale S. Il sistema Z2 è programmato per ricevere da Z1 un vettore di X caratteri,*
+00000000                                    11  *espressi su 1 byte. 																																			* 
+00000000                                    12  *Il sistema Z2 riceve sempre caratteri sulla periferica P finché non arriva un carattere TERMINA ($FF), in quel caso il sistema Z2 ricevente invia un comando di*
+00000000                                    13  *STOP (00) al Z1 sempre sulla periferica P. Da quel momento Z2 comincia a ricevere i rimanenti caratteri sulla periferica seriale S (gli eventuali caratteri 	*
+00000000                                    14  *ricevuti sulla PIA subito dopo il riconoscimento di TERMINA, devono essere scartati, oppure la PIA P di Z2 deve essere disabilitata in ricezione).  			*
+00000000                                    15  *L’invio dei caratteri deve essere gestito dal programma principale. 																							*
+00000000                                    16  *Lo studente, prima di sviluppare il codice, deve illustrare in modo schematico il flusso di controllo che intende implementare e specificare i possibili stati *
+00000000                                    17  *di eventuali flag/contatori utilizzati. 																														*
+00000000                                    18  *****************************************************************************************************************************************************************
+00000000                                    19  
+00000000                                    20  *Supponiamo per prova X=6 (vettore di 6 caratteri)
+00000000                                    21  
+00000000                                    22  
+00000000                                    23  
+00000000                                    24  
+00000000                                    25  *******************AREA DATI******************************************************************************************************************************
+00008000                                    26  		ORG $8000
+00008000  01 02 03 FF 05 06                 27  MSG			DC.B	1,2,3,255,5,6
+00008006                                    28  DIM			DS.B	6
+0000800C                                    29  MSGSTOP		DS.B	1
+0000800D  00                                30  CONTINV		DC.B	0
+0000800E                                    31  
+0000800E                                    32  
+0000800E                                    33  
+0000800E                                    34  *************AREA MAIN***************************************************************************************************************************************
+00008200                                    35  		ORG $8200
+00008200                                    36  		
+00008200                                    37  *												Usa invece il porto B per ricevere l'unico carattere di stop ch il sistema Z2 gli invia
+00008200  =00002004                         38  PIAPDRA		EQU		$2004						;indirizzo PDRA e DDRA
+00008200  =00002005                         39  PIACRA		EQU		$2005						;indirizzo CRA
+00008200                                    40  
+00008200                                    41  *												Il sistema Z1 usa il porto A per inviare
+00008200  =00002006                         42  PIAPDRB		EQU		$2006						;indirizzo PDRB e DDRB: accedo ad uno dei 2 a seconda del bit 2 del PIACRB
+00008200  =00002007                         43  PIACRB		EQU		$2007						;indirizzo CRB
+00008200                                    44  
+00008200                                    45  *												Usa invece l'USART per inviare i restanti caratteri una volta ricevuto da Z2 lo stop
+00008200  =00002010                         46  USARTDATO	EQU		$2010						;registro dati della usart
+00008200  =00002011                         47  USARTCTR	EQU		$2011						;registro di controllo della usart
+00008200                                    48  
+00008200                                    49  
+00008200                                    50  
+00008200  4EB9 00008260                     51  MAIN 		JSR		INITBOUT
+00008206  4EB9 00008274                     52  			JSR		INITAIN
+0000820C  4EB9 00008288                     53  			JSR		INITUSART
+00008212                                    54  						
+00008212                                    55  
+00008212                                    56  *PARTE DOVE ABILITO LE INTERRUZIONI			
+00008212  40C3                              57  			MOVE.W	SR,D3						;Lettura registro di stato
+00008214  0243 D8FF                         58  			ANDI.W	#$D8FF,D3					;Maschera per il registro di stato (Stato utente, interruzioni abilitate)
+00008218  46C3                              59  			MOVE.W	D3,SR						;Pongo il livello nterruzioni a 000, così da accettarle tutte
+0000821A                                    60  
+0000821A                                    61  
+0000821A                                    62  *PARTE USART
+0000821A  267C 00002010                     63  			MOVEA.L	#USARTDATO,A3				;Indirizzo del registro dato
+00008220  287C 00002011                     64  			MOVEA.L	#USARTCTR,A4				;Indirizzo registro di controllo
+00008226                                    65  
+00008226                                    66  *PARTE PIA
+00008226  227C 00002007                     67  			MOVEA.L #PIACRB,A1					;Indirizzo del registro CRB
+0000822C  247C 00002006                     68  			MOVEA.L #PIAPDRB,A2				;Indirizzo di PDRB
+00008232                                    69  			
+00008232                                    70  			
+00008232  207C 00008000                     71  			MOVEA.L	#MSG,A0					;Indirizzo area messaggio
+00008238  1039 00008006                     72  			MOVE.B	DIM,D0						;Dimensione del messaggio
+0000823E  1439 0000800D                     73  			MOVE.B	CONTINV,D2					;Contatore dei caratteri inviati
+00008244                                    74  			
+00008244  4241                              75  			CLR		D1							;Registro di appoggio
+00008246                                    76  
+00008246                                    77  
+00008246  1212                              78  INVIO		MOVE.B	(A2),D1					;Lettura fittizia per abbassare CB2, quindi per azzerare CRB(7)
+00008248  1218                              79  			MOVE.B	(A0)+,D1					;Inserisco uno per volta nel registro di appoggio il carattere corrente da inviare
+0000824A  1481                              80  			MOVE.B	D1,(A2)					;Scrittura del dato da inviare su PDRB: visto che in DDRB ho messo tutti 1, questo andrà a finire sul bus PB. Scrivere in PDRB significa abbassare la linea CB2, e quindi anche la linea CA1 a cui è connessa del dispositivo che riceve
+0000824C  5202                              81  			ADD.B	#1,D2						;Incremento di 1 il contatore di carattere inviati
+0000824E                                    82  
+0000824E                                    83  
+0000824E                                    84  *Questo ciclo serve per aspettare di ricevere l'ack dall'altro sistema, ovvero aspetto che la linea CA2 dell'altro sistema si alzi (quindi la CPU dell'altro sistema ha letto nel PDRA il dato che gli è arrivato): ciò fa alzare anche CB1 (quindi a
+0000824E  1211                              85  ciclo			MOVE.B	(A1),D1					;Voglio leggere il CRB per vedere se il bit 7 è 0
+00008250  0201 0080                         86  			ANDI.B 	#%10000000,D1				;Controllo se la AND bit a bit tra 1000000 e CRB restituisce tutti 1: se non è così signifca che CRB(7) si è abbassato e posso inviare il nuovo carattere
+00008254  67F8                              87  			BEQ		ciclo						;Se invece sono uguali, significa che CRA(7) è ancora altro, ovvero CB1 (CA2) ancora alto, quindi l'altro sistema non ha ancora letto, quindi devo leggere di nuovo
+00008256                                    88  
+00008256                                    89  
+00008256  B042                              90  			CMP		D2,D0						;Controllo se ho iniato tutti i caratteri (confrontando il numero dei caratteri inviati con la dimensione)
+00008258  66EC                              91  			BNE		INVIO						;Se non l'ho fatto allora invio ancora.
+0000825A                                    92  
+0000825A                                    93  
+0000825A                                    94  
+0000825A  4EF9 0000825A                     95  LOOP		JMP		LOOP						;Il processore aspetta che gli arrivano interruzioni, in particolare 
+00008260                                    96  
+00008260                                    97  
+00008260                                    98  
+00008260                                    99  			
+00008260                                   100  
+00008260                                   101  
+00008260  11FC 0000 2007                   102  INITBOUT	MOVE.B	#0,PIACRB					;Sto inizializzndo il CRB: in particolare è interessante il bit 2 pari a 0, poiché così quando poi accedo al PIAPDRB accedo al DDRB
+00008266  11FC 0001 2006                   103  			MOVE.B	#1,PIAPDRB					;Ora sto accedendo al DDRB (visto che in CRB(2) ho 0) e metto tutti 1 così da impostare le linee di PB ad output
+0000826C  11FC 0024 2007                   104  			MOVE.B	#%00100100,PIACRB			;Ho impostato la modalità handshaking, e disabilitato le interruzioni su A in quanto la trasmissione avviene nel main
+00008272  4E75                             105  			RTS
+00008274                                   106  
+00008274  11FC 0000 2005                   107  INITAIN 	MOVE.B	#0,PIACRA
+0000827A  11FC 0001 2004                   108  			MOVE.B	#1,PIAPDRA
+00008280  11FC 0025 2005                   109  			MOVE.B	#%00100101,PIACRA			;Sul porto A invece abilito l'interruzione, poichè il porto B riceve il arattere di stop 
+00008286  4E75                             110  			RTS
+00008288                                   111  
+00008288  11FC 005D 2011                   112  INITUSART	MOVE.B	#%01011101,USARTCTR		;Il primo accesso a questo indirizzo della USART mi fa accedere al registr di MODE, dove setto modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+0000828E  11FC 0023 2011                   113  			MOVE.B	#%00100011,USARTCTR		;Dal secondo accesso in poi accedo al registro di controllo, dove abilito trasmissione, e attivo l'handshaking. 
+00008294  4E75                             114  			RTS
+00008296                                   115  
+00008296                                   116  
+00008296                                   117  
+00008296                                   118  
+00008700                                   119  		ORG	$8700
+00008700  2F09                             120  RICSTOP		MOVE.L	A1,-(A7)					;Salvataggio del contesto software
+00008702  2F0A                             121  			MOVE.L	A2,-(A7)
+00008704  2F03                             122  			MOVE.L  D3,-(A7)
+00008706  2F01                             123  			MOVE.L 	D1,-(A7)
+00008708                                   124  	
+00008708  227C 00002004                    125  			MOVE.L	#PIAPDRA,A1
+0000870E  247C 0000800C                    126  			MOVE.L	#MSGSTOP,A2				;Indirizzo per salvare il messaggio di stop ricevuto
+00008714                                   127  		
+00008714  1491                             128  			MOVE.B	(A1),(A2)					;Il carattere di stop è stato acquisito (è stato ricevuto e memorizzato nell'area di memoria riservata ad esso)
+00008716                                   129  	
+00008716                                   130  
+00008716  1614                             131  CHECKDSR	MOVE.B	(A4),D3
+00008718  0203 0080                        132  			ANDI.B 	#%10000000,D3				;Controllo se il primo bit del CTR è 1: se è 1 attendo, altrimenti posso trasmettere, poichè DSR è legato a DTR della USART dell'altro dispositivo.
+0000871C  67F8                             133  			BEQ 	CHECKDSR
+0000871E                                   134  		
+0000871E                                   135  
+0000871E  1614                             136  CHECKTxRDY	MOVE.B	(A4),D3		
+00008720  0201 0001                        137  			ANDI.B	#%00000001,D1				;Si controlla se posso trasmettere il carattere: lo posso trasmettere quando il bit 1 è 0
+00008724  67F8                             138  			BEQ		CHECKTxRDY	
+00008726                                   139  
+00008726  1218                             140  INVIOSERIALE		MOVE.B	(A0)+,D1					;Continuo la trasmeissione da dove mi ero fermato prima: prendo il prossico carattere e lo metto in un registro D4
+00008728  1684                             141  			MOVE.B 	D4,(A3)					;Sposto poi il carattere che sta in D4 in (A3), ovvero nel registro dato della USART, per trasmettere
+0000872A  5202                             142  			ADD.B	#1,D2						;Incremento il contatore
+0000872C                                   143  		
+0000872C  B042                             144  			CMP		D2,D0
+0000872E  66EE                             145  			BNE		CHECKTxRDY
+00008730                                   146  			
+00008730                                   147  			
+00008730  221F                             148  			MOVE.L	(A7)+,D1
+00008732  261F                             149  			MOVE.L	(A7)+,D3
+00008734  245F                             150  			MOVE.L	(A7)+,A2
+00008736  225F                             151  			MOVE.L	(A7)+,A1
+00008738                                   152  			
+00008738  4E73                             153  			RTE
+0000873A                                   154  		
+00008800                                   155  		ORG	$8800
+00008800                                   156  *												Questa è la ISR per la trasmissione con la USART: la devo mettere per forza in quanto non posso disabilitare l'interruzione sulla trasmissione, ma non fa niente poichè trasmetto nel main.		
+00008800  4E73                             157  			RTE
+00008802                                   158  			
+00008802                                   159  			
+00008802                                   160  			
+00008802                                   161  			END MAIN
+
+No errors detected
+No warnings generated

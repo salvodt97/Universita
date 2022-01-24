@@ -1,0 +1,163 @@
+
+
+
+
+
+
+
+
+*****************************************************************************************************************************************************************
+*I sistemi Z1 e Z2 comunicano mediante 2 periferiche, una parallela P e una seriale S. Il sistema Z2 è programmato per ricevere da Z1 un vettore di X caratteri,*
+*espressi su 1 byte. 																																			* 
+*Il sistema Z2 riceve sempre caratteri sulla periferica P finché non arriva un carattere TERMINA ($FF), in quel caso il sistema Z2 ricevente invia un comando di*
+*STOP (00) al Z1 sempre sulla periferica P. Da quel momento Z2 comincia a ricevere i rimanenti caratteri sulla periferica seriale S (gli eventuali caratteri 	*
+*ricevuti sulla PIA subito dopo il riconoscimento di TERMINA, devono essere scartati, oppure la PIA P di Z2 deve essere disabilitata in ricezione).  			*
+*L’invio dei caratteri deve essere gestito dal programma principale. 																							*
+*Lo studente, prima di sviluppare il codice, deve illustrare in modo schematico il flusso di controllo che intende implementare e specificare i possibili stati *
+*di eventuali flag/contatori utilizzati. 																														*
+*****************************************************************************************************************************************************************
+
+*Supponiamo per prova X=6 (vettore di 6 caratteri)
+
+
+
+
+*******************AREA DATI******************************************************************************************************************************
+		ORG $8000
+MSG			DC.B	1,2,3,255,5,6
+DIM			DC.B	6
+MSGSTOP		DS.B	1
+CONTINV		DC.B	0
+
+
+
+*************AREA MAIN***************************************************************************************************************************************
+		ORG $8200
+		
+*												Usa invece il porto B per ricevere l'unico carattere di stop ch il sistema Z2 gli invia
+PIAPDRA		EQU		$2004						;indirizzo PDRA e DDRA
+PIACRA		EQU		$2005						;indirizzo CRA
+
+*												Il sistema Z1 usa il porto A per inviare
+PIAPDRB		EQU		$2006						;indirizzo PDRB e DDRB: accedo ad uno dei 2 a seconda del bit 2 del PIACRB
+PIACRB		EQU		$2007						;indirizzo CRB
+
+*												Usa invece l'USART per inviare i restanti caratteri una volta ricevuto da Z2 lo stop
+USARTDATO	EQU		$2010						;registro dati della usart
+USARTCTR	EQU		$2011						;registro di controllo della usart
+
+
+
+MAIN 		JSR		INITBOUT
+			JSR		INITAIN
+			JSR		INITUSART
+						
+
+*PARTE DOVE ABILITO LE INTERRUZIONI			
+			MOVE.W	SR,D3						;Lettura registro di stato
+			ANDI.W	#$D8FF,D3					;Maschera per il registro di stato (Stato utente, interruzioni abilitate)
+			MOVE.W	D3,SR						;Pongo il livello nterruzioni a 000, così da accettarle tutte
+
+
+*PARTE USART
+			MOVEA.L	#USARTDATO,A3				;Indirizzo del registro dato
+			MOVEA.L	#USARTCTR,A4				;Indirizzo registro di controllo
+
+*PARTE PIA
+			MOVEA.L #PIACRB,A1					;Indirizzo del registro CRB
+			MOVEA.L #PIAPDRB,A2				;Indirizzo di PDRB
+			
+			
+			MOVEA.L	#MSG,A0					;Indirizzo area messaggio
+			MOVE.B	DIM,D0						;Dimensione del messaggio
+			MOVE.B	CONTINV,D2					;Contatore dei caratteri inviati
+			
+			CLR		D1							;Registro di appoggio
+
+
+INVIO		MOVE.B	(A2),D1					;Lettura fittizia per abbassare CB2, quindi per azzerare CRB(7)
+			MOVE.B	(A0)+,D1					;Inserisco uno per volta nel registro di appoggio il carattere corrente da inviare
+			MOVE.B	D1,(A2)					;Scrittura del dato da inviare su PDRB: visto che in DDRB ho messo tutti 1, questo andrà a finire sul bus PB. Scrivere in PDRB significa abbassare la linea CB2, e quindi anche la linea CA1 a cui è connessa del dispositivo che riceve
+			ADD.B	#1,D2						;Incremento di 1 il contatore di carattere inviati
+
+
+*Questo ciclo serve per aspettare di ricevere l'ack dall'altro sistema, ovvero aspetto che la linea CA2 dell'altro sistema si alzi (quindi la CPU dell'altro sistema ha letto nel PDRA il dato che gli è arrivato): ciò fa alzare anche CB1 (quindi a
+ciclo			MOVE.B	(A1),D1					;Voglio leggere il CRB per vedere se il bit 7 è 0
+			ANDI.B 	#%10000000,D1				;Controllo se la AND bit a bit tra 1000000 e CRB restituisce tutti 1: se non è così signifca che CRB(7) si è abbassato e posso inviare il nuovo carattere
+			BEQ		ciclo						;Se invece sono uguali, significa che CRA(7) è ancora altro, ovvero CB1 (CA2) ancora alto, quindi l'altro sistema non ha ancora letto, quindi devo leggere di nuovo
+
+
+			CMP		D2,D0						;Controllo se ho iniato tutti i caratteri (confrontando il numero dei caratteri inviati con la dimensione)
+			BNE		INVIO						;Se non l'ho fatto allora invio ancora.
+
+
+
+LOOP		JMP		LOOP						;Il processore aspetta che gli arrivano interruzioni, in particolare 
+
+
+
+			
+
+
+INITBOUT	MOVE.B	#0,PIACRB					;Sto inizializzndo il CRB: in particolare è interessante il bit 2 pari a 0, poiché così quando poi accedo al PIAPDRB accedo al DDRB
+			MOVE.B	#1,PIAPDRB					;Ora sto accedendo al DDRB (visto che in CRB(2) ho 0) e metto tutti 1 così da impostare le linee di PB ad output
+			MOVE.B	#%00100100,PIACRB			;Ho impostato la modalità handshaking, e disabilitato le interruzioni su A in quanto la trasmissione avviene nel main
+			RTS
+
+INITAIN 	MOVE.B	#0,PIACRA
+			MOVE.B	#0,PIAPDRA
+			MOVE.B	#%00100101,PIACRA			;Sul porto A invece abilito l'interruzione, poichè il porto B riceve il arattere di stop 
+			RTS
+
+INITUSART	MOVE.B	#%01011101,USARTCTR		;Il primo accesso a questo indirizzo della USART mi fa accedere al registr di MODE, dove setto modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+			MOVE.B	#%00100011,USARTCTR		;Dal secondo accesso in poi accedo al registro di controllo, dove abilito trasmissione, e attivo l'handshaking. 
+			RTS
+
+
+
+
+		ORG	$8700
+RICSTOP		MOVE.L	A1,-(A7)					;Salvataggio del contesto software
+			MOVE.L	A2,-(A7)
+			MOVE.L  D3,-(A7)
+			MOVE.L 	D1,-(A7)
+	
+			MOVE.L	#PIAPDRA,A1
+			MOVE.L	#MSGSTOP,A2				;Indirizzo per salvare il messaggio di stop ricevuto
+		
+			MOVE.B	(A1),(A2)					;Il carattere di stop è stato acquisito (è stato ricevuto e memorizzato nell'area di memoria riservata ad esso)
+	
+
+CHECKDSR	MOVE.B	(A4),D3
+			ANDI.B 	#%10000000,D3				;Controllo se il primo bit del CTR è 1: se è 1 attendo, altrimenti posso trasmettere, poichè DSR è legato a DTR della USART dell'altro dispositivo.
+			BEQ 	CHECKDSR
+		
+
+CHECKTxRDY	MOVE.B	(A4),D3		
+			ANDI.B	#%00000001,D1				;Si controlla se posso trasmettere il carattere: lo posso trasmettere quando il bit 1 è 0
+			BEQ		CHECKTxRDY	
+
+INVIOSERIALE		MOVE.B	(A0)+,D1					;Continuo la trasmeissione da dove mi ero fermato prima: prendo il prossico carattere e lo metto in un registro D4
+			MOVE.B 	D4,(A3)					;Sposto poi il carattere che sta in D4 in (A3), ovvero nel registro dato della USART, per trasmettere
+			ADD.B	#1,D2						;Incremento il contatore
+		
+			CMP		D2,D0
+			BNE		CHECKTxRDY
+			
+			
+			MOVE.L	(A7)+,D1
+			MOVE.L	(A7)+,D3
+			MOVE.L	(A7)+,A2
+			MOVE.L	(A7)+,A1
+			
+			RTE
+
+			
+			
+			
+			END MAIN
+
+
+
+
+

@@ -1,0 +1,46 @@
+Nei moderni sistemi, il Sistema operativo decide dove allocare dinamicamente dati e istruzioni spostandoli tra memoria di massa(secondaria) e RAM(principale), e le tecniche dispostamenti si chiamano
+Memoria Virtuale. Quindi capisco che l'indirizzo che genera il processore è virtuale e potrebbe essere ogni volta diverso a seconda di dove sta allocato quello che cerco.
+IL processore genera quindi INDIRIZZI VIRTUALI: vengono tradoto dall'MMU in un indirizzo fisico poi, che mi serve per capire se il dato sta in cache o no. E' sempre un indirizzo grande però quanto la memoria
+virtuale. Devo capire come fare questa traduzione. Tutti i dati e le istruzioni sono organizzate in RAM in un unità ben precisa, detta PAGINE: una pagina è la dimensione minima di unità che sposto tra memoria
+principale e secondaria. Un indirizzo virtuale sarà quindi coposto d 2 parti: la prima che mi dice la pagina, il secondo che mi dice l'offest(l'indirizzo del dato)dentro la pagina. E' il sistema operativo che sa il 
+numero di pagina, poichè lui associa la pagina virtuale ad una fisica. Quindi vedo un'indirizzo virtuale generato dal processore come numero di pagina virtuale e offset: l'ffset è sempre lo stesso, ma è il 
+numero di pagina che può cambiare. Per ricavare il numero di pagina corretto, si usa  tabella chiamata PAGE TABLE memorizzo poi in quale pagina fisica sta quella pagina virtuale: in particolare per ogni 
+pagine nella tabella avrò un indirizzo base, a cui sommo l'indirizzo virtuale della pagina per avere quello fisico.
+La pagina però è grande, quindi viene mantenita in meoria centrale. Quindi quando cerco un dato prima vado in memoria principale a crecare la pagina, poi vedo l'indirizzo del dato nella cache, e poi vado 
+in cache. Ciò è lento: allora metto parte della Page table della MMU, ovvero la realizzo in hardware: è una memoria associativa detta TLB. Devo confrontare l'indirizzo di pagina virtuale nella TLB: se è 
+presente in nella TLB, significa che ho trovato la pagina poichè ho l'indirizzo base nella TLB e calcolo l'indirizzo fisico con quello virtuale, e quindi potrei trovate il dato nella cache; se invece non ho la pagina 
+virtuale, non ho proprio un miss,  poichè la TLB è piccola e non roesce a contenere tutte le pagine. In questo caso dovrei andare in memoria principale, nella Page Table, per cercare la pagina.
+Se la pagina poi no è presente nemmeno nella Page Table, ho il Page Fault che è un'eccezione, poichè significa che la pagina non sta in RAM.
+Quindi l'indirizzo fisico viene visto in 3 parti:  una parte di tag(somma tra indirizzo virtuale e base del frame che sta nella page table), una parte che è l'indirizzo del blocco(che sarebbe l'offset del blocco
+che si trova nell'indirizzo virtuale, in quanto indirizzo virtuale è fatto da indirizzo della pagina + offset che indica il blocco e quindi il dato), e una parte che è l'ndirizzo della word che mi interessa. 
+Riesco a calcolarlo se ho il frame della pagina nella paget table: se non ce l'ho, ho il Page fault. In questo caso quindi devo trasferire la pagina da meoria di massa a RAM e, se è piena, uso una
+combinazione tra algoritmi di sstituzione LRU e Random(il SO azzera ciclicamente il bit di validità).
+La gerarchia è CPU->MMU(e TLB)->Cache->memoria centrale->memoria di massa.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

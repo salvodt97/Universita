@@ -1,0 +1,26 @@
+Vediamo ora il PIC, dove però simuliamo un dispositivo più semplice. Ad ogni linea di interrupt sono associate delle priorità(la linea 0 è la più prioritaria). Ne registro TR come base scriviamo il numero
+64, che è il primo vettore del vettore delle interruzioni, e poi ci sommo lo spiazzamento degli ultimi 3 bit per ottenere il vero vettore dove sta la ISR. Chiaramente tale numero non è l'indirizzo reale
+del vettore dell ISR, ma lo devo convertire.
+In asim gli do 2 locazioni di memoria pari e dispari; in com1 dico qual'è il dispositivo che gestisce l'interruzione del PIC(CPU o un'altra PIC che sta in cascata); in com2 trovo le info sul vettore delle interruzioni, 
+la linea a cui è legata il pic e quindi la priorità.
+In ASIM è stato introdotto apposta il componente 1to4INTGEN: esso è in grado di generare 5 interruzioni diverse: la prima la generea se glilo dico io settando un bit(programmatica), mentre le alltre 4 sono
+generate allo scadere di un timer: quindi mi servono 4 timer. Queste 5 interruzioni andranno su 5 fii diversi legati al PIC: cioò mi serve per simulare di avere 5 dipsotivi interrompenti al PIC, serve solo per testare il PIC.
+
+Tale GEN ha diversi byte per progammarli(diversi registri): il primo mi dice la configurazione, h poi 4 registri per i timer, e 2 registri count per il conteggio del tempo. Invece, il byte Vector Number mi dice la linea di
+prorità (vettore) su cui sta la prima interruzione, quella programmatica.
+Il sistema che vedremo ha una CPU, memoria il PIC co il GEN, e un terminale che serve soll per fare vedere quale interruzione del GEN sto gestendo.
+Asim in teoria è in grado di gestire il fatto che su una linea del PIC ho piàù dispositivi interrompenti di cui controllo l'interruzione con daysi chain: il problema è che la ISR è la stessa per tutti i dispositivi su quella linea
+e quindi dovrei capire come trovare il dispositivo che mi ha interrotto e la sua ISR: ciò è molto complesso. Ecco perchè in Asim sulla com2 ho 4 bit: gli ultimi 2 bit mi dicono sia linea che priorità del dispositivo su quella linea.
+Se ho un solo dispositivo la priorità(qualsiasi cosa scrivo nell'ultima cifra) è quella della linea(terza cifra), ma se ho più linee allora la priorità è diversa.
+
+
+Il programma che fa: scrivo gli indirizzi del PIC, GEN e terminale: inizializzo il terminale.
+Inizializzo pi il pic scrivendo come primo accesso il numero 64($40) nel tr come indirizzo di base per il vettore di interruzioni; nel registro CNTRL mi ricordo di mettere a 0 il bit4 per dire che non voglio gestire le interuzoni
+con la tecnica automatica, ovvero lo voglio dire ko il bit da mettere a 0 nel registro ISR
+Ho poi 4 sezioni diverse per i 4 timer: ad ogni timer ci dico la linea a cui è connesso il dispositivo, la priorità(messa sempre a 1), i contatori H e L. Poi mi serve la sezione per l'iterruzione programmatica: gli dico che
+va sulla linea 7 del PIC e con la MOVE.B #$02, 2(A1) setto il bit per lanciare l'iterruzione.
+
+Ho poi le IR, una per ogni lena(anche se in realtà ne uso solo 5): essi stampano un numero sul terminale e settano il bit dell' ISR mettendo 1 nel bit 3 di CNTRL per idrce che voglio vancellare un bit di IDR(pochè ho
+fatto l'interruzione), e i bit 0,1,e 2 per idre quale bit dell'ISR devo cancellare 
+
+DA RICORDARE CHE L'INTGEN NON VA SEMPRE QUANDO USO IL PIC

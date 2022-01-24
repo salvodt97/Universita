@@ -1,0 +1,135 @@
+**********AREA DATI************************************************************************************
+	ORG	$8000
+MSG			DS.B	6
+MSGSTOP		DC.B	0						;Messaggio di stop da inviare nel caso in cui si riceve $FF dal trasmettitore
+COUNT		DC.B	0
+
+
+
+************AREA MAIN***************************************************************************
+*Il ricevitore usa il poro B della PIA per ricevere i primi dati, il porto A per inviare l'eventuale carattere di stop, e la USART per ricevere gli altri caratteri
+									
+PIAPDRA		EQU		$2004						
+PIACRA		EQU		$2005						
+
+
+PIAPDRB		EQU		$2006						
+PIACRB		EQU		$2007						
+
+												
+USARTDATO	EQU		$2010						
+USARTCTR	EQU		$2011						
+
+
+MAIN 		JSR		INITAIN
+			JSR		INITBOUT
+			JSR		INITUSART
+		
+		
+			MOVEA.L #MSGSTOP,A4
+
+			
+			
+*PARTE DOVE ABILITO LE INTERRUZIONI			
+			MOVE.W	SR,D3						
+			ANDI.W	#$D8FF,D3					
+			MOVE.W	D3,SR	
+			
+
+
+INITBOUT	MOVE.B	#0,PIACRB					;Sto inizializzndo il CRB: in particolare è interessante il bit 2 pari a 0, poiché così quando poi accedo al PIAPDRB accedo al DDRB
+			MOVE.B	#1,PIAPDRB					;Ora sto accedendo al DDRB (visto che in CRB(2) ho 0) e metto tutti 1 così da impostare le linee di PB ad output
+			MOVE.B	#%00100100,PIACRB			;Ho impostato la modalità handshaking, e disabilitato le interruzioni su A in quanto la trasmissione avviene nel main
+			RTS
+
+INITAIN 	MOVE.B	#0,PIACRA
+			MOVE.B	#1,PIAPDRA
+			MOVE.B	#%00100101,PIACRA			;Sul porto A invece abilito l'interruzione, poichè il porto B riceve il arattere di stop 
+			RTS
+
+INITUSART	MOVE.B	#%01011101,USARTCTR		;Il primo accesso a questo indirizzo della USART mi fa accedere al registr di MODE, dove setto modalità asincrona, parità dispari, 8 bit di informazione e 2 bit di stop
+			MOVE.B	#$36,USARTCTR				;Dal secondo accesso in poi accedo al registro di controllo, dove abilito ricezione, e attivo l'handshaking. 
+			RTS
+
+
+LOOP		JMP	LOOP
+
+
+
+
+
+
+
+**********************Questa è la ISR che si occupa di ricevere i caratteri sulla PIA**********************************************************************************************************************
+		ORG $8700
+			MOVE.L 	A0,-(A7)
+			MOVE.L	A1,-(A7)
+			MOVE.L  A2,-(A7)
+			MOVE.L  D1,-(A7)
+			MOVE.L  D0,-(A7)
+			
+			MOVEA.L	#MSG,A0
+			MOVE.B 	COUNT,D0
+			MOVEA.L #PIAPDRB,A2
+			MOVEA.L	#PIAPDRA,A1
+			
+			MOVE.B	(A1),(A0,D0)			;Ricevo
+			
+			ADD.B	#1,D0
+			MOVE.B	D0,COUNT
+			
+*Confronto per vedere se il carattere ricevuto è $FF: se ciò accade, Z2 deve inviare a Z1 il carattere di stop $00
+			MOVE.B	#$FF,D1
+			CMP		(A1),D1
+			BNE		RIPRISTINO
+			
+
+			MOVE.B  #%00100000,PIACRA		;Disabilito la ricezione sulla pia mettendo tutti 0 nel CRA: è importatnte che il bit 0 venga messo a 0 in particolare
+			CLR		D1
+			MOVE.B  (A2),D1				;Lettura fittizia per abbassare CB2, quindi per azzerare CRB(7)
+			MOVE.B	(A3),D1				;Inserisco uno per volta nel registro di appoggio il carattere corrente da inviare
+			MOVE.B	D1,(A2)				;Scrittura del dato da inviare su PDRB: visto che in DDRB ho messo tutti 1, questo andrà a finire sul bus PB. Scrivere in PDRB significa abbassare la linea CB2, e quindi anche la linea CA1 a cui è connessa del dispositivo che riceve
+			
+RICACK		MOVE.B	(A1),D1				;Parte in cui aspetto di ricevere l'ack dall'alro dispositivo, ovvero che il bit 7 del CRB si abbassi.
+			ANDI.B 	#%10000000,D1				
+			BEQ		RICACK	
+
+RIPRISTINO	MOVE.L (A7)+,D1
+			MOVE.L (A7)+,A2
+			MOVE.L (A7)+,A1		
+			
+			RTE
+			
+
+**********************Questa è la ISR che si occupa di ricevere i caratteri sulla USART**********************************************************************************************************************
+		ORG $8800
+			MOVE.L 	A0,-(A7)
+			MOVE.L	A1,-(A7)
+			MOVE.L  A2,-(A7)
+			MOVE.L  D1,-(A7)
+			MOVE.L  D0,-(A7)
+			
+			MOVEA.L	#USARTCTR,A2
+			MOVEA.L	#USARTDATO,A1
+			MOVEA.L	#MSG,A0
+			MOVE.B 	COUNT,D0
+
+CHECKDSR	MOVE.B	(A2),D1 
+			ANDI.B	#$80,D1					;Controllo se il primo bit del CTR è 1: se è 1 attendo, altrimenti posso trasmettere, poichè DSR è legato a DTR della USART dell'altro dispositivo.
+			BEQ 	CHECKDSR
+
+			MOVE.B (A1),(A0,D0)
+			
+			ADD.B	#1,D0
+			MOVE.B	D0,COUNT
+			
+			MOVE.L  (A7)+,D0
+			MOVE.L  (A7)+,D1
+			MOVE.L  (A7)+,A2
+			MOVE.L  (A7)+,A1
+			MOVE.L  (A7)+,A0
+
+
+			END		MAIN
+
+

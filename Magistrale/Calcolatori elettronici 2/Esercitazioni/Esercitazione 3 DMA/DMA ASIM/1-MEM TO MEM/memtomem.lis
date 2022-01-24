@@ -1,0 +1,92 @@
+00000000                                     1  ************************************************************************************
+00000000                                     2  *Questo esercizio mostra l'impiego del DMA per effettuare il trasferimento di un blocco di dati 
+00000000                                     3  *da memoria a memoria. Viene selezionata una modalità di trasferimento single.
+00000000                                     4  *Il DMA ha una linea di interruzione collegata sulla linea di priorità 7 del processore.
+00000000                                     5  *L'indirizzo della ISR, che segnala il completamento di un trasferimento, è $8700 e viene scritto
+00000000                                     6  *in ROM in corrispondenza dell'indirizzo 7C (settimo autovettore)
+00000000                                     7  * 
+00000000                                     8  *
+00000000                                     9  *
+00000000                                    10  *
+00000000  =00002010                         11  dma		EQU 	$2010
+00000000  =00000000                         12  caddr0		EQU	0
+00000000  =00000002                         13  caddr1		EQU	2
+00000000  =00000003                         14  ccount1	EQU	3
+00000000  =00000008                         15  cntrl		EQU	8
+00000000  =0000000B                         16  mode		EQU	11
+00000000  =0000000D                         17  reset		EQU	13
+00000000  =0000000E                         18  clearmf	EQU	14
+00000000  =0000000F                         19  writeamf	EQU	15	
+00000000  =00000022                         20  nbyte		EQU	34
+00000000                                    21  * ------------------------------------------------------------------------------------------------------
+00000000                                    22  
+00000000                                    23  *Area Dati
+00009500                                    24  		ORG 		$9500
+00009500  30 31 32 33 34 35 36 37 38 ...    25  origine	DC.B		'0123456789 messaggio da trasferire'
+00009522                                    26  destinazione	DS.B	34	
+00009544                                    27  
+00009544                                    28  * ------------------------------------------------------------------------------------------------------
+00009544                                    29  
+00009544                                    30  *Area Programma
+00009544                                    31  
+00008200                                    32  		ORG	$8200
+00008200                                    33  start
+00008200                                    34  
+00008200                                    35  *inizializzazione del device DMA
+00008200                                    36  
+00008200  307C 2010                         37  		MOVE.W	#dma,A0			;Carica in A0 l'indirizzo base del DMA
+00008204                                    38  
+00008204  317C 9500 0000                    39  		MOVE.W	#origine,caddr0(A0)		;Carica l'indirizzo base del blocco sorgente nel
+0000820A                                    40  *										registro indirizzo del canale 0
+0000820A                                    41  
+0000820A  317C 9522 0002                    42  		MOVE.W	#destinazione,caddr1(A0)		;Carica l'indirizzo base del blocco destinazione nel
+00008210                                    43  *										registro indirizzo del canale 1
+00008210                                    44  		
+00008210  117C 0022 0003                    45  		MOVE.B	#nbyte,ccount1(A0)		;Carica il numero di byte da spostare nel registro
+00008216                                    46  *										conteggio 
+00008216                                    47  
+00008216  117C 0090 000B                    48  		MOVE.B	#$90,mode(A0)		;CANALE 0: setta il trasferimento da memoria ad
+0000821C                                    49  *										interfaccia, si autoinizializzazione dei registri
+0000821C                                    50  *										addr e count dopo trasferimento, incremento del
+0000821C                                    51  *										registro indirizzo,trasferimento in modalità BLOCK	
+0000821C                                    52  	
+0000821C  117C 0091 000B                    53  		MOVE.B	#$91,mode(A0)		;CANALE 1: setta il trasferimento da memoria ad
+00008222                                    54  *										interfaccia, si autoinizializzazione dei registri
+00008222                                    55  *										addr e count dopo trasferimento, incremento del
+00008222                                    56  *										registro indirizzo,trasferimento in modalità BLOCK
+00008222                                    57  							    		
+00008222  117C 00A0 0008                    58  		MOVE.B	#$A0,cntrl(A0)			;CNTRL=1010|0000: abilita trasmissione mem-to-mem e
+00008228                                    59  *										abilita il DMA controller (automaticamente viene
+00008228                                    60  *										spedita la richiesta di bus al processore)
+00008228                                    61  
+00008228  4EF9 00008228                     62  loop	JMP	loop						;Loop di attesa del trasferimento, simula un impegno 
+0000822E                                    63  *									fittizio del processore
+0000822E                                    64  		
+0000822E                                    65  *	
+0000822E                                    66  *
+0000822E                                    67  *
+0000822E                                    68  
+0000822E                                    69  
+0000822E                                    70  *     INTERRUZIONE DI FINE TRASFERIMENTO    *
+0000822E                                    71  *     questa interruzione è generata dal segnale EOP quando il conteggio dei byte da trasferire si azzera.
+0000822E                                    72  *     L'interruzione deve essere sempre prevista: in questo caso specifico l'interruzione resetta il DMA
+0000822E                                    73  *
+0000822E                                    74  
+00008700                                    75  	ORG $8700
+00008700                                    76  
+00008700  2F08                              77  int7		MOVE.L	A0,-(A7)			;Salva il contesto
+00008702  307C 2010                         78  		MOVE.W	#dma,A0					
+00008706  117C 0000 000D                    79  		MOVE.B	#0,reset(A0)			;Resetta il DMA
+0000870C  205F                              80  		MOVE.L	(A7)+,A0			;Ripristina i registri utilizzati
+0000870E  4E73                              81  		RTE
+00008710                                    82  
+00008710                                    83  
+00008710                                    84  
+00008710                                    85  		
+00008710                                    86  
+00008710                                    87  
+00008710                                    88  		
+00008710                                    89  		end		start
+
+No errors detected
+No warnings generated

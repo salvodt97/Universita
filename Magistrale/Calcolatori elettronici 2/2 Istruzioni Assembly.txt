@@ -1,0 +1,47 @@
+Vediamo ora come sono le istruzioni fondamentali del Motorola 68000 e come sono memorizzati i programmi.
+Sappiamo che ci sono 16 registri a 32 bit A0 e A7 per gli indirizzi utilizzabili per 16 e 32 bit, D0 e D7 per i dati. Il registro A7 è particolare, poichè punta sempre alla testa dello stack
+così da fare operazioni sullo stack molto veloci.
+Il registro di stato ha i 5 bit meno significativi per gestire il salto(5 meno significativi), 3 per le interruzioni, un bit S per lo stato utente o supervisore, u bit T per il debug, In particolare i 5 meno significativi
+sono dei flag, cioè i Conditions Code CC, e sono:
+ -V, ovvero l'overflow
+ -Z, ovvero zero
+ -N, ovvero negativo
+ -C, ovvero il carry(in ingresso e/o in uscita)
+ -X, extend
+
+Vediamo le istruzioni:
+
+MOVE <sorgente>, <destiazioni>	mi muove una parola da un registro in un altro; posso usare parole di qualsiasi dimensoone, e permette tutte le modalità di indirizzameno, ovvero da registro a memoria
+				da registro a memoria e viceversa. Esso in particolare setta i 5 bit meno significativi dello stato: In particolare i flag N e Z a seconda dell'operando, e i bit C e V a 0
+ADD <operando>, Dn		fa la somma tra 2 operandi e la salva nel registro del primo operando; di default lavora su 16 bit e setta tutti i 5 bit dello stato. La somma viene sempre fatta con un
+				almeno un regsitro(il contenuto) come operando; la sottrazione si fa con SUB
+ADDQ#<dato>, <operando> 		mi fa la somma con un dato immediato(un valore sul massimo di 3 bit); c'è ancge SUBQ
+CLR <registro>			mi mette a 0 tutti i bit di un registro
+CMP <operando0>, <operando1>	compara 2 valori facendo la sottrazione tra il primo operando e il secondo, ma non memorizza il risultato, l'unica cosa che setta sono i flag del registro di stato
+				è bene che almeno uno dei 2 operandi sia di registro; se voglio confrontare elementi invece in memoria, uso la CMPM(Compare Mempory)
+Bcc <label>			Salto condizionato: controllo una condizione, e se è verificata faccio il sato non all'indirizzo successivo, ma somma al valore del programm counter il valore che
+				gli do come attributo ed esegue l'istruzione che si trova all'indirizzo somma. Lo spiazzamento può essere positivo onegativo.Inoltr, inrealtà l'istruzione non è Bcc,
+				ma c'è solo la B più altre lettere che caratterizzano la condizione sul cc. Per esempio c'è l'istruzione BEQ che salta se il flag Z=0, ovvero prima è stata fatta una compare
+				sottrazione per il quale il risultato era 0(erano uguali il valore). Prevede solo indirizzamento reltivo. Il processore non tiene conto del tipo di rappresentazione 
+				quando setta i flag CC. Praticamente la sintassi sarebbe: IF cc=1 THEN [PC] <- [PC]+label.In particolare sono previsti 3 tipi di branch:
+	*Su singoli bit(come BEQ, BNE ecc...) dove si verifica un solo flag
+	*Branch signed, dove si verifica la somma algebrica tra 2 flag(dove si concepisce anche il valore negativo)(per esempio $FF=-1 se signed, e quindi minore di $10=16)
+	*Branch unsigned, dove si controlla la somma tra 2 flag unsigned($FF è maggiore di $10 se non unsigned, poichè 255>10)
+JMP <label>			E' salto incondizionato, ovvero non calcola uno spiazzamento, ma setta il valore del programm counter con il valore di <label>. JMP mi permette di fare salti lunghi, ovvero
+				fuori dal modulo di operazione. Permette qualsiasi tipo di indirizzamento.
+DBcc Dn, <label>			Il branch con decremento, ovvero verifica se la condizione è falsa(quella di cc) torna al contatore che si trova in Dn e lo incrementa, se è vera salta. Praticamente fa:
+				IF(cc false) THEN 
+					[DN] <- [DN]-1
+					IF [DN] = -1 THEN [PC]<-[PC]+2
+						   ELSE [PC] <-[PC]+label
+				ELSE [PC]<-[PC]+2
+LEA <valore>, AN			Calcola l'indirizzo effettivo del primo operando e lo pone nel registro An. E' molto utile per lavorare sui vettori
+
+Ci sono poi degli pseudo-operatori, che sono delle rìdirettive al processore; e ci sno:
+ORG 			 viene usato per per inizializzare la variabile Program Location Counter(PLC), ovvero per indicare a quale indirizzo verrà posto il prossimo codice
+END			 viene usato per terminare il processo di assemblaggio e definire l'entry point
+DS			 permette di riservare uno spazio per un determinato nome(ad una variabile)
+DC			 permette di inizializzare il valore di una variabile mettendo direttamente il dato(anche un vettore) sarebbe degìfine constant
+EQU			 permette di definire una costante ma non una variabile, ovvero non la alloca in memoria che può essere letta ma non modificata
+
+Ci sono poi le etichette, che sono delle stringhe di testo: esse non posso avere il nome di un istruzione(come MOVE) e servono a riferirsi a quell'istruzione o dato indicati dall'etichetta

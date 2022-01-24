@@ -1,0 +1,145 @@
+--------------------INTRODUZIONE-----------------------------------------------------------------------------------------------------------------------------------
+Vedremo come realizzare sistemi di elaborazioni più performanti e complessi grazie al parallelismo. Al giorno d'oggi tutti i dispositivi, 
+anche i più piccoli, hanno un processore, ovvero sono fatti tramite architetture programmabili e non più con sistemi embdded.
+Il parallelismo può essere:
+ -INTERNO al singolo processore; (pipelini)
+ -ESTERNO, che permette a più processori nello stesso sistema di parlare tra loro (multi)
+In ogni caso le risorse restano sempre le stesse, sono condivise(come la memoria) e limitata, e quindi devo gestire in maniera efficiente
+tali risorse, altrimenti il parallelismo sarebbe soo un ostacolo poichè il processore può essere anche molto veloce, ma se l'accesso alla
+memoria è lento, è inutile farlo molto veloce.
+Dobbiamo sicronizzare tutti gli oggetti che si trovano nel processore, nell'unità di controllo.
+Riprendiamo il concetto di macchine combinatorie e sequenziali per costruire per realizzare due tipi di macchine:
+ -MACCHINE SPECIALI, che realizzano un solo programma, un solo compito
+ -MACCHINE GENERALI, sono general pourpose e sintetizzano più macchine speciali
+ -MACCHINE UNIVERSALI, molto più potenti in quanto programmabili e quindi permettono di avere un comportamento differente a seconda
+  del programma che eseguono; sono dette anche GENERAL POURPOSE. La sua struttura sarà qundi indipendente dai compiti che dovrà eseguire.
+  Tra gli esempi ci sono le macchine di TURING e VON NEUMANN; in particlare alla macchina di Von Neumann sono state apportate delle modifiche
+  per migiorarla
+
+-----------------------------------------MACCHINA DI VON NEUMANN-------------------------------------------------------------------------------------------------------
+Essa contiene una memoria linearmente indirizzabile, ovvero ogni cella dotata di parallelismo interno è univocamente identificata da un indirizzo; ogni
+cella può contenere sia istruzioni che dati, che vengono prelevate allo stesso modo. La differenza tra dati e istruzioni la si vede mediante lo stato di esecuzione
+del processore, ovvero mendiante le 3 fasi:
+  -FETCH, che preleva l'sitruzione
+  -DECODIFICA ISTRUZIONE
+  -PRELIEVO DEGLI OPERANDI
+  -ESECUZIONE
+Quindi mediante tali fasi capiamo se stiamo prelevando dati o istruzioni.
+Tutte queste fasi vengono eseguite per ogni istruzione, e noi vedremo un ulteriore fase, il WRITHE BACK, dove si memorizzano i risultatati.
+Tale macchine è composta da macchine combinatorie e sequenziali interconesse; tali macchine vengono controllate mediante dei segnali di abilitazione, che
+mi deve permettere anche di accedere alla parte operativa. In realtà gli accessi specifici ai registri il programmatore non lo vede, poichè di solito in linguaggio 
+è molto generale, sarà il calcolatore a tradurre tale istruzione in più istruzioni di basso livello cosicchè l'unità di controllo possa generare gli opportuni segnali di controllo.
+Mi servono quindi un insiemem di istruzioni primitive che il processore possa eseguire, che dipendono dal particolare processore, e tale insieme è dette 
+ISTRUCTION SET ARCHITECTURE (ISA); tali istruzioni sononscritte in inguaggio macchina o Assebler. Visto che voglio programmare in alto livello, mi serve anche un COMPILATORE,
+che ovviamente è specifico della macchina, che traduce il programma i  alto livello in un programma Assembler che poi verrà dato al processore. Queste sono delle
+modifiche che devono essere apportate alla macchina di Von Neumann, e ci riferiremo al MOTOROLA 68000.
+
+La macchina di Von Neumann è realizzata da diversi componenti:
+ -L'unità di controllo(processore), che manda istruzioni a tutti ma non riceve niente
+ -Una memoria, che contiene i dati
+ -Un blocco per l'input, che può scrivere in memoria,
+ -Un blocco per l'output, che legge dalla memoria
+-Un ALU, che scrive e legge dalla mmoria
+Per la memoria, noi vedremo una completa suddivisone tra area istruzione ed area dati: tale diviione è fisica oltre che logica.
+Ci sono quindi inconcetti di flussi(controllo e dati), di fasi(caricamento ed esecuzione), di programma e di singola istruzione
+L'elaborazione è sequenziale, cioè eseguo le istruzioni tutte una dopo l'atra come sono memorizzate, almeno di un salto; utilizza un lingaggio di programmazione IMPERATIVO,
+cioè che comanda il processore, la memoria è unica ed è divisa.
+Il calcolatore quindi ha diversi sottosistemi:
+  -Il PROCESSORE fatto da unità di controllo e Datapath(che contiene registri e dati) ed eseguo tutte le istruzioni elaborative dell Istruction set, preleva le sitruzioni una per una.
+   In particolare nel datapath ci sarà:
+    * il PROGRAM COUNTER, che contiene l'indirizzo della prossima istruzione da eseguire, che sarà quela subito dopo o un'altra per il salto
+    *l'INSTRUCTION REGISTER, che invece contiene l'istruzione appena prelevata, che devo eseguire, da cui la UC prende, è quindi il registro da cui decodifico
+    *REGISTRI GENERALI
+    *REGISTRO DI STATO, che contiene lo stato della macchina, dove abbiamo, per esempio, 3 bit che gestiscono le interruzioni per comunicare con i dispositivi
+      di I/O(impostando le priorità), e altri 5 bit per gestire l'ALU
+    *MEMORY ADDRESS(MAR), che va verso la memoria, e transita gli indirizzi verso la memoria
+    *MEMORY BUFFER(MBR) o MEMORY DATA(MDR), che invece legge e scrive i dati
+    *Registri per il collegamneto di I/O (non sempre ci sono)
+    *l'ALU, che è una macchina combinatoria che può avere dei registri di appoggio per i 2 operndi e il risultato
+  -La memoria centrale
+  -Blocchi di input e output
+Tutte le sitruzioni che lavorano sui registri sono molto più veloci di quele che lavorano sulla memoria, in quanto in questo ultimo caso devo leggere dalla memoria
+e aspettare che il risultato mi arrivi. uindi, se utilizzo spesso delle variabili nel programma, ha senso portarle nei registri o in una memoria il più possibile vicina al 
+processore(come la cache).
+Nel Motorola 68000 il secondo operando è sia sorgente che destinazione, ovvero nel suo registro leggo e poi scrivo. Ciò potrbbe rallentare molto, ma si può il tutto
+gestire con un clock, e con 2 edge triggered, uno sul fronte di salita e uno sul fronte di discesa.
+Si può anche fare un'operazione di ACCUMULAZIONE DEI RISULTATI, overo nello stesso colpo di clock prendo un operando, lo elaboro e lo salvo: ovviamente ciò è possibile
+se su un colpo di clock posso leggere e scrivere, ed è legato al discorso dei 2 edge triggered di prima.
+Ovviamente non tutti i regstri sono accessibili e visibili al programmatore; i registri generali sono accessibili e scrivili dal programmatore, mentre i regsitri speciali sono
+accessibili ma servono per lo più al comportamento interno del processore.
+
+Io vorrei avere più registri interni, perchè vi posso accedere con il clock interno, che è veloce in ordine dei GHz; il problema è che ne sono pochi, 16 nel 68000 poichè la
+board è molto piccola; in realtà per lo più usiamo la memoria centrale, dove vi è caricato tutto il programma(anche se in realtà sappiamo che il programma viene 
+caricato nella memoria di massa, e che in quella centrale non carico mai tutto ma solo ciò che mi serve, solo alcune pagine, e ciò avviene sia per problema di spazio,
+sia pe problema di multitasking). In reltà sul Motorola 68000 abbiamo anche 2 livelli di chache, che sono molto piccoli(pochi kb o Mb) e si trovano sulla board del
+processore: vi si accede più velocemente rispetto a quella centrale.
+Ho quindi una vera e propria gerarchi di memoria fatta da:
+ -MEMORIA DI MASSA
+ -MEMORIA CENTRALE(RAM), che posso vedere come un'array ognuna di m locazione accessibili con un unica operazione di lettura o scrittura e sono univocamente individuate da
+  un indirizzo compreso tra 0 a m-1; queto intervallo è detto SPAZIO DI INDIRIZZAMENTO. Inoltre la memoria centrale è ad accesso casuale(RAM), ovvero è casuale il tempo
+  che impiego per accedere ad un dato, in quanto quel tempo non dipende dalla posizione del dato. Inoltre, nellarray il bit più significativo sta a sinistra(MSB), quello meno significativo
+  a destra(LSB). Solitamente un array è fatto da 8 bit, infatti si parla di byte, e io accedo ad un byte per volta; in realtà al giorno d'oggi ci sono i processori a parola, ovvero
+  i registri del processore sono organizzati in modo tale che possono prendere più byte, e quindi la memoria centrale avrà array di più un byte. Così il parallelismo è 
+  aumentato, ma nella realtà ciò deve accadere anche avendo il giusto bus, ovvero il bus dovrebbe contenere per esempio 16 linee per accedere a 2 byte, altrimenti
+  dovrei fare due accessi in memoria a 2 indiriizi consevìcutivi per prendere una parola da 2 byte. In memoria però avrò comunque il byte, e si parla di BYTE ADDRESSABLE.
+  Ci sono 2 modi per spalmare la parola in memoria(per esempio voglio salvare una parola di 4 byte in una memoria dove ogni locazione ha 8 bit):
+    *BIG ENDIAN, ovvero metto il byte più significativo nell'indirizzo più picolo(lo metto in i, il secondo byte in i+1 e così via);
+    *LITTLE ENDIAN, ovvero metto il byte più significativo nell'indirizzo più grande(lo metto in i+3, il secondo in i+1, il byte meno significativo in i);
+  Bisogna poi capire come è scritta la parolain memoria:
+    *Se la parola è allineata ad undirizzo pari, si parla di PAROLA ALLINEATA SUL LIMITE DI PAROLA
+    *La parola può anche essere allineata in posizione dispary(per esempio, se la memoria ha una locazione di 16 bit, salvo 8 bit nel bayte 1 del primo indirizzo
+      e gli altri 8 bit nel byte 0 della pri a parola); ciò è utile perchè se voglio utilizzare solo 8 bit dell'indirizzo i, se poi volessi salvare 16 bit di un altra parola 
+      posso anche usare gli 8 bit dell'indirizzo i, non devo per forza andare all'indirizzo i+1.
+ -MEMORIA CACHE
+Queste memorie vanno gestite, poichè il processore non ha idea di tutto ciò; lui continua a generare indirizzi fisici che poi vanno opportunamente mappati con indirizi
+virtuali. 
+
+			EVOLUZIONI DELLA MACCHINA DI VON NEUMANN
+Ci sono state diverse evoluzioni negli anni:
+ 1) Inaniztutto si è migliorato il troughpouth(numero di istruzioni per tempo), replicando delle specifiche unità interne e quindi aumentando il parallelismo
+ 2) Si passa poi ad un'architettura PIPELINE, ovvero grazie alla replicazione delle diverse unità, si realizza un parallelismo funzionale, in modo che le diverse
+     macchine lavorino contemporaneamente(per esempio, quando l'hardware sta eseguendo l'istruzione, la parte di hardware che fa la fetch è libera, e quidni 
+     può già prelevare l'istruzione successiva). Nelle moderne architetture in realtà ci sono più pipeline, anche se però c'è il limite che alla memoria può accedere
+     una sola pipeline alla volta. Si potrebbe quindi fisicamente sdoppiare la memoria, fisicamente
+  3) Architetture VETTORIALI, che s dividono in:
+       *SIMD, ovvero archtetture dove c'è una sola istruzione lavori si più dati in parallelo
+       *MIMD, dove ci sono molte istruzioni che lavorano in parallelo su più dati
+  4) Architetture MULTIPROCESSORI: ci sono piùprocessori sulla stessa board che condividono le risorse
+  5) MULTICOMPUTER: ci son più computer, ognuna con un solo processore e quindi con le sue risorse, che possono comunicare mediante una rete tra loro
+
+Grazie agli aspetti teconligici migliorano anche i costi, la velocità, l'affidabilità e l'organizzazione interna rispetto all'architettura classica di Von Neumann. In realtà si guarda 
+anche l'energia, poichè stiamo parlando di dispositivi che sono sempre alimentati, ma le batterie che le alimentano non sono illimitate, quindi vanno dimensionate le 
+capacità di calcolo e le funzionalità per ottimizzare l'uso della batteria. Quindi dibbiamo opportunamnete diensionare le nostre macchine per ottimizzare uno o più di tali aspetti.
+
+Il calcolatore esegue un programma fatto da diverse istruzione mediante il sui Instrction Set, e quindi va tradotto. Le itruction set sono poche, ed appartengono a 4 categorie:
+  -Il salto
+  -Operazioni logico-aritmetche
+  -Confronto
+  -Spostmento di un dato tra diversi registri o da un registro verso la memoria e viceversa
+In ogni caso tali operazioni vanno eseguite senza sprechi. L'insieme di queste primitive forma il linguaggio che permette al programmatore di parlare con la macchina e permette
+di generare segnali di ablitazioni che comanda le macchine combinatorie e/o sequenziali. Chi progetta un calcolatore la prima cosa che fa è decidere quali istruction set mettere nella macchia
+che possoni essere:
+  -Molto semplici, che si eseguono con un semplice hardware e sono più veloci ma rendono il programma più complesso, come le macchine RISC
+  -Comlesse, con un hardware più complesso ma che permette al programmatore di scrivere il programma più facilmente(più in alto livello), come le macchine SISC. La decodifica dell'istruzione
+   ovviamente sarà più complessa e lenta
+Ovviamente c'è distanza a cosa conviene al programmatore e cosa conviene al calcolatore, e cìè bisogno di un compromesso che diminuisca il gap semantico.
+Tale gap misura la differenza tra i concetti esprimibili con linguaggio ad alto livello e i concetti che stanno nell'architettura del calcolatore. Tale gap è abbastanza elevato. 
+Ci potrebbe anche essere la necessità di avere più compilatori per diverso linguagguìio.
+Un eccezione fu creata da JAVA, che crò il concetto di avere un programma compilabile da diverse macchine: si usa una macchna virtuale su ciascuna macchina, e
+mentre la compilazione viene fatta sempre allo stesso modo dalla specifica macchina, sarà poi la Java Virtual Machine ad eseguire il programma in maniera diversa sulla machina.
+
+				ARCHITETTURA DEL MOTOROLA DEL 68000
+Esso ha:
+-Dei REGISTRI GENERALI DO-D7, A0-A7
+-Un ALU, che ha operazioni limitati
+-Un EFFECTIVE ADDRESS REGISTER(EAR), che si usa quando devo calcolare un indirizzo, è di appoggio
+-Il PROGRAMM COUNTER
+-Il registro IR, che è direttamente collegato all'unità di controllo in quanto le istruzioni non sono tutte della stessa lunghezza
+-Un registro di stato, i cui 8 bit meno significativi sono legati diettamente all'ALU
+-Un registro temporaneo per l'ALU
+-Un bus
+-Registri per interfacciardi con la memoria(MAR e MB) e con dispositivi di I\O
+Per quanto riguarda i dati, all'interno, nel processore, ho registri di 32 bit, mentre la memoria all'esterno ha locazioni di 16  bit, quindi devo accedere 2 volte per leggere parole di 32 bit
+Per quanto riguarda gli indirizzi, all'interno i bus sono di 32 bit, così uso tutta la parola di 32 bit, mentre verso l'esterno i bus sono di 24 bit, poichè la massima memoria che si poteva avere
+all'epoca era fatta da moduli di 16Mb, indirizzati da 24 bit.
+In memoria inoltre si usa la convenzione BEG ENDIAN.
