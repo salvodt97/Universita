@@ -1,0 +1,19 @@
+Iptables ha alla base Netfilter, ovvero un insieme di tool che sereva filtrare i pacchetti in rete. La cosa fondamentale che fa NetFilter, mediante Iptables, è controllare
+proprio l'header dei pacchetti, e decidere cosa fare (filtrarli o meno) a seconda delle policy stabilite.
+Un firewall, in generale, p una barriera (a livello logico) che si trova sull'interfaccia di rete della macchina e operano mediante delle tabelle (catene) che sono un insieme
+di regole: ce ne sono almeno due, una di input e una di output. Quando si riceve un pacchetto, si controlla l'headre e se esso matcha con almeno una della regola, si
+fa ciò che dice la regola, altrimento si applicano le policy di default.
+I firewall che si usano di solito sono quelli perimetrali, ovvero si trova davanti la rete, e a volte fa anche da ruther, e una volta ricevuti i pacchetti, il firewall li
+smisterà verso i vari server e in quedto caso, nelle regole, è fondamentale specificare l'indirizzo destinazione. Nel caso di una macchina singola la destinazione sarà
+sempre la stessa.
+Prima di applicare la policy di default, si vede se si può applicare l'ultima della regola della catena (tabella): questa regola viene usata per fare match con qualsiasi 
+pacchetto, ovvero è una regola di tipo DENY, con ANY sia in sorgente che in destinazione: a causa di ciò questa regola viene spesso confusa con quella di default.
+Con il comando "iptables -L -n" vedo le catene attive, e ce ne sono 3 di default:
+-INPUT, per i raffico in entrata (in kali, di defoult accetta tutto)
+-FORWARD, per forwardare i pacchetti(in kali, di defoult scarta tutto)
+-OUTPUT, per il traffico in uscita (in kali, di defoult accetta tutto)
+Le regole di default sono indicate tra èarentesi tonde, e gli indirizzi 0.0.0.0/0 stanno ad indicare tutti gli indirizzi.
+Con il comando "iptables -L -n --line-number -v" posso vedere il numero della riga della regola (--line-number) e delle colonne aggiuntive (-v) come le interfacce di input e
+output. Con "iptables -P 'CATENA' 'REGOLA'" posso cambiare la regola di default di una catena.
+Inoltre si possono anche accodare nuove regole ad una catena: è importante specificare, però, che le regle di una catema vengono analizzate in ordine, questo significa che se l'ultima
+regola di una catena è DENY ALL, e poi faccio l'append di una nuova regola, quest'ultima non verrà proprio considerata.
