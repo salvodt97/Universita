@@ -1,0 +1,99 @@
+Il nostro elaborato di software security prevede l'analisi della robustezza di un progetto, sviluppato durante il corso di sistemi embedded, per la board STM32F3-Discovery.
+In particolare, la robustezza del software è un parametro di qualità esterna, e indicala misura in cui il sistema si comporta in modo ragionevole in situazioni impreviste, 
+non contemplate dalle specifiche. Situazioni di questo tipo in genere riguardano errori ed eccezioni di varia natura (dati di input scorretti, fallimenti di componenti software 
+o hardware esterni al sistema e interagenti con esso, e così via).
+
+Il progetto in questione prevdev di utlizzare la board come mouse USB mediante l'utilizzo del tasto USER, individuando diverse fasi: innanzitutto si preme il tasto la prima volta e si
+avvia il giroscopio, che permette di leggere i dati di inclinazione della board; si preme il tasto la seconda volta e avvia l'accelerometro, che permette di leggere i dati di
+accelerazione con la quale si inclina la board in una certa direzione; si preme il tastouna terza volta e si avvia il mouse.
+Il funzionamento del mouse sfrutta la classe HID dello standard USB e i dispositivi configurati prima: i dati di inlcinazione letti dal giroscopio permettono di muovere il cursore, i dati
+letti dall'eccelerometro determinano la velocità di movimento del cursore, e la pressione del tasto USER simula la pressione del tasto sinistro del mouse. Inoltre, per rendere il tutto più 
+"user friedly", vengono anche accesi dei led durante l'inizializzazione della board e per indicare la direzione di movimento della board.
+
+In particolare il nostro progetto consta di diversi file e  utilizza una libreria detta Standard Peripheral Lybrary, di STM, che utlizza vari standard, tra cui quello CMSIS per 
+utlizzare il core Cortex-M4 presente sulla board che agisce da processore: è proprio dei file di questa libreria di STM che abbiamo analizzato la robustezza, analizzando come controlla i 
+parametri delle funzioni standard che utlizza e come fa error endling, provando a fare del fault injection.
+Ciò che abbiamo analizzato è stata in realtà la parte applicativa, la quale è sufficientemente robusta, poichè la parte "dietro le quinte" di scambio de dati mediante USB (quando la board 
+funzione come mouse) è nascosta.
+
+Di seguito è riportata l'analisi di di alcune funzioni
+
+-SysTick_Config() configura il systick, e controlla anche se il valore del tick inserito è troppo grande: in ogni caso la configurazione del systick non causa crash, anche inserendo
+ valori troppo grandi, poichè grazie al controllo, se fallisce la funzione ritorna 1 e il systick conterrà parametri di inizializzazione di default, quindi error handling perfetto.
+
+
+-STM_EVAL_LEDInit() prende in ingresso una macro (sicura) e si occupa di inzializzare i led della board ma non controlla il valore fornitogli in ingresso, in realtà questa funzione passa 
+i parametri alla board mediante una GPIO_Init() che inizializza la periferica GPIO su cui sono presenti led e button, che invoca più assert_param per verificare i campi della struttura 
+dati che prende in ingresso
+1)se si sta agendo sulla periferica GPIO;
+2)se si sta agendo sui pin di una periferica GPIO;
+3)se la modalità in cui è stato settato il pin GPIO è ammissibile (output general/purpose, input analogico/digitale ecc…)
+4)controlli su resistenze di pull-up e pull-down;
+5)se la velocità del clock è ammissibile per il pin GPIO
+6)se il parametro relativo alla modalità output è corretto;
+
+-STM_EVAL_PBInit() configura il tasto e l'interruzione (che poi verrà collegata all'interruzione di USB), mediante EXTI e NVIC che vengono configurate con le funzioni 
+1)SYSCFG_EXTILineConfig che con due assert controlla se la sorgente arriva da una periferica di GPIO e se il pin utilizzato è compreso tra 0 e 15 (pin di GPIO)
+2)EXTI_INIT controlla se EXTI lavora in una delle due modalità permesse (interrupt o a evento), se è stato impostato il trigger correttamente su un fronte del clock, se il campo EXTI_Line 
+della struttura in ingresso è settato correttamente e se lo stato è abilitato o disabilitato.
+3)NVIC_INIT:inizializza l’NVIC per la gestione delle interruzioni; effettua 3 controlli di robustezza per controllare rispettivamente che lo stato sia ammissibile (abilitato o disabilitato)
+ e che i valori di priorità forniti per la preemption priority e per la sottopriorità sono valori ammissibili.
+
+
+-Demo_USB() non prende parametri, configura l'USB. 
+-Chiama la funzione Set_System(), la quale, che si occupa di configurare tutto ciò che dovrà essere utilizzato dall’usb; in particolare invoca 2 funzoni:
+——GPIO_PINAFConfig, nella quale si configura il pin A di GPIO e qui troviamo dei controlli con delle assert_param che verificano se il parametro fornito alla funzione è di tipo GPIO, se il 
+pin GPIO è GPIOA (su cui si trova la periferica USB) e se si sta agendo sui pin 11 e 12 di GPIO che sono quelli necessari al funzionamento dell’USB.
+——RCC_AHBPeriphClockCmd, abilita il bus AHB e il clock sul bus e presenta 2 assert; la prima si occupa di controlla se effettivamente si sta agendo su AHB, mentre la seconda si occupa di 
+controllare se lo stato passato come parametro è uno stato ammissibile di AHB, altrimenti, per garantire la robustezza, il programma termina.
+-Chiama poi Set_USBClock() per configurare il clock di USB, e questa funzione invoca la RCC_APB1PeriphClockCMD() che abilita il bus APB e il clock sul bus e che presenta 2 controlli che 
+verificano rispettivamente se si sta agendo su APB e se lo stato fornito è ammissibile.
+-Infine viene chiamata la USB_Interrupts_Config() che setta l'interruzione di USB(del tasto user) attraverso l’invocazione di due funzioni (EXTI_CLEARITPENDINGBIT e 
+NVIC_PRIORITYGROUPCONFIG) e in entrambe vengono eseguiti i controlli con le funzioni di assert: nella prima si controlla che il parametro passato alla funzione sia riferito ad una linea 
+EXTI per l’interruzione esterna generata alla pressione del tasto USER; nella seconda si controlla che il parametro passato faccia riferimento ai bit che indicano la priorità di gruppo.
+
+
+La funzione L3GD20_SendByte() è la funzione responsabile di inviare i dati necessari all’inizializzazione del giroscopio; nella sua implementazione vengono invocate diverse funzioni:
+1)SPI_I2S_GetFlagStatus che presenta due assert: la prima che controlla se si sta utilizzando una periferica SPI (tra SPI1, 2 e 3), la seconda che si occupa di verificare se il flag letto
+appartiene alla struttura dati relativa all’SPI. Se il data register non si svuota entro un certo tempo oppure se non sono disponibili dati da leggere entro un certo tempo, viene invocata 
+una funzione di callback che si occupa di bloccare la comunicazione e tutti i processi.
+2)SPI_SendData8 e SPI_ReceiveData8 che presentano lo stesso controllo mediante una assert_param che si occupa di controllare che la periferica alla quale si sta accedendo è la periferica 
+SPI 1, 2 e 3. 
+
+
+La funzione LSM303DLHC_Write() configura l’accelerometro inviando dati mediante l’I2C:
+—I2C_SendData effettua un controllo sull’indirizzo al quale si stanno inviando i dati (indirizzo I2C1 o I2C2, altrimenti la assert ritorna false e il programma viene bloccato);
+—I2C_TransferHandling si occupa di gestire il trasferimento tra I2C e accelerometro, e presenta 4 diversi controlli:
+1)verifica se l’indirizzo al quale si stanno inviando i dati è corretto;
+2)verificare se la periferica nella quale si sta scrivendo può essere scritta dall’i2c
+3)verifica se la modalità settata per l’invio dei dati è accettabile;
+4)verifica se la modalità di fine trasferimento è una di quelle consentite (generate stop o non generate stop).
+
+
+La funzione LSM303DLHC_Read() si occupa di leggere i dati da acceleromtero mediante I2C: tutti gli indirizzi da cui leggere e in cui depositare i dati vengono controllati con delle assert 
+che sono identiche a quelle citate nella slide precedente.
+
+Da questo momento in poi iniziano le operazioni per trasferire le informazioni sul mouse (calcolate mediante il giroscopio, accelerometro, e pressione del tasto USER)
+verso il PC (il suo mouse) mediante il secondo connettore USB:
+
+-Si mette a 0 una variabile per indicare che sta per iniziare un trasferimento
+
+-USB_SIL_Write() scrive i dati nell'endpoint del dispositivo USB (siamo ancora sulla baord), prendendo l'indirizzo dell'endpoint e le info del mouse da scrivere + il numero 
+ di byte: quindi non rischio di sfondar niente in quanto con la dimensione non posso scrivere più di quanto ho detto (non ci può essere overflow). L'enpoint è un'astrazione di un buffer 
+che prende i dati dalla board e li manda al pc, e ci potrebbe essere del buffer overflow se mal gestito: provando però a scrivere valori errati, non accadono errori per 2 motivi: le 
+funzioni di più basso livello che scrivono nell'endpoint sono definite come macro, quindi non modificabili e rispettano lo standard (info ottenute in rete senza poter accedere al codice 
+però in quanto è nascosto), e la funzione stessa imposta la dimensione di ciò che deve essere scritto.
+
+-SetEPTxValid(), abilita la trasmissione dall'endpoint al pc settando il giusto bit mediante la funzione _SetEPTxStatus(). da questo momento i dati viaggeranno continuamente dalla
+ board al PC (fino a quando non si stacca il connettore USB).
+
+A questo livello quindi i controlli vengono effettuati con la funzione "assert_param", definita come macro, che prende in ingresso un'espressione e verifica che sia false. L'espressioni 
+che prende sono funzioni standard STM che verificano flag, o se un parametro è di tipo RCC ecc..., e se restituisce false, significa che il controllo è fallito e quindi chiama una funzione
+di assert_failed() passandogli il nome del file e la riga di codice in cui si è verificato l'errore, e stampa a video (sulla console di debug GDB sfruttando un meccanismo detto semihosting)
+tali informazioni con la snprintf() (printf sicura), anche se in realtà non c'è nemmeno bisogno di usare quella funzione sicura in quanto sto stampando su una console di debigging e quindi 
+non si rischia buffer overflow o altri tipi di sfondamento.
+
+
+
+
+

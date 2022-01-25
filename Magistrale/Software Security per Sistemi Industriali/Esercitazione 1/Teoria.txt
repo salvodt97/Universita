@@ -1,0 +1,36 @@
+GDB sta per GNU Debugger ed è il debugger più popolare per unix.
+Permette di ottenere un gran numero di informazioni sul programma analizzato.
+Tra i comandi GDB più importanti troviamo:
+-run: avvia l'esecuzione;
+-break n: imposta un break point alla riga n;
+-next: esegue l'istruzione successiva;
+-step: fa la stessa cosa del next ma se l'istruzione successiva è una funzione esegue solo la prima istruzione;
+-continue: riprende l'esecuzione se ci siamo fermati ad un break.
+
+wisdom-alt.c deve essere compilato.
+sudo sysctl -w kernel_randomize_va_space=0
+gcc -o wisdon-alt -ggdb -m32 -fno-stack-protector -z execstack vulnserver.c -o vulnserver
+gdb wisdom-alt
+Appena avviato gdb possiamo dare il comando start per verificare i registri: vediamo che c'è un breakpoint sul main
+Per settare un breakpoint facciamo:
+break main 
+con info b otteniamo informazioni sul breakpoint
+Una volta raggiunto il break, con continue si riprende l'esecuzione e si esegue il programma fino al termine o
+al successivo breakpoint.
+Se inseriamo un valore non presente nelle scelte (selection 3) si verifica un errore di segmentation fault.
+
+Il nostro obiettivo è trovare due vulnerabilità di buffer overflow: 
+-pat_on_back;
+-write_secret;
+
+Una delle vulnerabilità è legata all'array globale "ptrs" che contiene i puntatori alle funzioni (1,2);
+Se si inserisce un valore diverso da 1 o 2 si verifica l'errore.
+Per sfruttare ptrs si può usare ptrs[i].
+
+La seconda vulnerabilità si ha sulla funzione gets(); per scrivere sul buffer serve prima inviare la stringa 2\n e 
+la prima read legge 1024 caratteri.
+Con l'istruzione python -c import sys; sys.stdout.write("2\n"+"A"*1022) si esegue l'attacco producendo i caratteri A
+che andranno a sovrascrivere il contenuto dello stack.
+Inforegisters ci fa vedere le informazioni sui registri
+context reg, context code o context stack ci da informazioni su varie cose.
+

@@ -1,0 +1,22 @@
+*-pedantic: permette di rifiutare tutti i programmi che usano estensioni proibite
+ (per i linguaggi C/C++) e altri programmi che non seguono l'ISO (standard): tutti i programmi
+ che non vengono rifiutati sono quelli che possono essere compilati anche senza questa estensione.
+ In ogni caso, poichè il nostro programma viene compilato usando la toolchain GNU, non causa problemi
+ proibitivi, ma richiedono l'estensione -std (gnu09 o gnu99).
+*-Wall: abilita tutti i warning sulle costruzioni discutibili, e sono facili da evitare anche in
+ congiunzione con le macro. Questi permettono di controllare usi sospetti degli indirizzi di memoria
+ (se per esempo vengono usati in un if), oppure se si sta uscendo fuori dai limiti di un array, o se
+ si ri-dichiarano funzioni che hanno parametri di tipo array, il corretto utilizzo dei booleani, avvisa
+ sui commenti, controlla l'uso degli argomenti di printf e scanf, se la dichiarazione di una funzione
+ manca di parametri che servono ad una funzione correlata, se è stato allocato un oggetto non
+ inizializzato, se ci sono funzioni-valori-variabili inutilizzate.
+*-Wextra: aggiunge altri warnings non presenti in -Wall, che controllano i puntatori a funzione,
+ se ci blocchi vuoti in un if-else-while, se l'inizializzaziomne di una struttura non inizializza
+ alcuni campi, se ci sono dichiarazioni obsolete (per esempio, per le funzioni static, il static non è
+ la prma parola), se ci sono confronti tra signed e unsigned (-Wsign-compare), se ci sono parametri non usati
+ (-Wunused-parameter), anche se settati.
+*-Wno-deprecated: non si generabo warning se si usano features deprecate.
+*-Wmissing-include-dirs: genera warning se sono incluse direciry (col flag -I) che in realtà non esistono.
+*-Wcast-align: controlla se si fa il cast da un tipo di un puntatore ad un altro tipo (per esempio da char * a int *)
+ e avvisa nel caso in cui c'è bisogno di ri-allineare gli indirizzi. (magari se se deve incrementare il puntatore o se è stato
+ incrementato quando non si doveva)

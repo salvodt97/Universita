@@ -1,0 +1,28 @@
+SOLUZIONE PRIMO PUNTO CHALLENGE
+Eseguire il programma wisdom con gdb.
+Guardando il codice, alla riga 97 c'è una funzione read che può dare problemi; 
+mettiamo un breakpoint alla riga 97 e facciamo run.
+Nel codice ci sono due puntatori: ptrs (puntatore alle varie funzioni da eseguire) e 
+p (puntatore che punta a pat_on_back.
+Stampiamoli con print &p e print &ptrs.
+Quando si stampa l'elemento i-esimo del vettore si stampa l'indirizzo base + i*8byte.
+Vogliamo trovare l'indirizzo in cui si trova la funzione pat_on_back andando a fare la 
+sottrazione tra p e ptrs per trovare lo spiazzamento.
+Si ottiene il valore esadecimale, lo si divide per 8 o 4(64 o 32 bit) che è la dimensione dei 
+dati in ogni cella dell'array e lo si converte in decimale.
+
+
+
+SOLUZIONE SECONDO PUNTO CHALLENGE
+Lo scopo era di trovare la vulnerabilutà di tipo stack overflow, che si trova alla riga 62 nella funzione gets() che
+come sappiamo non controlla la dimensione del buffer. Bisogna riempire il buffer buf[1024] nella riga 90, e si deve craare
+il payload. Si crea con """python3 -c 'print("2\n" + "A*1023")' > file1 """, poi si fa """gdb -ex 'pattern_create 500 ./file2'"""
+Si concatena poi file2 e file1 con """cat file2 >> file1""", così si crea il payload.
+Poi si fa con gdb, e con """run < file1""" si manda il payload al programma; andando poi nello stak si trova il pattern dato in ingresso
+con il payload, e a noi ci interessa sfondare il record sullo stack di una funzione che andiamo a chiamare.
+Poi con """pattern_search""" troviamo l'offset (o RSP). Lo scopo è eseguire la funzione write_secret, e con """print write_secret""" troviamo
+l'indirizzo della funzione, e ci interessa poichè quando poi si ritorna dalla funzione put-wisdom, invece di tornare nel main
+si ritorna alla funzione write_secret.
+A noi interessa l'offsetr EIP+0 per proseguire, oltre all'indirizzo di write_secret. Ci interessa fare un attacco
+simile a quello che sta sulle slide (con scivilo di NOP sled per arrivare all'indirizzo effettivo), quindi a noi
+interessa generare un payload malevolo che permette di arrivare all'indirizzo di ritorno di write_secret.
