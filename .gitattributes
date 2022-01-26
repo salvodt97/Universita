@@ -1,3 +1,4 @@
 Magistrale/Impianti[[:space:]]di[[:space:]]elaborazione/** filter=lfs diff=lfs merge=lfs -text
 Magistrale/Architettura[[:space:]]dei[[:space:]]sistemi[[:space:]]di[[:space:]]elaborazione/** filter=lfs diff=lfs merge=lfs -text
 Magistrale/Sistemi_Embedded/** filter=lfs diff=lfs merge=lfs -text
+Magistrale/Cognitive[[:space:]]Computing[[:space:]]Systems/** filter=lfs diff=lfs merge=lfs -text
